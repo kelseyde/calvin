@@ -5,6 +5,7 @@ import com.kelseyde.calvin.board.Move;
 import com.kelseyde.calvin.board.Piece;
 import com.kelseyde.calvin.engine.EngineConfig;
 import com.kelseyde.calvin.evaluation.Evaluation;
+import com.kelseyde.calvin.evaluation.NNUE;
 import com.kelseyde.calvin.evaluation.Result;
 import com.kelseyde.calvin.evaluation.Score;
 import com.kelseyde.calvin.generation.MoveGeneration;
@@ -296,6 +297,7 @@ public class Searcher implements Search {
             boolean isCapture = capturedPiece != null;
             boolean isPromotion = move.getPromotionPiece() != null;
 
+            evaluator.makeMove(board, move);
             board.makeMove(move);
             nodes++;
 
@@ -310,6 +312,7 @@ public class Searcher implements Search {
                 && staticEval + config.getFpMargin()[depth] < alpha
                 && !isInCheck
                 && isQuiet) {
+                evaluator.unmakeMove();
                 board.unmakeMove();
                 continue;
             }
@@ -347,6 +350,7 @@ public class Searcher implements Search {
                     && isQuiet
                     && depth <= config.getLmpDepth()
                     && movesSearched >= lmpCutoff) {
+                    evaluator.unmakeMove();
                     board.unmakeMove();
                     continue;
                 }
@@ -377,6 +381,7 @@ public class Searcher implements Search {
                 }
             }
 
+            evaluator.unmakeMove();
             board.unmakeMove();
 
             if (isCancelled()) {
@@ -502,9 +507,11 @@ public class Searcher implements Search {
                 }
             }
 
+            evaluator.makeMove(board, move);
             board.makeMove(move);
             nodes++;
             eval = -quiescenceSearch(-beta, -alpha, depth + 1, ply + 1);
+            evaluator.unmakeMove();
             board.unmakeMove();
 
             if (eval >= beta) {
@@ -526,7 +533,7 @@ public class Searcher implements Search {
     @Override
     public void setPosition(Board board) {
         this.board = board;
-        this.evaluator.evaluate(board);
+        this.evaluator.setPosition(board);
     }
 
     @Override

@@ -35,7 +35,7 @@ public class TestUtils {
     public static final String TST_CONFIG_LOCATION = "src/test/resources/engine_config.json";
     public static final EngineConfig PRD_CONFIG = loadConfig(PRD_CONFIG_LOCATION);
     public static final EngineConfig TST_CONFIG = loadConfig(TST_CONFIG_LOCATION);
-    public static final OpeningBook OPENING_BOOK = EngineInitializer.loadDefaultOpeningBook();
+    public static final OpeningBook OPENING_BOOK = EngineInitializer.loadDefaultOpeningBook(PRD_CONFIG);
     public static final Tablebase TABLEBASE = new LichessTablebase(PRD_CONFIG);
     public static final MoveGenerator MOVE_GENERATOR = new MoveGenerator();
     public static final MoveOrdering MOVE_ORDERER = new MoveOrderer();

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kelseyde.calvin.endgame.Tablebase;
 import com.kelseyde.calvin.endgame.lichess.LichessTablebase;
 import com.kelseyde.calvin.evaluation.Evaluation;
-import com.kelseyde.calvin.evaluation.Evaluator;
+import com.kelseyde.calvin.evaluation.NNUE;
 import com.kelseyde.calvin.generation.MoveGeneration;
 import com.kelseyde.calvin.generation.MoveGenerator;
 import com.kelseyde.calvin.opening.OpeningBook;
@@ -17,10 +17,9 @@ import com.kelseyde.calvin.transposition.pawn.PawnHashTable;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -29,19 +28,17 @@ import java.util.stream.Collectors;
 public class EngineInitializer {
 
     static final String DEFAULT_CONFIG_LOCATION = "/engine_config.json";
-    static final String DEFAULT_BOOK_LOCATION = "/opening_book.txt";
     static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public static Engine loadEngine() {
         EngineConfig config = loadDefaultConfig();
         config.postInitialise();
-        OpeningBook book = loadDefaultOpeningBook();
+        OpeningBook book = loadDefaultOpeningBook(config);
         Tablebase tablebase = loadDefaultTablebase(config);
         TranspositionTable transpositionTable = new TranspositionTable(config.getDefaultHashSizeMb());
-        PawnHashTable pawnHashTable = new PawnHashTable(config.getDefaultPawnHashSizeMb());
         Supplier<MoveGeneration> moveGenerator = MoveGenerator::new;
         Supplier<MoveOrdering> moveOrderer = MoveOrderer::new;
-        Supplier<Evaluation> evaluator = () -> new Evaluator(config, pawnHashTable);
+        Supplier<Evaluation> evaluator = NNUE::new;
         Search searcher = new ParallelSearcher(config, moveGenerator, moveOrderer, evaluator, transpositionTable);
         return new Engine(config, book, tablebase, moveGenerator.get(), searcher);
     }
@@ -60,8 +57,8 @@ public class EngineInitializer {
         }
     }
 
-    public static OpeningBook loadDefaultOpeningBook() {
-        return loadOpeningBook(DEFAULT_BOOK_LOCATION);
+    public static OpeningBook loadDefaultOpeningBook(EngineConfig config) {
+        return loadOpeningBook("/opening_book.txt");
     }
 
     public static Tablebase loadDefaultTablebase(EngineConfig config) {
@@ -80,6 +77,51 @@ public class EngineInitializer {
             return new OpeningBook(file);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static NNUE.Network loadNetwork(String file, int inputSize, int hiddenSize) {
+        try {
+            InputStream inputStream = NNUE.Network.class.getClassLoader().getResourceAsStream(file);
+            if (inputStream == null) {
+                throw new FileNotFoundException("NNUE file not found in resources");
+            }
+
+            byte[] fileBytes = inputStream.readAllBytes();
+            inputStream.close();
+            ByteBuffer buffer = ByteBuffer.wrap(fileBytes).order(ByteOrder.LITTLE_ENDIAN);
+
+            int inputWeightsOffset = inputSize * hiddenSize;
+            int inputBiasesOffset = hiddenSize;
+            int outputWeightsOffset = hiddenSize * 2;
+
+            short[] inputWeights = new short[inputWeightsOffset];
+            short[] inputBiases = new short[inputBiasesOffset];
+            short[] outputWeights = new short[outputWeightsOffset];
+
+            for (int i = 0; i < inputWeightsOffset; i++) {
+                inputWeights[i] = buffer.getShort();
+            }
+
+            for (int i = 0; i < inputBiasesOffset; i++) {
+                inputBiases[i] = buffer.getShort();
+            }
+
+            for (int i = 0; i < outputWeightsOffset; i++) {
+                outputWeights[i] = buffer.getShort();
+            }
+
+            short outputBias = buffer.getShort();
+
+            while (buffer.hasRemaining()) {
+                if (buffer.getShort() != 0) {
+                    throw new RuntimeException("Failed to load NNUE network: invalid file format");
+                }
+            }
+
+            return new NNUE.Network(inputWeights, inputBiases, outputWeights, outputBias);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load NNUE network", e);
         }
     }
 

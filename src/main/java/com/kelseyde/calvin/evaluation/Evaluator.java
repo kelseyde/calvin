@@ -1,9 +1,6 @@
 package com.kelseyde.calvin.evaluation;
 
-import com.kelseyde.calvin.board.Bits;
-import com.kelseyde.calvin.board.Bitwise;
-import com.kelseyde.calvin.board.Board;
-import com.kelseyde.calvin.board.Piece;
+import com.kelseyde.calvin.board.*;
 import com.kelseyde.calvin.engine.EngineConfig;
 import com.kelseyde.calvin.generation.Attacks;
 import com.kelseyde.calvin.transposition.pawn.PawnHashEntry;
@@ -188,6 +185,16 @@ public class Evaluator implements Evaluation {
         scoreKing(blackKing, blackPawns, whitePawns, whiteMaterial, friendlyBlackBlockers, whitePieces, board, phase, false);
 
         return sum(white);
+    }
+
+    @Override
+    public void makeMove(Board board, Move move) {
+
+    }
+
+    @Override
+    public void unmakeMove() {
+
     }
 
     private void scorePawnsWithHash(Board board, long whitePawns, long blackPawns) {
@@ -587,6 +594,11 @@ public class Evaluator implements Evaluation {
     @Override
     public void clearHistory() {
         pawnHash.clear();
+    }
+
+    @Override
+    public void setPosition(Board board) {
+
     }
 
 }
