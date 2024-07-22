@@ -19,9 +19,9 @@ public class NNUE implements Evaluation {
 
     public record Network(short[] inputWeights, short[] inputBiases, short[] outputWeights, short outputBias) {
 
-        public static final String FILE = "patzer.nnue";
+        public static final String FILE = "net010.bin";
         public static final int INPUT_SIZE = 768;
-        public static final int HIDDEN_SIZE = 256;
+        public static final int HIDDEN_SIZE = 768;
 
         public static final Network NETWORK = EngineInitializer.loadNetwork(FILE, INPUT_SIZE, HIDDEN_SIZE);
 
