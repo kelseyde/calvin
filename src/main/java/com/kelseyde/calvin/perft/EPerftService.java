@@ -5,6 +5,8 @@ import com.kelseyde.calvin.board.Move;
 import com.kelseyde.calvin.evaluation.Evaluation;
 import com.kelseyde.calvin.evaluation.NNUE;
 import com.kelseyde.calvin.generation.MoveGenerator;
+import com.kelseyde.calvin.utils.FEN;
+import com.kelseyde.calvin.utils.Notation;
 
 import java.util.List;
 
@@ -27,9 +29,15 @@ public class EPerftService {
         for (Move move : moves) {
             evaluator.makeMove(board, move);
             board.makeMove(move);
+            if (evaluator.evaluate() != new NNUE(board).evaluate()) {
+                System.out.println("NNUE evaluation mismatch!" + evaluator.evaluate() + " " + new NNUE(board).evaluate() + " " + FEN.toFEN(board) + " " + Notation.toNotation(move));
+            }
             ePerft(board, depth - 1);
             evaluator.unmakeMove();
             board.unmakeMove();
+            if (evaluator.evaluate() != new NNUE(board).evaluate()) {
+                System.out.println("NNUE evaluation mismatch!" + evaluator.evaluate() + " " + new NNUE(board).evaluate() + " " + FEN.toFEN(board) + " " + Notation.toNotation(move));
+            }
         }
     }
 

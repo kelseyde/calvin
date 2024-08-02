@@ -67,7 +67,6 @@ public class NNUE implements Evaluation {
     public int evaluate() {
 
         applyLazyUpdates();
-
         boolean white = board.isWhiteToMove();
         short[] us = white ? accumulator.whiteFeatures : accumulator.blackFeatures;
         short[] them = white ? accumulator.blackFeatures : accumulator.whiteFeatures;
