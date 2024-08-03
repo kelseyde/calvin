@@ -5,6 +5,7 @@ import com.kelseyde.calvin.board.Board;
 import com.kelseyde.calvin.board.Move;
 import com.kelseyde.calvin.board.Piece;
 import com.kelseyde.calvin.engine.EngineInitializer;
+import com.kelseyde.calvin.utils.FEN;
 import jdk.incubator.vector.ShortVector;
 import jdk.incubator.vector.VectorOperators;
 import jdk.incubator.vector.VectorSpecies;
@@ -53,6 +54,8 @@ public class NNUE implements Evaluation {
     Accumulator accumulator;
     Board board;
 
+    private int makes = 0;
+
     public NNUE() {
         this.accumulator = new Accumulator(Network.HIDDEN_SIZE);
     }
@@ -66,6 +69,9 @@ public class NNUE implements Evaluation {
     @Override
     public int evaluate() {
 
+        int makes2 = makes;
+        int accumulatorHistorySize = accumulatorHistory.size();
+        int updatesSize = updates.size();
         applyLazyUpdates();
         boolean white = board.isWhiteToMove();
         short[] us = white ? accumulator.whiteFeatures : accumulator.blackFeatures;
@@ -75,6 +81,7 @@ public class NNUE implements Evaluation {
         eval += forward(them, Network.HIDDEN_SIZE);
         eval *= SCALE;
         eval /= QAB;
+        System.out.printf("eval %s %s %s %s %s\n", makes2, accumulatorHistorySize, updatesSize, eval, FEN.toFEN(board));
         return eval;
 
     }
@@ -131,6 +138,7 @@ public class NNUE implements Evaluation {
      */
     @Override
     public void makeMove(Board board, Move move) {
+        System.out.printf("making %s %s %s\n", makes, accumulatorHistory.size(), updates.size());
         boolean white = board.isWhiteToMove();
         int startSquare = move.getStartSquare();
         int endSquare = move.getEndSquare();
@@ -147,6 +155,7 @@ public class NNUE implements Evaluation {
         } else {
             update = handleStandardMove(move, piece, newPiece, white);
         }
+        makes++;
         updates.push(update);
     }
 
@@ -242,11 +251,13 @@ public class NNUE implements Evaluation {
 
     @Override
     public void unmakeMove() {
+        System.out.printf("unmaking %s %s %s\n", makes, accumulatorHistory.size(), updates.size());
         if (!this.updates.isEmpty()) {
             this.updates.pop();
         } else {
             this.accumulator = accumulatorHistory.pop();
         }
+        makes--;
     }
 
     @Override

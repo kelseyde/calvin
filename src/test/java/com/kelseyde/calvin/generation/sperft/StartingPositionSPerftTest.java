@@ -13,6 +13,11 @@ public class StartingPositionSPerftTest extends SPerftTest {
     private final String subFolder = "starting_position";
 
     @Test
+    public void testDepthThree() {
+        sPerft(3);
+    }
+
+    @Test
     public void testDepthFive() {
         sPerft(5);
     }

@@ -5,6 +5,7 @@ import com.kelseyde.calvin.board.Move;
 import com.kelseyde.calvin.board.Piece;
 import com.kelseyde.calvin.engine.EngineConfig;
 import com.kelseyde.calvin.evaluation.Evaluation;
+import com.kelseyde.calvin.evaluation.NNUE;
 import com.kelseyde.calvin.evaluation.Score;
 import com.kelseyde.calvin.generation.MoveGeneration;
 import com.kelseyde.calvin.generation.MoveGeneration.MoveFilter;
@@ -16,6 +17,7 @@ import com.kelseyde.calvin.search.picker.QuiescentMovePicker;
 import com.kelseyde.calvin.transposition.HashEntry;
 import com.kelseyde.calvin.transposition.HashFlag;
 import com.kelseyde.calvin.transposition.TranspositionTable;
+import com.kelseyde.calvin.utils.FEN;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -229,6 +231,9 @@ public class Searcher implements Search {
         int staticEval = Integer.MIN_VALUE;
         if (!isInCheck) {
             staticEval = transposition != null ? transposition.getStaticEval() : evaluator.evaluate();
+            if ( transposition == null && staticEval != new NNUE(board).evaluate()) {
+                System.out.println("Static eval mismatch: " + staticEval + " vs " + new NNUE(board).evaluate()+ " " + FEN.toFEN(board));
+            }
         }
 
         evalHistory[ply] = staticEval;
@@ -442,6 +447,9 @@ public class Searcher implements Search {
         int eval = Integer.MIN_VALUE;
         if (!isInCheck) {
             eval = transposition != null ? transposition.getStaticEval() : evaluator.evaluate();
+            if ( transposition == null && eval != new NNUE(board).evaluate()) {
+                System.out.println("Static eval mismatch: " + eval + " vs " + new NNUE(board).evaluate() + " " + FEN.toFEN(board));
+            }
         }
         int standPat = eval;
 
