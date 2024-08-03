@@ -60,7 +60,7 @@ The table below tracks the strength of previous Calvin releases, both on the CCR
 ### Search
 
 - [Alpha-Beta](https://www.chessprogramming.org/Alpha-Beta) - Calvin uses a classical alpha-beta minimax search algorithm to traverse the game tree. This is enhanced by [Principal Variation Search](https://www.chessprogramming.org/Principal_Variation_Search), combined with an [Iterative Deepening](https://www.chessprogramming.org/Iterative_Deepening) depth-first approach to managing time, and finally a [Quiescence Search](https://www.chessprogramming.org/Quiescence_Search) at the tips of the tree to filter out noisy/tactical positions. 
-- [Transposition table](https://www.chessprogramming.org/Transposition_Table) - An transposition table is an in-memory hashtable recording information of all the previously visited positions in the search, which helps drastically cut down on the search space, since the searcher will encounter the same positions from multiple different move orders. [Zobrist hashing](https://www.chessprogramming.org/Zobrist_Hashing) is used to create the hash index.
+- [Transposition table](https://www.chessprogramming.org/Transposition_Table) - A transposition table is an in-memory hashtable recording information of all the previously visited positions in the search, which helps drastically cut down on the search space, since the searcher will encounter the same positions from multiple different move orders. [Zobrist hashing](https://www.chessprogramming.org/Zobrist_Hashing) is used to create the hash index.
 - [Parallel Search](https://www.chessprogramming.org/Parallel_Search) - [Lazy SMP](https://www.chessprogramming.org/Lazy_SMP) is implemented for multi-threaded parallel search.
 - [Pruning](https://www.chessprogramming.org/Pruning) - Calvin uses multiple pruning techniques to cut down on the search space, including [Null-Move Pruning](https://www.chessprogramming.org/Null_Move_Pruning), [Futility Pruning](https://www.chessprogramming.org/Futility_Pruning), [Reverse Futility Pruning](https://www.chessprogramming.org/Reverse_Futility_Pruning), [Late Move Pruning](https://www.chessprogramming.org/Late_Move_Reductions) and [Delta Pruning](https://www.chessprogramming.org/Delta_Pruning)
 - [Search Extensions](https://www.chessprogramming.org/Extensions) - Calvin uses the popular [Check Extension](https://www.chessprogramming.org/Check_Extensions) to extend the search when in check, as well as an extension when trading into a pawn endgame (to avoid potentially trading into a drawn/lost ending). 
@@ -77,7 +77,7 @@ The table below tracks the strength of previous Calvin releases, both on the CCR
 
 ### Communication
 - Calvin communicates using the Universal Chess Interface [(UCI) protocol](https://www.chessprogramming.org/UCI).
-- [Pondering](https://www.chessprogramming.org/Pondering), where the engine thinks on the opponent's move. Can be disabled via the UCI.
+- [Pondering](https://www.chessprogramming.org/Pondering), where the engine thinks on the opponent's move. Can be disabled using the 'Ponder' UCI option.
 - Hash size and number of Lazy SMP threads are also configurable via the UCI.
 - Calvin is connected to Lichess where he plays regularly in the engine pool: https://lichess.org/@/Calvin_Bot
 
