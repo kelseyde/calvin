@@ -1,9 +1,12 @@
 package com.kelseyde.calvin.evaluation;
 
+import com.kelseyde.calvin.board.Piece;
 import jdk.incubator.vector.ShortVector;
 import jdk.incubator.vector.VectorSpecies;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class Accumulator {
 
@@ -15,18 +18,21 @@ public class Accumulator {
     public final short[] whiteFeatures;
     public final short[] blackFeatures;
 
+    public final List<AccumulatorUpdate> updates;
+
     public Accumulator(int featureCount) {
         this.whiteFeatures = new short[featureCount];
         this.blackFeatures = new short[featureCount];
+        this.updates = new ArrayList<>();
     }
 
     public Accumulator(short[] whiteFeatures, short[] blackFeatures) {
         this.whiteFeatures = whiteFeatures;
         this.blackFeatures = blackFeatures;
+        this.updates = new ArrayList<>();
     }
 
     public void add(int wx1, int bx1) {
-        System.out.printf("adding (%s %s)\n", wx1, bx1);
         short[] weights = NNUE.Network.NETWORK.inputWeights();
         int hiddenSize = NNUE.Network.HIDDEN_SIZE;
 
@@ -43,7 +49,6 @@ public class Accumulator {
     }
 
     public void addSub(int wx1, int bx1, int wx2, int bx2) {
-        System.out.printf("adding (%s %s), subbing (%s %s)\n", wx1, bx1, wx2, bx2);
         short[] weights = NNUE.Network.NETWORK.inputWeights();
         int hiddenSize = NNUE.Network.HIDDEN_SIZE;
 
@@ -65,7 +70,6 @@ public class Accumulator {
     }
 
     public void addSubSub(int wx1, int bx1, int wx2, int bx2, int wx3, int bx3) {
-        System.out.printf("adding (%s %s), subbing (%s %s), subbing (%s %s)\n", wx1, bx1, wx2, bx2, wx3, bx3);
         short[] weights = NNUE.Network.NETWORK.inputWeights();
         int hiddenSize = NNUE.Network.HIDDEN_SIZE;
 
@@ -90,7 +94,6 @@ public class Accumulator {
     }
 
     public void addAddSubSub(int wx1, int bx1, int wx2, int bx2, int wx3, int bx3, int wx4, int bx4) {
-        System.out.printf("adding (%s %s), subbing (%s %s), subbing (%s %s), subbing (%s %s)\n", wx1, bx1, wx2, bx2, wx3, bx3, wx4, bx4);
         short[] weights = NNUE.Network.NETWORK.inputWeights();
         int hiddenSize = NNUE.Network.HIDDEN_SIZE;
 
@@ -125,6 +128,44 @@ public class Accumulator {
         return new Accumulator(
                 Arrays.copyOf(whiteFeatures, whiteFeatures.length),
                 Arrays.copyOf(blackFeatures, blackFeatures.length));
+    }
+
+    public record FeatureUpdate(int square, Piece piece, boolean white) {}
+
+    public static class AccumulatorUpdate {
+
+        public FeatureUpdate[] adds = new FeatureUpdate[2];
+        public int addCount = 0;
+
+        public FeatureUpdate[] subs = new FeatureUpdate[2];
+        public int subCount = 0;
+
+        public void pushAdd(FeatureUpdate update) {
+            adds[addCount++] = update;
+        }
+
+        public void pushSub(FeatureUpdate update) {
+            subs[subCount++] = update;
+        }
+
+        public void pushAddSub(FeatureUpdate add, FeatureUpdate sub) {
+            pushAdd(add);
+            pushSub(sub);
+        }
+
+        public void pushAddSubSub(FeatureUpdate add, FeatureUpdate sub1, FeatureUpdate sub2) {
+            pushAdd(add);
+            pushSub(sub1);
+            pushSub(sub2);
+        }
+
+        public void pushAddAddSubSub(FeatureUpdate add1, FeatureUpdate add2, FeatureUpdate sub1, FeatureUpdate sub2) {
+            pushAdd(add1);
+            pushAdd(add2);
+            pushSub(sub1);
+            pushSub(sub2);
+        }
+
     }
 
 }

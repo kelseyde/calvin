@@ -5,6 +5,8 @@ import com.kelseyde.calvin.board.Board;
 import com.kelseyde.calvin.board.Move;
 import com.kelseyde.calvin.board.Piece;
 import com.kelseyde.calvin.engine.EngineInitializer;
+import com.kelseyde.calvin.evaluation.Accumulator.AccumulatorUpdate;
+import com.kelseyde.calvin.evaluation.Accumulator.FeatureUpdate;
 import com.kelseyde.calvin.utils.FEN;
 import com.kelseyde.calvin.utils.Notation;
 import jdk.incubator.vector.ShortVector;
@@ -50,8 +52,7 @@ public class NNUE implements Evaluation {
     static final int QB = 64;
     static final int QAB = QA * QB;
 
-    final Deque<Accumulator> accumulatorHistory = new ArrayDeque<>();
-    final Deque<AccumulatorUpdate> updates = new ArrayDeque<>();
+    final Accumulator[] accumulatorHistory;
     public Accumulator accumulator;
     Board board;
 
@@ -59,10 +60,12 @@ public class NNUE implements Evaluation {
 
     public NNUE() {
         this.accumulator = new Accumulator(Network.HIDDEN_SIZE);
+        this.accumulatorHistory = new Accumulator[256];
     }
 
     public NNUE(Board board) {
         this.accumulator = new Accumulator(Network.HIDDEN_SIZE);
+        this.accumulatorHistory = new Accumulator[256];
         this.board = board;
         activateAll(board);
     }
@@ -70,13 +73,7 @@ public class NNUE implements Evaluation {
     @Override
     public int evaluate() {
 
-        int makes2 = makes;
-        int accumulatorHistorySize = accumulatorHistory.size();
-        int updatesSize = updates.size();
-        //System.out.printf("size moves %s accs %s updates %s %s\n", board.getMoveHistory().size(), accumulatorHistorySize, updatesSize, FEN.toFEN(board));
-        //assert accumulatorHistorySize + updatesSize == board.getMoveHistory().size();
         applyLazyUpdates();
-        assert updates.isEmpty();
         boolean white = board.isWhiteToMove();
         short[] us = white ? accumulator.whiteFeatures : accumulator.blackFeatures;
         short[] them = white ? accumulator.blackFeatures : accumulator.whiteFeatures;
@@ -85,7 +82,6 @@ public class NNUE implements Evaluation {
         eval += forward(them, Network.HIDDEN_SIZE);
         eval *= SCALE;
         eval /= QAB;
-        //System.out.printf("eval %s %s %s %s %s\n", makes2, accumulatorHistorySize, updatesSize, eval, FEN.toFEN(board));
         return eval;
 
     }
@@ -143,7 +139,6 @@ public class NNUE implements Evaluation {
     @Override
     public void makeMove(Board board, Move move) {
         //System.out.printf("making %s %s %s \n", makes, accumulatorHistory.size(), updates.size());
-        System.out.printf("making move %s with fen %s \n", Notation.toNotation(move), FEN.toFEN(board));
         boolean white = board.isWhiteToMove();
         int startSquare = move.getStartSquare();
         int endSquare = move.getEndSquare();
@@ -161,7 +156,7 @@ public class NNUE implements Evaluation {
             update = handleStandardMove(move, piece, newPiece, white);
         }
         makes++;
-        updates.push(update);
+        accumulator.updates.add(update);
     }
 
     private AccumulatorUpdate handleStandardMove(Move move, Piece piece, Piece newPiece, boolean white) {
@@ -197,37 +192,19 @@ public class NNUE implements Evaluation {
     }
 
     private void applyLazyUpdates() {
-        //System.out.println("acc size before " + accumulatorHistory.size());
-        System.out.println("num updates " + updates.size());
-        while (!updates.isEmpty()) {
-            this.accumulatorHistory.push(accumulator.copy());
-            AccumulatorUpdate update = updates.pop();
-            if (update.addCount == 1 && update.subCount == 1) {
-                System.out.println("lazy update add sub");
-                lazyUpdateAddSub(update);
-            }
-            else if (update.addCount == 1 && update.subCount == 2) {
-                System.out.println("lazy update add sub sub");
-                lazyUpdateAddSubSub(update);
-            }
-            else if (update.addCount == 2 && update.subCount == 2) {
-                System.out.println("lazy update add add sub sub");
-                lazyUpdateAddAddSubSub(update);
-            }
-            else {
-                throw new IllegalStateException("Invalid update");
-            }
+        boolean updated = false;
+        while (!updated) {
+
         }
-        //System.out.println("acc size after " + accumulatorHistory.size());
     }
 
     private void lazyUpdateAddSub(AccumulatorUpdate update) {
         FeatureUpdate add = update.adds[0];
         FeatureUpdate sub = update.subs[0];
-        int whiteAddIdx = featureIndex(add.piece, add.square, add.white, true);
-        int blackAddIdx = featureIndex(add.piece, add.square, add.white, false);
-        int whiteSubIdx = featureIndex(sub.piece, sub.square, sub.white, true);
-        int blackSubIdx = featureIndex(sub.piece, sub.square, sub.white, false);
+        int whiteAddIdx = featureIndex(add.piece(), add.square(), add.white(), true);
+        int blackAddIdx = featureIndex(add.piece(), add.square(), add.white(), false);
+        int whiteSubIdx = featureIndex(sub.piece(), sub.square(), sub.white(), true);
+        int blackSubIdx = featureIndex(sub.piece(), sub.square(), sub.white(), false);
         accumulator.addSub(whiteAddIdx, blackAddIdx, whiteSubIdx, blackSubIdx);
     }
 
@@ -235,12 +212,12 @@ public class NNUE implements Evaluation {
         FeatureUpdate add1 = update.adds[0];
         FeatureUpdate sub1 = update.subs[0];
         FeatureUpdate sub2 = update.subs[1];
-        int whiteAdd1Idx = featureIndex(add1.piece, add1.square, add1.white, true);
-        int blackAdd1Idx = featureIndex(add1.piece, add1.square, add1.white, false);
-        int whiteSub1Idx = featureIndex(sub1.piece, sub1.square, sub1.white, true);
-        int blackSub1Idx = featureIndex(sub1.piece, sub1.square, sub1.white, false);
-        int whiteSub2Idx = featureIndex(sub2.piece, sub2.square, sub2.white, true);
-        int blackSub2Idx = featureIndex(sub2.piece, sub2.square, sub2.white, false);
+        int whiteAdd1Idx = featureIndex(add1.piece(), add1.square(), add1.white(), true);
+        int blackAdd1Idx = featureIndex(add1.piece(), add1.square(), add1.white(), false);
+        int whiteSub1Idx = featureIndex(sub1.piece(), sub1.square(), sub1.white(), true);
+        int blackSub1Idx = featureIndex(sub1.piece(), sub1.square(), sub1.white(), false);
+        int whiteSub2Idx = featureIndex(sub2.piece(), sub2.square(), sub2.white(), true);
+        int blackSub2Idx = featureIndex(sub2.piece(), sub2.square(), sub2.white(), false);
         accumulator.addSubSub(whiteAdd1Idx, blackAdd1Idx, whiteSub1Idx, blackSub1Idx, whiteSub2Idx, blackSub2Idx);
     }
 
@@ -249,14 +226,14 @@ public class NNUE implements Evaluation {
         FeatureUpdate add2 = update.adds[1];
         FeatureUpdate sub1 = update.subs[0];
         FeatureUpdate sub2 = update.subs[1];
-        int whiteAdd1Idx = featureIndex(add1.piece, add1.square, add1.white, true);
-        int blackAdd1Idx = featureIndex(add1.piece, add1.square, add1.white, false);
-        int whiteAdd2Idx = featureIndex(add2.piece, add2.square, add2.white, true);
-        int blackAdd2Idx = featureIndex(add2.piece, add2.square, add2.white, false);
-        int whiteSub1Idx = featureIndex(sub1.piece, sub1.square, sub1.white, true);
-        int blackSub1Idx = featureIndex(sub1.piece, sub1.square, sub1.white, false);
-        int whiteSub2Idx = featureIndex(sub2.piece, sub2.square, sub2.white, true);
-        int blackSub2Idx = featureIndex(sub2.piece, sub2.square, sub2.white, false);
+        int whiteAdd1Idx = featureIndex(add1.piece(), add1.square(), add1.white(), true);
+        int blackAdd1Idx = featureIndex(add1.piece(), add1.square(), add1.white(), false);
+        int whiteAdd2Idx = featureIndex(add2.piece(), add2.square(), add2.white(), true);
+        int blackAdd2Idx = featureIndex(add2.piece(), add2.square(), add2.white(), false);
+        int whiteSub1Idx = featureIndex(sub1.piece(), sub1.square(), sub1.white(), true);
+        int blackSub1Idx = featureIndex(sub1.piece(), sub1.square(), sub1.white(), false);
+        int whiteSub2Idx = featureIndex(sub2.piece(), sub2.square(), sub2.white(), true);
+        int blackSub2Idx = featureIndex(sub2.piece(), sub2.square(), sub2.white(), false);
         accumulator.addAddSubSub(whiteAdd1Idx, blackAdd1Idx, whiteAdd2Idx, blackAdd2Idx, whiteSub1Idx, blackSub1Idx, whiteSub2Idx, blackSub2Idx);
     }
 
@@ -298,44 +275,6 @@ public class NNUE implements Evaluation {
         this.accumulator = new Accumulator(Network.HIDDEN_SIZE);
         this.accumulatorHistory.clear();
         this.updates.clear();
-    }
-
-    private record FeatureUpdate(int square, Piece piece, boolean white) {}
-
-    private static class AccumulatorUpdate {
-
-        private FeatureUpdate[] adds = new FeatureUpdate[2];
-        private int addCount = 0;
-
-        private FeatureUpdate[] subs = new FeatureUpdate[2];
-        private int subCount = 0;
-
-        public void pushAdd(FeatureUpdate update) {
-            adds[addCount++] = update;
-        }
-
-        public void pushSub(FeatureUpdate update) {
-            subs[subCount++] = update;
-        }
-
-        public void pushAddSub(FeatureUpdate add, FeatureUpdate sub) {
-            pushAdd(add);
-            pushSub(sub);
-        }
-
-        public void pushAddSubSub(FeatureUpdate add, FeatureUpdate sub1, FeatureUpdate sub2) {
-            pushAdd(add);
-            pushSub(sub1);
-            pushSub(sub2);
-        }
-
-        public void pushAddAddSubSub(FeatureUpdate add1, FeatureUpdate add2, FeatureUpdate sub1, FeatureUpdate sub2) {
-            pushAdd(add1);
-            pushAdd(add2);
-            pushSub(sub1);
-            pushSub(sub2);
-        }
-
     }
 
 }
