@@ -6,7 +6,12 @@ import com.kelseyde.calvin.generation.MoveGenerator;
 import com.kelseyde.calvin.utils.FEN;
 import com.kelseyde.calvin.utils.Notation;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
 
 public class NNUETest {
 
@@ -221,6 +226,48 @@ public class NNUETest {
             board.unmakeMove();
             nnue.unmakeMove();
         }
+    }
+
+    @Test
+    @Disabled
+    public void testLazyUpdates() {
+
+        String fen = "1k6/8/8/8/8/8/8/5K2 w - - 0 1";
+        Board board = FEN.toBoard(fen);
+        NNUE nnue = new NNUE(board);
+        int i = 0;
+        while (i < 500) {
+            int random = new Random().nextInt(100);
+            if (random > 80 || i == 0) {
+                List<Move> moves = new MoveGenerator().generateMoves(board);
+                int moveRandom = new Random().nextInt(moves.size());
+                Move move = moves.get(moveRandom);
+                nnue.makeMove(board, move);
+                board.makeMove(move);
+                i++;
+            } else {
+                nnue.unmakeMove();
+                board.unmakeMove();
+                i--;
+            }
+            int evalRandom = new Random().nextInt(100);
+            if (evalRandom > 90) {
+                System.out.println("doing eval");
+                int eval = nnue.evaluate();
+                System.out.println("doing new eval");
+                NNUE newNNUE = new NNUE(board);
+                Assertions.assertTrue(Arrays.equals(newNNUE.accumulator.whiteFeatures, nnue.accumulator.whiteFeatures));
+                Assertions.assertTrue(Arrays.equals(newNNUE.accumulator.blackFeatures, nnue.accumulator.blackFeatures));
+                int newEval = newNNUE.evaluate();
+                if (eval != newEval) {
+                    System.out.println("Eval mismatch");
+                    System.out.println("Eval: " + eval);
+                    System.out.println("New Eval: " + newEval);
+                    Assertions.fail();
+                }
+            }
+        }
+
     }
 
 }

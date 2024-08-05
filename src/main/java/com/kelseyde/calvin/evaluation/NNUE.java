@@ -6,6 +6,7 @@ import com.kelseyde.calvin.board.Move;
 import com.kelseyde.calvin.board.Piece;
 import com.kelseyde.calvin.engine.EngineInitializer;
 import com.kelseyde.calvin.utils.FEN;
+import com.kelseyde.calvin.utils.Notation;
 import jdk.incubator.vector.ShortVector;
 import jdk.incubator.vector.VectorOperators;
 import jdk.incubator.vector.VectorSpecies;
@@ -51,7 +52,7 @@ public class NNUE implements Evaluation {
 
     final Deque<Accumulator> accumulatorHistory = new ArrayDeque<>();
     final Deque<AccumulatorUpdate> updates = new ArrayDeque<>();
-    Accumulator accumulator;
+    public Accumulator accumulator;
     Board board;
 
     private int makes = 0;
@@ -72,7 +73,10 @@ public class NNUE implements Evaluation {
         int makes2 = makes;
         int accumulatorHistorySize = accumulatorHistory.size();
         int updatesSize = updates.size();
+        //System.out.printf("size moves %s accs %s updates %s %s\n", board.getMoveHistory().size(), accumulatorHistorySize, updatesSize, FEN.toFEN(board));
+        //assert accumulatorHistorySize + updatesSize == board.getMoveHistory().size();
         applyLazyUpdates();
+        assert updates.isEmpty();
         boolean white = board.isWhiteToMove();
         short[] us = white ? accumulator.whiteFeatures : accumulator.blackFeatures;
         short[] them = white ? accumulator.blackFeatures : accumulator.whiteFeatures;
@@ -81,7 +85,7 @@ public class NNUE implements Evaluation {
         eval += forward(them, Network.HIDDEN_SIZE);
         eval *= SCALE;
         eval /= QAB;
-        System.out.printf("eval %s %s %s %s %s\n", makes2, accumulatorHistorySize, updatesSize, eval, FEN.toFEN(board));
+        //System.out.printf("eval %s %s %s %s %s\n", makes2, accumulatorHistorySize, updatesSize, eval, FEN.toFEN(board));
         return eval;
 
     }
@@ -138,7 +142,8 @@ public class NNUE implements Evaluation {
      */
     @Override
     public void makeMove(Board board, Move move) {
-        System.out.printf("making %s %s %s\n", makes, accumulatorHistory.size(), updates.size());
+        //System.out.printf("making %s %s %s \n", makes, accumulatorHistory.size(), updates.size());
+        System.out.printf("making move %s with fen %s \n", Notation.toNotation(move), FEN.toFEN(board));
         boolean white = board.isWhiteToMove();
         int startSquare = move.getStartSquare();
         int endSquare = move.getEndSquare();
@@ -169,8 +174,8 @@ public class NNUE implements Evaluation {
 
     private AccumulatorUpdate handleCastleMove(Move move, boolean white) {
         boolean kingside = Board.file(move.getEndSquare()) == 6;
-        int rookStart = kingside ? white ? 7 : 63 : white ? 0 : 56;
-        int rookEnd = kingside ? white ? 5 : 61 : white ? 3 : 59;
+        int rookStart = kingside ? (white ? 7 : 63) : (white ? 0 : 56);
+        int rookEnd = kingside ? (white ? 5 : 61) : (white ? 3 : 59);
         FeatureUpdate kingAdd = new FeatureUpdate(move.getEndSquare(), Piece.KING, white);
         FeatureUpdate kingSub = new FeatureUpdate(move.getStartSquare(), Piece.KING, white);
         FeatureUpdate rookAdd = new FeatureUpdate(rookEnd, Piece.ROOK, white);
@@ -192,28 +197,34 @@ public class NNUE implements Evaluation {
     }
 
     private void applyLazyUpdates() {
+        //System.out.println("acc size before " + accumulatorHistory.size());
+        System.out.println("num updates " + updates.size());
         while (!updates.isEmpty()) {
             this.accumulatorHistory.push(accumulator.copy());
             AccumulatorUpdate update = updates.pop();
             if (update.addCount == 1 && update.subCount == 1) {
+                System.out.println("lazy update add sub");
                 lazyUpdateAddSub(update);
             }
             else if (update.addCount == 1 && update.subCount == 2) {
+                System.out.println("lazy update add sub sub");
                 lazyUpdateAddSubSub(update);
             }
             else if (update.addCount == 2 && update.subCount == 2) {
+                System.out.println("lazy update add add sub sub");
                 lazyUpdateAddAddSubSub(update);
             }
             else {
                 throw new IllegalStateException("Invalid update");
             }
         }
+        //System.out.println("acc size after " + accumulatorHistory.size());
     }
 
     private void lazyUpdateAddSub(AccumulatorUpdate update) {
         FeatureUpdate add = update.adds[0];
         FeatureUpdate sub = update.subs[0];
-        int whiteAddIdx= featureIndex(add.piece, add.square, add.white, true);
+        int whiteAddIdx = featureIndex(add.piece, add.square, add.white, true);
         int blackAddIdx = featureIndex(add.piece, add.square, add.white, false);
         int whiteSubIdx = featureIndex(sub.piece, sub.square, sub.white, true);
         int blackSubIdx = featureIndex(sub.piece, sub.square, sub.white, false);
@@ -251,10 +262,11 @@ public class NNUE implements Evaluation {
 
     @Override
     public void unmakeMove() {
-        System.out.printf("unmaking %s %s %s\n", makes, accumulatorHistory.size(), updates.size());
         if (!this.updates.isEmpty()) {
+            System.out.printf("unmaking update %s %s %s\n", makes, accumulatorHistory.size(), updates.size());
             this.updates.pop();
         } else {
+            System.out.printf("unmaking acc %s %s %s\n", makes, accumulatorHistory.size(), updates.size());
             this.accumulator = accumulatorHistory.pop();
         }
         makes--;
@@ -276,7 +288,9 @@ public class NNUE implements Evaluation {
         int pieceOffset = pieceIndex * PIECE_OFFSET;
         boolean ourPiece = whitePiece == whitePerspective;
         int colourOffset = ourPiece ? 0 : COLOUR_OFFSET;
-        return colourOffset + pieceOffset + squareIndex;
+        int idx = colourOffset + pieceOffset + squareIndex;
+        System.out.printf("sq %s piece %s colour %s perspective %s idx %s \n", square, piece, whitePiece ? "W" : "B", whitePerspective? "W":"B", idx);
+        return idx;
     }
 
     @Override

@@ -26,6 +26,7 @@ public class Accumulator {
     }
 
     public void add(int wx1, int bx1) {
+        System.out.printf("adding (%s %s)\n", wx1, bx1);
         short[] weights = NNUE.Network.NETWORK.inputWeights();
         int hiddenSize = NNUE.Network.HIDDEN_SIZE;
 
@@ -42,6 +43,7 @@ public class Accumulator {
     }
 
     public void addSub(int wx1, int bx1, int wx2, int bx2) {
+        System.out.printf("adding (%s %s), subbing (%s %s)\n", wx1, bx1, wx2, bx2);
         short[] weights = NNUE.Network.NETWORK.inputWeights();
         int hiddenSize = NNUE.Network.HIDDEN_SIZE;
 
@@ -63,6 +65,7 @@ public class Accumulator {
     }
 
     public void addSubSub(int wx1, int bx1, int wx2, int bx2, int wx3, int bx3) {
+        System.out.printf("adding (%s %s), subbing (%s %s), subbing (%s %s)\n", wx1, bx1, wx2, bx2, wx3, bx3);
         short[] weights = NNUE.Network.NETWORK.inputWeights();
         int hiddenSize = NNUE.Network.HIDDEN_SIZE;
 
@@ -87,6 +90,7 @@ public class Accumulator {
     }
 
     public void addAddSubSub(int wx1, int bx1, int wx2, int bx2, int wx3, int bx3, int wx4, int bx4) {
+        System.out.printf("adding (%s %s), subbing (%s %s), subbing (%s %s), subbing (%s %s)\n", wx1, bx1, wx2, bx2, wx3, bx3, wx4, bx4);
         short[] weights = NNUE.Network.NETWORK.inputWeights();
         int hiddenSize = NNUE.Network.HIDDEN_SIZE;
 
