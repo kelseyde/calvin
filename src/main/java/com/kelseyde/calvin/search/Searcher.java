@@ -182,7 +182,7 @@ public class Searcher implements Search {
     public int search(int depth, int ply, int alpha, int beta, boolean allowNull) {
 
         // If timeout is reached, exit immediately
-        if (isCancelled()) return alpha;
+        if (isCancelled()) return beta;
 
         // If depth is reached, drop into quiescence search
         if (depth <= 0) return quiescenceSearch(alpha, beta, 1, ply);
@@ -265,6 +265,7 @@ public class Searcher implements Search {
         }
 
         Move bestMove = null;
+        int bestScore = Integer.MIN_VALUE;
         HashFlag flag = HashFlag.UPPER;
         int movesSearched = 0;
 
@@ -367,32 +368,37 @@ public class Searcher implements Search {
             board.unmakeMove();
 
             if (isCancelled()) {
-                return alpha;
+                return bestScore;
             }
 
-            if (eval >= beta) {
+            if (eval > bestScore) {
 
-                // This is a beta cut-off - the opponent won't let us get here as they already have better alternatives
-                transpositionTable.put(getKey(), HashFlag.LOWER, depth, ply, move, staticEval, beta);
-                if (!isCapture) {
-                    // Non-captures which cause a beta cut-off are stored as 'killer' and 'history' moves for future move ordering
-                    moveOrderer.addKillerMove(ply, move);
-                    moveOrderer.incrementHistoryScore(depth, move, board.isWhiteToMove());
-                }
-
-                return beta;
-            }
-
-            if (eval > alpha) {
-                // We have found a new best move
                 bestMove = move;
-                alpha = eval;
-                flag = HashFlag.EXACT;
-                if (rootNode) {
-                    bestMoveCurrentDepth = move;
-                    bestEvalCurrentDepth = eval;
+                bestScore = eval;
+
+                if (eval > alpha) {
+
+                    if (eval >= beta) {
+                        // This is a beta cut-off - the opponent won't let us get here as they already have better alternatives
+                        flag = HashFlag.LOWER;
+                        if (!isCapture) {
+                            // Non-captures which cause a beta cut-off are stored as 'killer' and 'history' moves for future move ordering
+                            moveOrderer.addKillerMove(ply, move);
+                            moveOrderer.incrementHistoryScore(depth, move, board.isWhiteToMove());
+                        }
+                        break;
+                    }
+
+                    alpha = eval;
+                    flag = HashFlag.EXACT;
+                    if (rootNode) {
+                        bestMoveCurrentDepth = move;
+                        bestEvalCurrentDepth = eval;
+                    }
                 }
+
             }
+
         }
 
         if (movesSearched == 0) {
@@ -408,8 +414,8 @@ public class Searcher implements Search {
             return eval;
         }
 
-        transpositionTable.put(getKey(), flag, depth, ply, bestMove, staticEval, alpha);
-        return alpha;
+        transpositionTable.put(getKey(), flag, depth, ply, bestMove, staticEval, bestScore);
+        return bestScore;
 
     }
 
@@ -422,7 +428,7 @@ public class Searcher implements Search {
      */
     int quiescenceSearch(int alpha, int beta, int depth, int ply) {
         if (isCancelled()) {
-            return alpha;
+            return beta;
         }
 
         QuiescentMovePicker movePicker = new QuiescentMovePicker(moveGenerator, moveOrderer, board);
@@ -444,6 +450,7 @@ public class Searcher implements Search {
             eval = transposition != null ? transposition.getStaticEval() : evaluator.evaluate();
         }
         int standPat = eval;
+        int bestScore = eval;
 
         if (isInCheck) {
             // If we are in check, we need to generate 'all' legal moves that evade check, not just captures. Otherwise,
@@ -453,7 +460,7 @@ public class Searcher implements Search {
             // If we are not in check, then we have the option to 'stand pat', i.e. decline to continue the capture chain,
             // if the static evaluation of the position is good enough.
             if (eval >= beta) {
-                return beta;
+                return eval;
             }
             if (eval > alpha) {
                 alpha = eval;
@@ -496,11 +503,19 @@ public class Searcher implements Search {
             evaluator.unmakeMove();
             board.unmakeMove();
 
-            if (eval >= beta) {
-                return beta;
-            }
-            if (eval > alpha) {
-                alpha = eval;
+            if (eval > bestScore) {
+
+                bestScore = eval;
+
+                if (eval > alpha) {
+
+                    if (eval >= beta) {
+                        break;
+                    }
+
+                    alpha = eval;
+                }
+
             }
         }
 
@@ -508,7 +523,7 @@ public class Searcher implements Search {
             return -Score.MATE_SCORE + ply;
         }
 
-        return alpha;
+        return bestScore;
 
     }
 
