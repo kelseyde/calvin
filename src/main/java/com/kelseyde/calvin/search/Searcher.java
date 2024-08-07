@@ -299,6 +299,19 @@ public class Searcher implements Search {
                 continue;
             }
 
+            // SEE Pruning
+            // If the move loses material on the spot, don't bother searching it
+            if (!rootNode
+                && !pvNode
+                && depth <= 9) {
+                int seeThreshold = depth * (isQuiet ? -50 : -90);
+                if (see.evaluateAfterMove(board, move) < seeThreshold) {
+                    evaluator.unmakeMove();
+                    board.unmakeMove();
+                    continue;
+                }
+            }
+
             // Search Extensions - https://www.chessprogramming.org/Extensions
             // In certain interesting cases (e.g. promotions, or checks that do not immediately lose material), let's
             // extend the search depth by one ply.
