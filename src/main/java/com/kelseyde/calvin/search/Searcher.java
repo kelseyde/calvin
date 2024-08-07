@@ -356,11 +356,13 @@ public class Searcher implements Search {
                 // to try and prove the move will fail low while saving the time spent on a full search.
                 eval = -search(depth - 1 + extension - reduction, ply + 1, -alpha - 1, -alpha, true);
 
-                if (eval > alpha && (eval < beta || reduction > 0)) {
-                    // If we reduced the depth and/or used a null window, and the score beat alpha, we need to do a
-                    // re-search with the full window and depth. This is costly, but hopefully doesn't happen too often.
+                // If we reduced the depth and/or used a null window, and the score beat alpha, we need to do a
+                // re-search with the full window and depth. This is costly, but hopefully doesn't happen too often.
+                if (eval > alpha && reduction > 0)
+                    eval = -search(depth - 1 + extension, ply + 1, -alpha - 1, -alpha, true);
+
+                if (eval > alpha && eval < beta)
                     eval = -search(depth - 1 + extension, ply + 1, -beta, -alpha, true);
-                }
             }
 
             evaluator.unmakeMove();
