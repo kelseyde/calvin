@@ -11,6 +11,8 @@ public interface MoveGeneration {
 
     List<Move> generateMoves(Board board, MoveFilter filter);
 
+    List<Move> generateLegalMoves(Board board, MoveFilter filter);
+
     boolean isCheck(Board board, boolean white);
 
     enum MoveFilter {

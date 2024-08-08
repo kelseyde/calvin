@@ -392,8 +392,8 @@ public class BoardTest {
 
         MoveGenerator moveGenerator = new MoveGenerator();
 
-        Assertions.assertEquals(0, moveGenerator.generateMoves(board, MoveGeneration.MoveFilter.QUIET).size());
-        Assertions.assertEquals(4, moveGenerator.generateMoves(board, MoveGeneration.MoveFilter.NOISY).size());
+        Assertions.assertEquals(0, moveGenerator.generateLegalMoves(board, MoveGeneration.MoveFilter.QUIET).size());
+        Assertions.assertEquals(4, moveGenerator.generateLegalMoves(board, MoveGeneration.MoveFilter.NOISY).size());
 
     }
 

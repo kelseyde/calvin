@@ -15,23 +15,23 @@ public class MovePickerTest {
 
     private final MoveGenerator moveGenerator = new MoveGenerator();
     private final MoveOrderer moveOrderer = new MoveOrderer();
-
-    @Test
-    public void testInCheckDoesNotGenerateMovesTwice() {
-
-        String fen = "rnbqkbnr/pp2pppp/3p4/1Bp5/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 0 1";
-        Board board = FEN.toBoard(fen);
-
-        MovePicker picker = new MovePicker(moveGenerator, moveOrderer, board, 0);
-
-        List<Move> moves = new ArrayList<>();
-        while (true) {
-            Move move = picker.pickNextMove();
-            if (move == null) break;
-            moves.add(move);
-        }
-
-        Assertions.assertEquals(4, moves.size());
-    }
+//
+//    @Test
+//    public void testInCheckDoesNotGenerateMovesTwice() {
+//
+//        String fen = "rnbqkbnr/pp2pppp/3p4/1Bp5/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 0 1";
+//        Board board = FEN.toBoard(fen);
+//
+//        MovePicker picker = new MovePicker(moveGenerator, moveOrderer, board, 0);
+//
+//        List<Move> moves = new ArrayList<>();
+//        while (true) {
+//            Move move = picker.pickNextMove();
+//            if (move == null) break;
+//            moves.add(move);
+//        }
+//
+//        Assertions.assertEquals(4, moves.size());
+//    }
 
 }

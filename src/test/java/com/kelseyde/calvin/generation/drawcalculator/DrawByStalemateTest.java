@@ -1,7 +1,9 @@
 package com.kelseyde.calvin.generation.drawcalculator;
 
 import com.kelseyde.calvin.board.Board;
+import com.kelseyde.calvin.board.Move;
 import com.kelseyde.calvin.evaluation.Score;
+import com.kelseyde.calvin.generation.MoveGeneration;
 import com.kelseyde.calvin.generation.MoveGenerator;
 import com.kelseyde.calvin.utils.FEN;
 import com.kelseyde.calvin.utils.TestUtils;
@@ -23,7 +25,7 @@ public class DrawByStalemateTest {
         board.makeMove(TestUtils.getLegalMove(board, "b1", "b6"));
 
         // king stalemated in the corner
-        Assertions.assertTrue(moveGenerator.generateMoves(board).isEmpty());
+        Assertions.assertTrue(moveGenerator.generateLegalMoves(board, MoveGeneration.MoveFilter.ALL).isEmpty());
 
     }
 
@@ -36,7 +38,7 @@ public class DrawByStalemateTest {
         board.makeMove(TestUtils.getLegalMove(board, "d6", "e6"));
 
         // king stalemated by king and pawn
-        Assertions.assertTrue(moveGenerator.generateMoves(board).isEmpty());
+        Assertions.assertTrue(moveGenerator.generateLegalMoves(board, MoveGeneration.MoveFilter.ALL).isEmpty());
 
     }
 
@@ -48,7 +50,7 @@ public class DrawByStalemateTest {
         board.makeMove(TestUtils.getLegalMove(board, "f5", "e6"));
 
         // king stalemated in the corner
-        Assertions.assertTrue(moveGenerator.generateMoves(board).isEmpty());
+        Assertions.assertTrue(moveGenerator.generateLegalMoves(board, MoveGeneration.MoveFilter.ALL).isEmpty());
 
     }
 
@@ -61,7 +63,7 @@ public class DrawByStalemateTest {
         board.makeMove(TestUtils.getLegalMove(board, "b2", "a2"));
 
         // even though pawn could pseudo-legally capture on h6 with check, it is pinned, therefore stalemate
-        Assertions.assertTrue(moveGenerator.generateMoves(board).isEmpty());
+        Assertions.assertTrue(moveGenerator.generateLegalMoves(board, MoveGeneration.MoveFilter.ALL).isEmpty());
 
     }
 

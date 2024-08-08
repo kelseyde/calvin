@@ -179,8 +179,12 @@ public class Engine {
             if (entry == null || entry.getMove() == null) {
                 break;
             }
-            principalVariation.add(entry.getMove());
             board.makeMove(entry.getMove());
+            if (moveGenerator.isCheck(board, !board.isWhiteToMove())) {
+                board.unmakeMove();
+                break;
+            }
+            principalVariation.add(entry.getMove());
             moveCount++;
         }
         IntStream.range(0, moveCount).forEach(i -> board.unmakeMove());
@@ -205,7 +209,7 @@ public class Engine {
      * corresponding 'legal' move which includes any special move flag (promotion, en passant, castling etc.)
      */
     private Move move(Move move) {
-        return moveGenerator.generateMoves(board).stream()
+        return moveGenerator.generateLegalMoves(board, MoveGeneration.MoveFilter.ALL).stream()
                 .filter(move::matches)
                 .findAny()
                 .orElseThrow(() -> new IllegalArgumentException("Illegal move " + Notation.toNotation(move)));

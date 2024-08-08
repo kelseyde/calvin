@@ -157,7 +157,7 @@ public class Searcher implements Search {
         // If no move is found within the time limit, choose the first available move
         if (result == null) {
             System.out.println("Time expired before a move was found!");
-            List<Move> legalMoves = moveGenerator.generateMoves(board);
+            List<Move> legalMoves = moveGenerator.generateLegalMoves(board, MoveFilter.ALL);
             if (!legalMoves.isEmpty()) bestMove = legalMoves.get(0);
             result = buildResult();
         }
@@ -281,6 +281,11 @@ public class Searcher implements Search {
 
             evaluator.makeMove(board, move);
             if (!board.makeMove(move)) continue;
+            if (moveGenerator.isCheck(board, !board.isWhiteToMove())) {
+                evaluator.unmakeMove();
+                board.unmakeMove();
+                continue;
+            }
             nodes++;
 
             boolean isCheck = moveGenerator.isCheck(board, board.isWhiteToMove());
@@ -491,6 +496,11 @@ public class Searcher implements Search {
 
             evaluator.makeMove(board, move);
             if (!board.makeMove(move)) continue;
+            if (moveGenerator.isCheck(board, !board.isWhiteToMove())) {
+                evaluator.unmakeMove();
+                board.unmakeMove();
+                continue;
+            }
             nodes++;
             eval = -quiescenceSearch(-beta, -alpha, depth + 1, ply + 1);
             evaluator.unmakeMove();

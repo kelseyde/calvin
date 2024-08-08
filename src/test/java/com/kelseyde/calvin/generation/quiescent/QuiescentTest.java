@@ -22,7 +22,7 @@ public class QuiescentTest {
         String fen = "1k1r1N1n/pppb3p/P2b4/4N3/1N6/6K1/8/8 w - - 0 1";
         Board board = FEN.toBoard(fen);
 
-        List<Move> moves = moveGenerator.generateMoves(board, MoveGeneration.MoveFilter.CAPTURES_ONLY);
+        List<Move> moves = moveGenerator.generateLegalMoves(board, MoveGeneration.MoveFilter.CAPTURES_ONLY);
         List<Move> expected = List.of(
                 Notation.fromNotation("a6", "b7"),
                 Notation.fromNotation("f8", "d7"),
@@ -30,7 +30,7 @@ public class QuiescentTest {
         );
         assertMoves(expected, moves);
 
-        moves = moveGenerator.generateMoves(board, MoveGeneration.MoveFilter.NOISY);
+        moves = moveGenerator.generateLegalMoves(board, MoveGeneration.MoveFilter.NOISY);
         expected = List.of(
                 Notation.fromNotation("a6", "b7"),
                 Notation.fromNotation("f8", "d7"),
@@ -80,7 +80,7 @@ public class QuiescentTest {
         );
         assertMoves(expected, moves);
 
-        moves = moveGenerator.generateMoves(board, MoveGeneration.MoveFilter.NOISY);
+        moves = moveGenerator.generateLegalMoves(board, MoveGeneration.MoveFilter.NOISY);
         expected = List.of(
                 Notation.fromNotation("h2", "g4"),
                 Notation.fromNotation("c6", "d6"),

@@ -11,6 +11,7 @@ import com.kelseyde.calvin.engine.EngineConfig;
 import com.kelseyde.calvin.engine.EngineInitializer;
 import com.kelseyde.calvin.evaluation.Evaluation;
 import com.kelseyde.calvin.evaluation.NNUE;
+import com.kelseyde.calvin.generation.MoveGeneration;
 import com.kelseyde.calvin.generation.MoveGenerator;
 import com.kelseyde.calvin.opening.OpeningBook;
 import com.kelseyde.calvin.search.ParallelSearcher;
@@ -83,7 +84,7 @@ public class TestUtils {
 
     public static Move getLegalMove(Board board, String startSquare, String endSquare) {
         Move move = Notation.fromNotation(startSquare, endSquare);
-        List<Move> legalMoves = MOVE_GENERATOR.generateMoves(board);
+        List<Move> legalMoves = MOVE_GENERATOR.generateLegalMoves(board, MoveGeneration.MoveFilter.ALL);
         Optional<Move> legalMove = legalMoves.stream()
                 .filter(m -> m.matches(move))
                 .findAny();
@@ -94,7 +95,7 @@ public class TestUtils {
     }
 
     public static Move getLegalMove(Board board, Move move) {
-        List<Move> legalMoves = MOVE_GENERATOR.generateMoves(board);
+        List<Move> legalMoves = MOVE_GENERATOR.generateLegalMoves(board, MoveGeneration.MoveFilter.ALL);
         Optional<Move> legalMove = legalMoves.stream()
                 .filter(m -> m.matches(move))
                 .findAny();

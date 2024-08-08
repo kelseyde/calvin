@@ -18,11 +18,25 @@ public class PerftService {
         totalNodeCount++;
         List<Move> moves = moveGenerator.generateMoves(board);
         if (depth == 1) {
-            return moves.size();
+            int count = 0;
+            for (Move move : moves) {
+                board.makeMove(move);
+                if (moveGenerator.isCheck(board, !board.isWhiteToMove())) {
+                    board.unmakeMove();
+                    continue;
+                }
+                count++;
+                board.unmakeMove();
+            }
+            return count;
         }
         long totalMoveCount = 0;
         for (Move move : moves) {
             board.makeMove(move);
+            if (moveGenerator.isCheck(board, !board.isWhiteToMove())) {
+                board.unmakeMove();
+                continue;
+            }
             totalMoveCount += perft(board, depth - 1);
             board.unmakeMove();
         }
