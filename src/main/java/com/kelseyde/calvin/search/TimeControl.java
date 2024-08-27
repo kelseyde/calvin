@@ -20,6 +20,11 @@ public record TimeControl(Duration softLimit, Duration hardLimit) {
 
     static final double SOFT_TIME_FACTOR = 0.6666;
     static final double HARD_TIME_FACTOR = 2.0;
+
+    // Values stolen from Simbelyne, will later be SPSA tuned:
+    // https://github.com/sroelants/simbelmyne/blob/main/simbelmyne/src/time_control.rs
+    static final int NODE_FRAC_BASE = 152;
+    static final int NODE_FRAC_MULTIPLIER = 174;
     static final double[] BEST_MOVE_STABILITY_FACTOR = new double[] { 2.50, 1.20, 0.90, 0.80, 0.75 };
 
     public static TimeControl init(Board board, int timeWhiteMs, int timeBlackMs, int incWhiteMs, int incBlackMs) {
@@ -41,20 +46,24 @@ public record TimeControl(Duration softLimit, Duration hardLimit) {
         return expired.compareTo(hardLimit) > 0;
     }
 
-    public boolean isSoftLimitReached(Instant start, int bestMoveStability) {
+    public boolean isSoftLimitReached(Instant start, double bestMoveNodeFraction, int bestMoveStability) {
         Duration expired = Duration.between(start, Instant.now());
-        Duration adjustedSoftLimit = adjustSoftLimit(softLimit, bestMoveStability);
+        Duration adjustedSoftLimit = adjustSoftLimit(softLimit, bestMoveNodeFraction, bestMoveStability);
         return expired.compareTo(adjustedSoftLimit) > 0;
     }
 
-    private Duration adjustSoftLimit(Duration softLimit, int bestMoveStability) {
+    private Duration adjustSoftLimit(Duration softLimit, double bestMoveNodeFraction, int bestMoveStability) {
+
+        // Scale the soft limit based on the percentage of total nodes spent searching the best move. If we spent a
+        // high percentage of time searching the best move, we can assume we don't need as much time to search further.
+        double nodeFactor = (NODE_FRAC_BASE / 100.0 * bestMoveNodeFraction) * NODE_FRAC_MULTIPLIER / 100.0;
 
         // Scale the soft limit based on the stability of the best move. If the best move has remained stable for several
         // iterations, we can safely assume that we don't need to spend as much time searching further.
         bestMoveStability = Math.min(bestMoveStability, BEST_MOVE_STABILITY_FACTOR.length - 1);
         double bmStabilityFactor = BEST_MOVE_STABILITY_FACTOR[bestMoveStability];
 
-        return Duration.ofMillis((long) (softLimit.toMillis() * bmStabilityFactor));
+        return Duration.ofMillis((long) (softLimit.toMillis() * nodeFactor * bmStabilityFactor));
     }
 
 }

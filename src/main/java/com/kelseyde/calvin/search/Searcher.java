@@ -23,7 +23,9 @@ import lombok.experimental.FieldDefaults;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Classical alpha-beta search with iterative deepening. This is the main search algorithm used by the engine.
@@ -66,6 +68,8 @@ public class Searcher implements Search {
     Move bestMove;
     Move bestMoveCurrentDepth;
     int bestMoveStability;
+    int[][] nodesPerMove;
+    double bestMoveNodeFraction;
     int bestEval;
     int bestEvalCurrentDepth;
     SearchResult result;
@@ -101,6 +105,7 @@ public class Searcher implements Search {
         bestMove = null;
         bestMoveCurrentDepth = null;
         bestMoveStability = 0;
+        nodesPerMove = new int[64][64];
         bestEval = 0;
         bestEvalCurrentDepth = 0;
         cancelled = false;
@@ -300,8 +305,11 @@ public class Searcher implements Search {
                 continue;
             }
 
+            int nodesBefore = nodes;
+
             evaluator.makeMove(board, move);
             if (!board.makeMove(move)) continue;
+
             nodes++;
 
             boolean isCheck = moveGenerator.isCheck(board, board.isWhiteToMove());
@@ -374,6 +382,9 @@ public class Searcher implements Search {
 
             evaluator.unmakeMove();
             board.unmakeMove();
+            if (rootNode) {
+                addNodes(move, nodes - nodesBefore);
+            }
 
             if (isHardTimeoutReached()) {
                 return alpha;
@@ -577,7 +588,10 @@ public class Searcher implements Search {
     }
 
     private boolean isSoftTimeoutReached() {
-        return !config.isPondering() && tc.isSoftLimitReached(start, bestMoveStability);
+        if (currentDepth == 1) return false;
+        int bestMoveNodes = bestMove != null ? getNodes(bestMove) : nodes;
+        bestMoveNodeFraction = (double) bestMoveNodes / nodes;
+        return !config.isPondering() && tc.isSoftLimitReached(start, bestMoveNodeFraction, bestMoveStability);
     }
 
     private boolean isDraw() {
@@ -608,6 +622,18 @@ public class Searcher implements Search {
             }
         }
         return lastEval < staticEval;
+    }
+
+    private void addNodes(Move move, int nodes) {
+        int from = move.getStartSquare();
+        int to = move.getEndSquare();
+        nodesPerMove[from][to] += nodes;
+    }
+
+    private int getNodes(Move move) {
+        int from = move.getStartSquare();
+        int to = move.getEndSquare();
+        return nodesPerMove[from][to];
     }
 
     @Override
