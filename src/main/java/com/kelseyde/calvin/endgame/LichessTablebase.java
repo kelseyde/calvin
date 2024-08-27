@@ -69,13 +69,13 @@ public class LichessTablebase implements Tablebase {
     /**
      * Checks if the tablebase can be probed within the given timeout.
      *
-     * @param timeoutMs the timeout in milliseconds.
+     * @param timeout the timeout in milliseconds.
      * @return true if the tablebase can be probed, false otherwise.
      */
     @Override
-    public boolean canProbeTablebase(long timeoutMs) {
+    public boolean canProbeTablebase(Duration timeout) {
         int overheadMs = 50;
-        if (timeoutMs - overheadMs <= config.getLichessTablebaseTimeoutMs()) {
+        if (timeout.toMillis() - overheadMs <= config.getLichessTablebaseTimeoutMs()) {
             return false;
         }
         boolean canProbe = lastLimitReached == null || Instant.now().isAfter(lastLimitReached.plus(API_REQUEST_LIMIT_COOLDOWN));

@@ -95,7 +95,7 @@ public class NNUE implements Evaluation {
             var clippedVector = featuresVector.min(ceil).max(floor);
             var resultVector = clippedVector.mul(weightsVector);
 
-            sum = Math.addExact(sum,resultVector.reduceLanes(VectorOperators.ADD));
+            sum += resultVector.reduceLanes(VectorOperators.ADD);
         }
 
         return sum;

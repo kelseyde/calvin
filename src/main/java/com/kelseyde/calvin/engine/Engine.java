@@ -8,6 +8,7 @@ import com.kelseyde.calvin.generation.MoveGeneration;
 import com.kelseyde.calvin.opening.OpeningBook;
 import com.kelseyde.calvin.search.Search;
 import com.kelseyde.calvin.search.SearchResult;
+import com.kelseyde.calvin.search.TimeControl;
 import com.kelseyde.calvin.transposition.HashEntry;
 import com.kelseyde.calvin.transposition.TranspositionTable;
 import com.kelseyde.calvin.utils.FEN;
@@ -94,14 +95,14 @@ public class Engine {
         this.config.setPondering(pondering);
     }
 
-    public void findBestMove(int thinkTimeMs, Consumer<SearchResult> onThinkComplete) {
+    public void findBestMove(TimeControl tc, Consumer<SearchResult> onThinkComplete) {
 
         if (useOpeningBook()) {
             // If we are in the opening and book is enabled, select a move from the opening book
             Move bookMove = book.getBookMove(board);
             onThinkComplete.accept(new SearchResult(0, move(bookMove), 0, 0, 0, 0));
         }
-        else if (useEndgameTablebase(thinkTimeMs)) {
+        else if (useEndgameTablebase(tc)) {
             // If we are in the endgame and tablebase is enabled, select a move from the tablebase probe
             try {
                 Move tablebaseMove = tablebase.getTablebaseMove(board);
@@ -109,28 +110,32 @@ public class Engine {
             } catch (TablebaseException e) {
                 // In case tablebase probe fails, search manually
                 System.out.println("error probing tablebase: " + e.getMessage());
-                startThinking(thinkTimeMs, onThinkComplete);
+                startThinking(tc, onThinkComplete);
             }
         }
         else {
             // Otherwise, search for the best move.
-            startThinking(thinkTimeMs, onThinkComplete);
+            startThinking(tc, onThinkComplete);
         }
 
     }
 
-    public SearchResult think(int thinkTimeMs) {
-        Duration thinkTime = Duration.ofMillis(thinkTimeMs);
-        return searcher.search(thinkTime);
+    public SearchResult think(int timeout) {
+        TimeControl tc = new TimeControl(Duration.ofMillis(timeout), Duration.ofMillis(timeout));
+        return searcher.search(tc);
+    }
+
+    public SearchResult think(TimeControl tc) {
+        return searcher.search(tc);
     }
 
     public boolean isThinking() {
         return think != null && !think.isDone();
     }
 
-    public void startThinking(int thinkTimeMs, Consumer<SearchResult> onThinkComplete) {
+    public void startThinking(TimeControl tc, Consumer<SearchResult> onThinkComplete) {
         stopThinking();
-        think = CompletableFuture.supplyAsync(() -> think(thinkTimeMs));
+        think = CompletableFuture.supplyAsync(() -> think(tc));
         think.thenAccept(onThinkComplete);
     }
 
@@ -138,21 +143,6 @@ public class Engine {
         if (isThinking()) {
             think.cancel(true);
         }
-    }
-
-    public int chooseThinkTime(int timeWhiteMs, int timeBlackMs, int incrementWhiteMs, int incrementBlackMs) {
-
-        boolean white = board.isWhiteToMove();
-        int timeRemainingMs = white ? timeWhiteMs : timeBlackMs;
-        int incrementMs = white ? incrementWhiteMs : incrementBlackMs;
-
-        int overhead = 50;
-        timeRemainingMs -= overhead;
-        double optimalThinkTime = Math.min(timeRemainingMs * 0.5, timeRemainingMs * 0.03333 + incrementMs);
-        double minThinkTime = Math.min(50, (int) (timeRemainingMs * 0.25));
-        double thinkTime = Math.max(optimalThinkTime, minThinkTime);
-        return (int) thinkTime;
-
     }
 
     public void gameOver() {
@@ -193,11 +183,11 @@ public class Engine {
         return config.isOwnBookEnabled() && moveCount < config.getMaxBookMoves() && book.hasBookMove(key);
     }
 
-    private boolean useEndgameTablebase(int thinkTimeMs) {
+    private boolean useEndgameTablebase(TimeControl tc) {
         return !config.isPondering()
                 && config.isOwnTablebaseEnabled()
                 && board.countPieces() <= config.getMaxTablebaseSupportedPieces()
-                && tablebase.canProbeTablebase(thinkTimeMs);
+                && tablebase.canProbeTablebase(tc.hardLimit());
     }
 
     /**

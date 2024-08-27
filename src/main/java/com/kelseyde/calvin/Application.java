@@ -7,6 +7,7 @@ import com.kelseyde.calvin.engine.EngineInitializer;
 import com.kelseyde.calvin.evaluation.NNUE;
 import com.kelseyde.calvin.evaluation.Score;
 import com.kelseyde.calvin.search.SearchResult;
+import com.kelseyde.calvin.search.TimeControl;
 import com.kelseyde.calvin.utils.FEN;
 import com.kelseyde.calvin.utils.Notation;
 import com.kelseyde.calvin.utils.train.TrainingDataScorer;
@@ -15,6 +16,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -171,21 +173,23 @@ public class Application {
             return;
         }
 
-        int thinkTime;
+        TimeControl tc;
         if (command.contains("movetime")) {
-            thinkTime = getLabelInt(command, "movetime", GO_LABELS);
+            Duration thinkTime = Duration.ofMillis(getLabelInt(command, "movetime", GO_LABELS));
+            tc = new TimeControl(thinkTime, thinkTime);
         }
         else if (command.contains("wtime")) {
             int timeWhiteMs = getLabelInt(command, "wtime", GO_LABELS);
             int timeBlackMs = getLabelInt(command, "btime", GO_LABELS);
             int incrementWhiteMs = getLabelInt(command, "winc", GO_LABELS);
             int incrementBlackMs = getLabelInt(command, "binc", GO_LABELS);
-            thinkTime = ENGINE.chooseThinkTime(timeWhiteMs, timeBlackMs, incrementWhiteMs, incrementBlackMs);
+            tc = TimeControl.init(ENGINE.getBoard(), timeWhiteMs, timeBlackMs, incrementWhiteMs, incrementBlackMs);
         }
         else {
-            thinkTime = Integer.MAX_VALUE;
+            Duration thinkTime = Duration.ofMillis(Integer.MAX_VALUE);
+            tc = new TimeControl(thinkTime, thinkTime);
         }
-        ENGINE.findBestMove(thinkTime, Application::writeMove);
+        ENGINE.findBestMove(tc, Application::writeMove);
     }
 
     private static void handleEval() {
@@ -272,7 +276,7 @@ public class Application {
 
     private static String formatScore(int eval) {
         if (Score.isMateScore(eval)) {
-            int moves = Math.max((Score.MATE_SCORE - Math.abs(eval)) / 2, 1);
+            int moves = Math.max((Score.MATE - Math.abs(eval)) / 2, 1);
             if (eval < 0) moves = -moves;
             return "mate " + moves;
         } else {

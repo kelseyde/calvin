@@ -29,7 +29,7 @@
   "aspFailMargin":150,
   "nmpDepth":0,
   "fpDepth":6,
-  "rfpDepth":4,
+  "rfpDepth":5,
   "lmrDepth":3,
   "lmrMinSearchedMoves":3,
   "lmrBase":0.85,
@@ -40,6 +40,6 @@
   "nmpMargin":70,
   "dpMargin":140,
   "fpMargin": [ 0, 120, 200, 375, 425, 500, 550 ],
-  "rfpMargin":[ 0, 120, 240, 360, 480 ]
+  "rfpMargin":[ 0, 120, 240, 360, 480, 480 ]
 
 }

@@ -9,7 +9,6 @@ import com.kelseyde.calvin.transposition.TranspositionTable;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -74,16 +73,16 @@ public class ParallelSearcher implements Search {
      * Searches for the best move within the given duration. Does so by starting a new thread for each searcher and
      * waiting for all threads to finish. The best result is then selected from the results of the individual searchers.
      *
-     * @param duration the maximum duration to search
+     * @param timeControl the maximum duration to search
      * @return the best search result found
      */
     @Override
-    public SearchResult search(Duration duration) {
+    public SearchResult search(TimeControl timeControl) {
         try {
             setPosition(board);
             threadManager.reset();
             List<CompletableFuture<SearchResult>> threads = searchers.stream()
-                    .map(searcher -> initThread(searcher, duration))
+                    .map(searcher -> initThread(searcher, timeControl))
                     .toList();
 
             SearchResult result = selectResult(threads).get();
@@ -137,10 +136,10 @@ public class ParallelSearcher implements Search {
         this.searchers = initSearchers();
     }
 
-    private CompletableFuture<SearchResult> initThread(Searcher searcher, Duration duration) {
+    private CompletableFuture<SearchResult> initThread(Searcher searcher, TimeControl tc) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                return searcher.search(duration);
+                return searcher.search(tc);
             } catch (Exception e) {
                 System.out.printf("info error %s, %s %s%n", e.getMessage(), e.getCause(), Arrays.toString(e.getStackTrace()));
                 return SearchResult.empty();

@@ -9,11 +9,13 @@ import java.util.Iterator;
 
 public class Score {
 
-    public static final int MATE_SCORE = 1000000;
-    public static final int DRAW_SCORE = 0;
+    public static final int MAX = 32767;
+    public static final int MIN = -MAX;
+    public static final int MATE = 32766;
+    public static final int DRAW = 0;
 
     public static boolean isMateScore(int eval) {
-        return Math.abs(eval) >= Score.MATE_SCORE - 100;
+        return Math.abs(eval) >= Score.MATE - 100;
     }
 
     /**

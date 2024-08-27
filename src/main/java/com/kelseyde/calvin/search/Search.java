@@ -3,8 +3,6 @@ package com.kelseyde.calvin.search;
 import com.kelseyde.calvin.board.Board;
 import com.kelseyde.calvin.transposition.TranspositionTable;
 
-import java.time.Duration;
-
 /**
  * Search for the best move/evaluation (encapsulated in a {@link SearchResult}) within a give time limit.
  * See {@link Searcher} for a concrete implementation, using an iterative deepening approach.
@@ -33,10 +31,10 @@ public interface Search {
 
     /**
      * Search the current position for the best move.
-     * @param duration How long to search for
+     * @param timeControl How long to search for
      * @return a {@link SearchResult} containing the best move and the current eval.
      */
-    SearchResult search(Duration duration);
+    SearchResult search(TimeControl timeControl);
 
     /**
      * @return the {@link TranspositionTable} used by the search algorithm.
