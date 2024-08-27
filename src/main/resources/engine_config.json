@@ -8,7 +8,7 @@
   "defaultPawnHashSizeMb":16,
   "defaultHashSizeMb":512,
 
-  "ownBookEnabled":true,
+  "ownBookEnabled":false,
   "ownBookFile": "/opening_book.txt",
   "maxBookMoves":26,
 

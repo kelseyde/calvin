@@ -185,7 +185,7 @@ public class Searcher implements Search {
     public int search(int depth, int ply, int alpha, int beta, boolean allowNull) {
 
         // If timeout is reached, exit immediately
-        if (isHardTimeoutReached()) return beta;
+        if (ply > 0 && isHardTimeoutReached()) return 0;
 
         // If depth is reached, drop into quiescence search
         if (depth <= 0) return quiescenceSearch(alpha, beta, 1, ply);
@@ -252,7 +252,7 @@ public class Searcher implements Search {
             if (depth <= config.getRfpDepth()
                 && staticEval - config.getRfpMargin()[depth] > beta
                 && !isMateHunting) {
-                return beta;
+                return staticEval;
             }
 
             // Null Move Pruning - https://www.chessprogramming.org/Null_Move_Pruning
@@ -268,7 +268,7 @@ public class Searcher implements Search {
                 board.unmakeNullMove();
                 if (eval >= beta) {
                     transpositionTable.put(getKey(), HashFlag.LOWER, depth, ply, previousBestMove, staticEval, beta);
-                    return beta;
+                    return eval;
                 }
             }
         }
@@ -376,39 +376,31 @@ public class Searcher implements Search {
             evaluator.unmakeMove();
             board.unmakeMove();
 
-            if (isHardTimeoutReached()) {
-                return bestScore;
-            }
-
-            if (eval > bestScore) {
-
-                bestMove = move;
+            if (eval > bestScore)
                 bestScore = eval;
 
-                if (eval > alpha) {
+            if (eval > alpha) {
 
-                    if (eval >= beta) {
-                        // This is a beta cut-off - the opponent won't let us get here as they already have better alternatives
-                        flag = HashFlag.LOWER;
-                        if (!isCapture) {
-                            // Non-captures which cause a beta cut-off are stored as 'killer' and 'history' moves for future move ordering
-                            moveOrderer.addKillerMove(ply, move);
-                            moveOrderer.incrementHistoryScore(depth, move, board.isWhiteToMove());
-                        }
-                        break;
-                    }
-
-                    alpha = eval;
-                    flag = HashFlag.EXACT;
-                    if (rootNode) {
-                        bestMoveCurrentDepth = move;
-                        bestEvalCurrentDepth = eval;
-                    }
+                alpha = eval;
+                bestMove = move;
+                flag = HashFlag.EXACT;
+                if (rootNode) {
+                    bestMoveCurrentDepth = move;
+                    bestEvalCurrentDepth = eval;
                 }
-
 
             }
 
+            if (eval >= beta) {
+                // This is a beta cut-off - the opponent won't let us get here as they already have better alternatives
+                flag = HashFlag.LOWER;
+                if (!isCapture) {
+                    // Non-captures which cause a beta cut-off are stored as 'killer' and 'history' moves for future move ordering
+                    moveOrderer.addKillerMove(ply, move);
+                    moveOrderer.incrementHistoryScore(depth, move, board.isWhiteToMove());
+                }
+                break;
+            }
 
         }
 
@@ -439,7 +431,7 @@ public class Searcher implements Search {
      */
     int quiescenceSearch(int alpha, int beta, int depth, int ply) {
         if (isHardTimeoutReached()) {
-            return beta;
+            return 0;
         }
 
         QuiescentMovePicker movePicker = new QuiescentMovePicker(moveGenerator, moveOrderer, board);
@@ -460,8 +452,6 @@ public class Searcher implements Search {
         if (!isInCheck) {
             eval = transposition != null ? transposition.getStaticEval() : evaluator.evaluate();
         }
-        int standPat = eval;
-        int bestScore = eval;
 
         if (isInCheck) {
             // If we are in check, we need to generate 'all' legal moves that evade check, not just captures. Otherwise,
@@ -480,6 +470,8 @@ public class Searcher implements Search {
             movePicker.setFilter(filter);
         }
 
+        int standPat = eval;
+        int bestScore = eval;
         int movesSearched = 0;
 
         while (true) {
@@ -514,20 +506,15 @@ public class Searcher implements Search {
             evaluator.unmakeMove();
             board.unmakeMove();
 
-            if (eval > bestScore) {
-
+            if (eval > bestScore)
                 bestScore = eval;
 
-                if (eval > alpha) {
+            if (eval > alpha)
+                alpha = eval;
 
-                    if (eval >= beta) {
-                        break;
-                    }
+            if (eval >= beta)
+                break;
 
-                    alpha = eval;
-                }
-
-            }
         }
 
         if (movesSearched == 0 && isInCheck) {
@@ -590,11 +577,11 @@ public class Searcher implements Search {
         if (config.isSearchCancelled()) return true;
         // Exit if local search is cancelled
         if (cancelled) return true;
-        return !config.isPondering() && tc.isHardLimitReached(start);
+        return !config.isPondering() && tc != null && tc.isHardLimitReached(start);
     }
 
     private boolean isSoftTimeoutReached() {
-        return !config.isPondering() && tc.isSoftLimitReached(start, bestMoveStability);
+        return !config.isPondering() && tc != null && tc.isSoftLimitReached(start, bestMoveStability);
     }
 
     private boolean isDraw() {
