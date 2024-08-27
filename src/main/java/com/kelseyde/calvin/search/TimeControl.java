@@ -46,13 +46,13 @@ public record TimeControl(Duration softLimit, Duration hardLimit) {
         return expired.compareTo(hardLimit) > 0;
     }
 
-    public boolean isSoftLimitReached(Instant start, double bestMoveNodeFraction, int bestMoveStability) {
+    public boolean isSoftLimitReached(Instant start, int depth, double bestMoveNodeFraction, int bestMoveStability) {
         Duration expired = Duration.between(start, Instant.now());
-        Duration adjustedSoftLimit = adjustSoftLimit(softLimit, bestMoveNodeFraction, bestMoveStability);
+        Duration adjustedSoftLimit = adjustSoftLimit(softLimit, depth, bestMoveNodeFraction, bestMoveStability);
         return expired.compareTo(adjustedSoftLimit) > 0;
     }
 
-    private Duration adjustSoftLimit(Duration softLimit, double bestMoveNodeFraction, int bestMoveStability) {
+    private Duration adjustSoftLimit(Duration softLimit, int depth, double bestMoveNodeFraction, int bestMoveStability) {
 
         // Scale the soft limit based on the percentage of total nodes spent searching the best move. If we spent a
         // high percentage of time searching the best move, we can assume we don't need as much time to search further.
@@ -63,7 +63,12 @@ public record TimeControl(Duration softLimit, Duration hardLimit) {
         bestMoveStability = Math.min(bestMoveStability, BEST_MOVE_STABILITY_FACTOR.length - 1);
         double bmStabilityFactor = BEST_MOVE_STABILITY_FACTOR[bestMoveStability];
 
-        return Duration.ofMillis((long) (softLimit.toMillis() * nodeFactor * bmStabilityFactor));
+        double adjustedLimit = softLimit.toMillis() * bmStabilityFactor;
+        if (depth > 7) {
+            adjustedLimit *= nodeFactor;
+        }
+
+        return Duration.ofMillis((long) adjustedLimit);
     }
 
 }

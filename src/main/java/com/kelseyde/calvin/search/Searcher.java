@@ -591,7 +591,7 @@ public class Searcher implements Search {
         if (currentDepth == 1) return false;
         int bestMoveNodes = bestMove != null ? getNodes(bestMove) : nodes;
         bestMoveNodeFraction = (double) bestMoveNodes / nodes;
-        return !config.isPondering() && tc.isSoftLimitReached(start, bestMoveNodeFraction, bestMoveStability);
+        return !config.isPondering() && tc.isSoftLimitReached(start, currentDepth, bestMoveNodeFraction, bestMoveStability);
     }
 
     private boolean isDraw() {
