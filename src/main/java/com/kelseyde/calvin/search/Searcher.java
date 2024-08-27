@@ -433,12 +433,13 @@ public class Searcher implements Search {
         if (isHardTimeoutReached()) {
             return alpha;
         }
+        boolean pvNode = beta - alpha > 1;
 
         QuiescentMovePicker movePicker = new QuiescentMovePicker(moveGenerator, moveOrderer, board);
 
         // Exit the quiescence search early if we already have an accurate score stored in the hash table.
         HashEntry transposition = transpositionTable.get(getKey(), ply);
-        if (isUsefulTransposition(transposition, 1, alpha, beta)) {
+        if (!pvNode && isUsefulTransposition(transposition, 1, alpha, beta)) {
             return transposition.getScore();
         }
         if (hasBestMove(transposition)) {
