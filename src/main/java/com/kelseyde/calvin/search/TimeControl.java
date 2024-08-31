@@ -76,26 +76,24 @@ public record TimeControl(Duration softLimit, Duration hardLimit, int maxNodes, 
 
     private Duration adjustSoftLimit(Duration softLimit, int depth, double bestMoveNodeFraction, int bestMoveStability, int evalStability) {
 
-        // Scale the soft limit based on the percentage of total nodes spent searching the best move. If we spent a
-        // high percentage of time searching the best move, we can assume we don't need as much time to search further.
-        double nodeFactor = (NODE_FRAC_BASE / 100.0 * bestMoveNodeFraction) * NODE_FRAC_MULTIPLIER / 100.0;
-
         // Scale the soft limit based on the stability of the best move. If the best move has remained stable for several
         // iterations, we can safely assume that we don't need to spend as much time searching further.
         bestMoveStability = Math.min(bestMoveStability, BEST_MOVE_STABILITY_FACTOR.length - 1);
         double bmStabilityFactor = BEST_MOVE_STABILITY_FACTOR[bestMoveStability];
 
-        // Scale the soft limit based on the stability of the evaluation. If the evaluation has remained stable for several
-        // iterations, we can safely assume that we don't need to spend as much time searching further.
-        evalStability = Math.min(evalStability, EVAL_STABILITY_FACTOR.length - 1);
-        double evalStabilityFactor = EVAL_STABILITY_FACTOR[evalStability];
-
         double adjustedLimit = softLimit.toMillis() * bmStabilityFactor;
         if (depth >= EVAL_STABILITY_MIN_DEPTH) {
+            // Scale the soft limit based on the stability of the evaluation. If the evaluation has remained stable for several
+            // iterations, we can safely assume that we don't need to spend as much time searching further.
+            evalStability = Math.min(evalStability, EVAL_STABILITY_FACTOR.length - 1);
+            double evalStabilityFactor = EVAL_STABILITY_FACTOR[evalStability];
             adjustedLimit *= evalStabilityFactor;
         }
 
         if (depth >= BEST_MOVE_NODE_FRAC_MIN_DEPTH) {
+            // Scale the soft limit based on the percentage of total nodes spent searching the best move. If we spent a
+            // high percentage of time searching the best move, we can assume we don't need as much time to search further.
+            double nodeFactor = (NODE_FRAC_BASE / 100.0 * bestMoveNodeFraction) * NODE_FRAC_MULTIPLIER / 100.0;
             adjustedLimit *= nodeFactor;
         }
 

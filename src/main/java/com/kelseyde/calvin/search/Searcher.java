@@ -22,9 +22,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Classical alpha-beta search with iterative deepening. This is the main search algorithm used by the engine.
@@ -592,7 +590,7 @@ public class Searcher implements Search {
         if (currentDepth == 1) return false;
         int bestMoveNodes = bestMove != null ? getNodes(bestMove) : nodes;
         bestMoveNodeFraction = (double) bestMoveNodes / nodes;
-        return !config.isPondering() && tc != null && tc.isSoftLimitReached(start, currentDepth, bestMoveStability, evalStability);
+        return !config.isPondering() && tc != null && tc.isSoftLimitReached(start, currentDepth, bestMoveNodeFraction, bestMoveStability, evalStability);
     }
 
     private boolean isDraw() {
