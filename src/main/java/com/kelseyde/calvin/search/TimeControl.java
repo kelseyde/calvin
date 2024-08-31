@@ -94,6 +94,7 @@ public record TimeControl(Duration softLimit, Duration hardLimit, int maxNodes, 
             // Scale the soft limit based on the percentage of total nodes spent searching the best move. If we spent a
             // high percentage of time searching the best move, we can assume we don't need as much time to search further.
             double nodeFactor = (NODE_FRAC_BASE / 100.0 * bestMoveNodeFraction) * NODE_FRAC_MULTIPLIER / 100.0;
+            System.out.println("Node factor: " + nodeFactor);
             adjustedLimit *= nodeFactor;
         }
 

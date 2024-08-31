@@ -64,8 +64,7 @@ public class Searcher implements Search {
     Move bestMove;
     Move bestMoveCurrentDepth;
     int bestMoveStability;
-    int[][] nodesPerMove;
-    double bestMoveNodeFraction;
+    int[][] nodesPerMove = new int[64][64];
     int bestEval;
     int bestEvalCurrentDepth;
     int previousEval;
@@ -589,7 +588,8 @@ public class Searcher implements Search {
     private boolean shouldStopSoft() {
         if (currentDepth == 1) return false;
         int bestMoveNodes = bestMove != null ? getNodes(bestMove) : nodes;
-        bestMoveNodeFraction = (double) bestMoveNodes / nodes;
+        double bestMoveNodeFraction = (double) bestMoveNodes / nodes;
+        System.out.printf("Best move nodes: %d, total nodes: %d, fraction: %.2f\n", bestMoveNodes, nodes, bestMoveNodeFraction);
         return !config.isPondering() && tc != null && tc.isSoftLimitReached(start, currentDepth, bestMoveNodeFraction, bestMoveStability, evalStability);
     }
 

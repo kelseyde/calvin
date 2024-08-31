@@ -1,13 +1,13 @@
 {
   "minThreadCount":1,
   "maxThreadCount":12,
-  "defaultThreadCount":9,
+  "defaultThreadCount":1,
 
   "minHashSizeMb":16,
   "maxHashSizeMb":1024,
   "defaultHashSizeMb":512,
 
-  "ownBookEnabled":true,
+  "ownBookEnabled":false,
   "ownBookFile": "/opening_book.txt",
   "ownBookMaxMoves":26,
 
