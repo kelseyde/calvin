@@ -41,7 +41,7 @@ public class Notation {
      * Generate a {@link Move} from combined algebraic notation (e.g. "e2e4"), as used in the UCI protocol.
      * Special case promotion: "a2a1q" - values 'q' | 'b' | 'r' | 'n'
      */
-    public static Move fromCombinedNotation(String notation) {
+    public static Move fromUCI(String notation) {
         int startSquare = fromNotation(notation.substring(0, 2));
         int endSquare = fromNotation(notation.substring(2, 4));
 

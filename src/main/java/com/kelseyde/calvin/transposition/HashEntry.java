@@ -23,6 +23,8 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class HashEntry {
 
+    public static final int SIZE_BYTES = 32;
+
     private static final long ZOBRIST_PART_MASK = 0x00000000ffffffffL;
     private static final long GENERATION_MASK = 0x0000ffff00000000L;
     private static final long STATIC_EVAL_MASK = 0xffff000000000000L;

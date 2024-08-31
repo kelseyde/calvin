@@ -1,6 +1,7 @@
 package com.kelseyde.calvin.search;
 
 import com.kelseyde.calvin.board.Board;
+import com.kelseyde.calvin.board.Move;
 import com.kelseyde.calvin.engine.EngineConfig;
 import com.kelseyde.calvin.evaluation.Evaluation;
 import com.kelseyde.calvin.generation.MoveGeneration;
@@ -107,11 +108,6 @@ public class ParallelSearcher implements Search {
         searchers.forEach(searcher -> searcher.setPosition(board.copy()));
     }
 
-    @Override
-    public void setNodeLimit(int nodeLimit) {
-        searchers.forEach(searcher -> searcher.setNodeLimit(nodeLimit));
-    }
-
     /**
      * Sets the size of the {@link TranspositionTable}. This is done by creating a new transposition table with the
      * given size and setting it for all searchers.
@@ -156,7 +152,12 @@ public class ParallelSearcher implements Search {
     private CompletableFuture<SearchResult> selectResult(List<CompletableFuture<SearchResult>> threads) {
         CompletableFuture<SearchResult> collector = CompletableFuture.completedFuture(new SearchResult(0, null, 0, 0, 0, 0));
         for (CompletableFuture<SearchResult> thread : threads) {
-            collector = collector.thenCombine(thread, (thread1, thread2) -> thread1.depth() > thread2.depth() ? thread1 : thread2);
+            collector = collector.thenCombine(thread, (thread1, thread2) -> {
+                SearchResult best = thread1.depth() > thread2.depth() ? thread1 : thread2;
+                int bestEval = best.eval();
+                Move bestMove = best.move();
+                return new SearchResult(bestEval, bestMove, best.depth(), best.time(), thread1.nodes() + thread2.nodes(), best.nps());
+            });
         }
         return collector;
     }

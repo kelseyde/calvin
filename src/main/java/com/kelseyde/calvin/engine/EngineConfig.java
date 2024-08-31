@@ -19,11 +19,10 @@ public class EngineConfig {
     int minHashSizeMb;
     int maxHashSizeMb;
     int defaultHashSizeMb;
-    int defaultPawnHashSizeMb;
 
     boolean ownBookEnabled;
     String ownBookFile;
-    int maxBookMoves;
+    int ownBookMaxMoves;
 
     boolean ownTablebaseEnabled;
     int maxTablebaseSupportedPieces;

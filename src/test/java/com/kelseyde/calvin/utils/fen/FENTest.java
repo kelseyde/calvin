@@ -19,7 +19,7 @@ public class FENTest {
     @Test
     public void testStartingPosition() {
 
-        Board fenBoard = FEN.toBoard(FEN.STARTING_POSITION);
+        Board fenBoard = FEN.toBoard(FEN.STARTPOS);
         Board newBoard = new Board();
         Assertions.assertEquals(newBoard.getPawns(true), fenBoard.getPawns(true));
         Assertions.assertEquals(newBoard.getKnights(true), fenBoard.getKnights(true));

@@ -15,11 +15,6 @@ public interface Search {
     void setPosition(Board board);
 
     /**
-     * Set the maximum number of nodes that should be searched.
-     */
-    void setNodeLimit(int nodeLimit);
-
-    /**
      * Set the size of the {@link TranspositionTable}.
      */
     void setHashSize(int hashSizeMb);

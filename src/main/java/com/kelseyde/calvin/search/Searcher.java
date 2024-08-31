@@ -18,7 +18,6 @@ import com.kelseyde.calvin.transposition.HashFlag;
 import com.kelseyde.calvin.transposition.TranspositionTable;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
 import java.time.Duration;
@@ -61,7 +60,6 @@ public class Searcher implements Search {
     boolean cancelled;
 
     int currentDepth;
-    @Setter int nodeLimit = -1;
     final int maxDepth = 256;
     int[] evalHistory = new int[maxDepth];
 
@@ -72,6 +70,9 @@ public class Searcher implements Search {
     double bestMoveNodeFraction;
     int bestEval;
     int bestEvalCurrentDepth;
+    int previousEval;
+    int evalStability;
+
     SearchResult result;
 
     public Searcher(EngineConfig config,
@@ -118,7 +119,7 @@ public class Searcher implements Search {
         int aspFailMargin = config.getAspFailMargin();
         SearchResult result = null;
 
-        while (!isSoftTimeoutReached() && currentDepth < maxDepth) {
+        while (!shouldStopSoft() && currentDepth < maxDepth) {
             // Reset variables for the current depth iteration
             bestMoveCurrentDepth = null;
             bestEvalCurrentDepth = 0;
@@ -135,8 +136,11 @@ public class Searcher implements Search {
                 threadManager.handleSearchResult(result);
             }
 
+            // Update the eval stability if the eval is stable
+            evalStability = eval >= previousEval - 10 && eval <= previousEval + 10 ? evalStability + 1 : 0;
+
             // Check if search is cancelled or a checkmate is found
-            if (isHardTimeoutReached() || foundMate(currentDepth) || nodeLimitReached()) {
+            if (shouldStop() || foundMate(currentDepth)) {
                 break;
             }
 
@@ -159,6 +163,7 @@ public class Searcher implements Search {
 
             // Increment depth and retry multiplier for next iteration
             retryMultiplier = 0;
+            previousEval = eval;
             currentDepth++;
         }
 
@@ -190,7 +195,7 @@ public class Searcher implements Search {
     public int search(int depth, int ply, int alpha, int beta, boolean allowNull) {
 
         // If timeout is reached, exit immediately
-        if (isHardTimeoutReached()) return alpha;
+        if (shouldStop()) return alpha;
 
         // If depth is reached, drop into quiescence search
         if (depth <= 0) return quiescenceSearch(alpha, beta, 1, ply);
@@ -224,7 +229,7 @@ public class Searcher implements Search {
         if (hasBestMove(transposition)) {
             previousBestMove = transposition.getMove();
         }
-        movePicker.setBestMove(previousBestMove);
+        movePicker.setTtMove(previousBestMove);
 
         boolean isInCheck = moveGenerator.isCheck(board, board.isWhiteToMove());
 
@@ -386,7 +391,7 @@ public class Searcher implements Search {
                 addNodes(move, nodes - nodesBefore);
             }
 
-            if (isHardTimeoutReached()) {
+            if (shouldStop()) {
                 return alpha;
             }
 
@@ -441,7 +446,7 @@ public class Searcher implements Search {
      * @see <a href="https://www.chessprogramming.org/Quiescence_Search">Chess Programming Wiki</a>
      */
     int quiescenceSearch(int alpha, int beta, int depth, int ply) {
-        if (isHardTimeoutReached()) {
+        if (shouldStop()) {
             return alpha;
         }
 
@@ -453,7 +458,7 @@ public class Searcher implements Search {
             return transposition.getScore();
         }
         if (hasBestMove(transposition)) {
-            movePicker.setBestMove(transposition.getMove());
+            movePicker.setTtMove(transposition.getMove());
         }
 
         boolean isInCheck = moveGenerator.isCheck(board, board.isWhiteToMove());
@@ -569,29 +574,25 @@ public class Searcher implements Search {
         return Math.abs(bestEval) >= Score.MATE - currentDepth;
     }
 
-    private boolean nodeLimitReached() {
-        return nodeLimit > 0 && nodes >= nodeLimit;
-    }
-
     private SearchResult buildResult() {
         long millis = start != null ? Duration.between(start, Instant.now()).toMillis() : 0;
         long nps = nodes > 0 && millis > 0 ? ((nodes / millis) * 1000) : 0;
         return new SearchResult(bestEvalCurrentDepth, bestMoveCurrentDepth, currentDepth, millis, nodes, nps);
     }
 
-    private boolean isHardTimeoutReached() {
+    private boolean shouldStop() {
         // Exit if global search is cancelled
         if (config.isSearchCancelled()) return true;
         // Exit if local search is cancelled
         if (cancelled) return true;
-        return !config.isPondering() && tc.isHardLimitReached(start);
+        return !config.isPondering() && tc != null && tc.isHardLimitReached(start, currentDepth, nodes);
     }
 
-    private boolean isSoftTimeoutReached() {
+    private boolean shouldStopSoft() {
         if (currentDepth == 1) return false;
         int bestMoveNodes = bestMove != null ? getNodes(bestMove) : nodes;
         bestMoveNodeFraction = (double) bestMoveNodes / nodes;
-        return !config.isPondering() && tc.isSoftLimitReached(start, currentDepth, bestMoveNodeFraction, bestMoveStability);
+        return !config.isPondering() && tc != null && tc.isSoftLimitReached(start, currentDepth, bestMoveStability, evalStability);
     }
 
     private boolean isDraw() {

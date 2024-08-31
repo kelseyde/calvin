@@ -70,7 +70,7 @@ public class OpeningBook {
 
     private BookMove parseBookMove(String moveEntry) {
         String[] moveData = moveEntry.split(" ");
-        Move move = Notation.fromCombinedNotation(moveData[0]);
+        Move move = Notation.fromUCI(moveData[0]);
         int frequency = Integer.parseInt(moveData[1]);
         return new BookMove(move, frequency);
     }

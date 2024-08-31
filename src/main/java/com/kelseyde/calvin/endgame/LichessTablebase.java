@@ -151,7 +151,7 @@ public class LichessTablebase implements Tablebase {
         }
         LichessTablebaseMove bestMove = tablebaseEntry.moves().get(0);
         String uci = bestMove.uci();
-        return Notation.fromCombinedNotation(uci);
+        return Notation.fromUCI(uci);
     }
 
 }

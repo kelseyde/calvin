@@ -20,7 +20,7 @@ import java.util.List;
 public class QuiescentMovePicker implements MovePicking {
 
     public enum Stage {
-        BEST_MOVE,
+        TT_MOVE,
         NOISY,
         END
     }
@@ -33,11 +33,10 @@ public class QuiescentMovePicker implements MovePicking {
     MoveFilter filter;
     Stage stage;
 
-    List<Move> moves;
     @Setter
-    Move bestMove;
+    Move ttMove;
+    ScoredMove[] moves;
     int moveIndex;
-    int[] scores;
 
     /**
      * Constructs a MovePicker with the specified move generator, move orderer, board, and ply.
@@ -50,7 +49,7 @@ public class QuiescentMovePicker implements MovePicking {
         this.moveGenerator = moveGenerator;
         this.moveOrderer = moveOrderer;
         this.board = board;
-        this.stage = Stage.BEST_MOVE;
+        this.stage = Stage.TT_MOVE;
     }
 
     /**
@@ -64,7 +63,7 @@ public class QuiescentMovePicker implements MovePicking {
         Move nextMove = null;
         while (nextMove == null) {
             nextMove = switch (stage) {
-                case BEST_MOVE -> pickBestMove();
+                case TT_MOVE -> pickTTMove();
                 case NOISY -> pickMove();
                 case END -> null;
             };
@@ -77,9 +76,9 @@ public class QuiescentMovePicker implements MovePicking {
     /**
      * Select the best move from the transposition table and advance to the next stage.
      */
-    private Move pickBestMove() {
+    private Move pickTTMove() {
         stage = Stage.NOISY;
-        return bestMove;
+        return ttMove;
     }
 
     /**
@@ -88,19 +87,18 @@ public class QuiescentMovePicker implements MovePicking {
     private Move pickMove() {
 
         if (moves == null) {
-            moves = moveGenerator.generateMoves(board, filter);
+            List<Move> stagedMoves = moveGenerator.generateMoves(board, filter);
+            scoreMoves(stagedMoves);
             moveIndex = 0;
-            scoreMoves();
         }
-        if (moveIndex >= moves.size()) {
+        if (moveIndex >= moves.length) {
             moves = null;
             stage = Stage.END;
             return null;
         }
-        sortMoves();
-        Move move = moves.get(moveIndex);
+        Move move = pick();
         moveIndex++;
-        if (move.equals(bestMove)) {
+        if (move.equals(ttMove)) {
             // Skip to the next move
             return pickMove();
         }
@@ -111,29 +109,29 @@ public class QuiescentMovePicker implements MovePicking {
     /**
      * Moves are scored using the {@link MoveOrderer} MVV-LVA routine.
      */
-    public void scoreMoves() {
-        scores = new int[moves.size()];
-        for (int i = 0; i < moves.size(); i++) {
-            scores[i] = moveOrderer.mvvLva(board, moves.get(i), bestMove);
+    public void scoreMoves(List<Move> stagedMoves) {
+        moves = new ScoredMove[stagedMoves.size()];
+        for (int i = 0; i < stagedMoves.size(); i++) {
+            moves[i] = new ScoredMove(stagedMoves.get(i), moveOrderer.mvvLva(board, stagedMoves.get(i), ttMove));
         }
     }
 
     /**
      * Select the move with the highest score and move it to the head of the move list.
      */
-    public void sortMoves() {
-        for (int j = moveIndex + 1; j < moves.size(); j++) {
-            int firstScore = scores[moveIndex];
-            int secondScore = scores[j];
-            if (scores[j] > scores[moveIndex]) {
-                Move firstMove = moves.get(moveIndex);
-                Move secondMove = moves.get(j);
-                scores[moveIndex] = secondScore;
-                scores[j] = firstScore;
-                moves.set(moveIndex, secondMove);
-                moves.set(j, firstMove);
+    public Move pick() {
+        for (int j = moveIndex + 1; j < moves.length; j++) {
+            if (moves[j].score() > moves[moveIndex].score()) {
+                swap(moveIndex, j);
             }
         }
+        return moves[moveIndex].move();
+    }
+
+    private void swap(int i, int j) {
+        ScoredMove temp = moves[i];
+        moves[i] = moves[j];
+        moves[j] = temp;
     }
 
 }

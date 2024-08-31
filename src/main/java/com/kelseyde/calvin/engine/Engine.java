@@ -11,6 +11,7 @@ import com.kelseyde.calvin.search.SearchResult;
 import com.kelseyde.calvin.search.TimeControl;
 import com.kelseyde.calvin.transposition.HashEntry;
 import com.kelseyde.calvin.transposition.TranspositionTable;
+import com.kelseyde.calvin.uci.UCICommand.PositionCommand;
 import com.kelseyde.calvin.utils.FEN;
 import com.kelseyde.calvin.utils.Notation;
 import lombok.AccessLevel;
@@ -53,9 +54,9 @@ public class Engine {
         searcher.clearHistory();
     }
 
-    public void setPosition(String fen, List<Move> moves) {
-        board = FEN.toBoard(fen);
-        for (Move move : moves) {
+    public void setPosition(PositionCommand command) {
+        board = FEN.toBoard(command.fen());
+        for (Move move : command.moves()) {
             Move legalMove = move(move);
             board.makeMove(legalMove);
         }
@@ -121,7 +122,7 @@ public class Engine {
     }
 
     public SearchResult think(int timeout) {
-        TimeControl tc = new TimeControl(Duration.ofMillis(timeout), Duration.ofMillis(timeout));
+        TimeControl tc = new TimeControl(Duration.ofMillis(timeout), Duration.ofMillis(timeout), -1, -1);
         return searcher.search(tc);
     }
 
@@ -180,7 +181,7 @@ public class Engine {
     private boolean useOpeningBook() {
         long key = board.getGameState().getZobrist();
         int moveCount = board.getMoveHistory().size();
-        return config.isOwnBookEnabled() && moveCount < config.getMaxBookMoves() && book.hasBookMove(key);
+        return config.isOwnBookEnabled() && moveCount < config.getOwnBookMaxMoves() && book.hasBookMove(key);
     }
 
     private boolean useEndgameTablebase(TimeControl tc) {

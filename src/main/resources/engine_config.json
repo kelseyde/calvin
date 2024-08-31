@@ -5,12 +5,11 @@
 
   "minHashSizeMb":16,
   "maxHashSizeMb":1024,
-  "defaultPawnHashSizeMb":16,
   "defaultHashSizeMb":512,
 
   "ownBookEnabled":true,
   "ownBookFile": "/opening_book.txt",
-  "maxBookMoves":26,
+  "ownBookMaxMoves":26,
 
   "ownTablebaseEnabled":true,
   "maxTablebaseSupportedPieces":7,

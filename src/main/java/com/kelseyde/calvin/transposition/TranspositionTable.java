@@ -1,6 +1,7 @@
 package com.kelseyde.calvin.transposition;
 
 import com.kelseyde.calvin.board.Move;
+import com.kelseyde.calvin.evaluation.Score;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 
@@ -21,9 +22,6 @@ import java.util.Objects;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class TranspositionTable {
 
-    static final int ENTRY_SIZE_BYTES = 32;
-    static final int CHECKMATE_BOUND = 1000000 - 256;
-
     final int tableSize;
     HashEntry[] entries;
 
@@ -35,7 +33,7 @@ public class TranspositionTable {
      * Constructs a transposition table of the given size in megabytes.
      */
     public TranspositionTable(int tableSizeMb) {
-        this.tableSize = (tableSizeMb * 1024 * 1024) / ENTRY_SIZE_BYTES;
+        this.tableSize = (tableSizeMb * 1024 * 1024) / HashEntry.SIZE_BYTES;
         entries = new HashEntry[tableSize];
         tries = 0;
         hits = 0;
@@ -57,7 +55,7 @@ public class TranspositionTable {
             if (entry != null && entry.getZobristPart() == zobristPart) {
                 hits++;
                 entry.setGeneration(generation);
-                if (isMateScore(entry.getScore())) {
+                if (Score.isMateScore(entry.getScore())) {
                     int score = retrieveMateScore(entry.getScore(), ply);
                     return entry.withAdjustedScore(score);
                 }
@@ -92,14 +90,8 @@ public class TranspositionTable {
         // Get the start index of the 4-item bucket.
         int startIndex = getIndex(zobristKey);
 
-        // Get the 48 bits of the zobrist used to verify the signature of the bucket entry
-        long zobristPart = HashEntry.zobristPart(zobristKey);
-
         // If the eval is checkmate, adjust the score to reflect the number of ply from the root position
-        if (isMateScore(score)) score = calculateMateScore(score, ply);
-
-        // Construct the new entry to store in the hash table.
-        HashEntry newEntry = HashEntry.of(zobristKey, score, staticEval, move, flag, depth, generation);
+        if (Score.isMateScore(score)) score = calculateMateScore(score, ply);
 
         int replacedIndex = -1;
         int minDepth = Integer.MAX_VALUE;
@@ -117,11 +109,11 @@ public class TranspositionTable {
 
             // Then, if the stored entry matches the zobrist key and the depth is >= the stored depth, replace it.
             // If the depth is < the store depth, don't replace it and exit (although this should never happen).
-            if (storedEntry.getZobristPart() == zobristPart) {
+            if (storedEntry.getZobristPart() == HashEntry.zobristPart(zobristKey)) {
                 if (depth >= storedEntry.getDepth()) {
                     // If the stored entry has a recorded best move but the new entry does not, use the stored one.
-                    if (newEntry.getMove() == null && storedEntry.getMove() != null) {
-                        newEntry.setMove(storedEntry.getMove());
+                    if (move == null && storedEntry.getMove() != null) {
+                        move = storedEntry.getMove();
                     }
                     replacedIndex = i;
                     break;
@@ -131,7 +123,7 @@ public class TranspositionTable {
             }
 
             // Next, prefer to replace entries from earlier on in the game, since they are now less likely to be relevant.
-            if (newEntry.getGeneration() > storedEntry.getGeneration()) {
+            if (generation > storedEntry.getGeneration()) {
                 replacedByAge = true;
                 replacedIndex = i;
             }
@@ -146,7 +138,7 @@ public class TranspositionTable {
 
         // Store the new entry in the table at the chosen index.
         if (replacedIndex != -1) {
-            entries[replacedIndex] = newEntry;
+            entries[replacedIndex] = HashEntry.of(zobristKey, score, staticEval, move, flag, depth, generation);;
         }
     }
 
@@ -180,16 +172,6 @@ public class TranspositionTable {
         // Modulo the result with the number of entries in the table, and align it with a multiple of 4,
         // ensuring the entries are always divided into 4-sized buckets.
         return (int) (index % (tableSize - 3)) & ~3;
-    }
-
-    /**
-     * Checks if the given score is a mate score.
-     *
-     * @param score the score to check.
-     * @return {@code true} if the score is a mate score, {@code false} otherwise.
-     */
-    private boolean isMateScore(int score) {
-        return Math.abs(score) >= CHECKMATE_BOUND;
     }
 
     /**

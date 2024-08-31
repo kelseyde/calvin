@@ -401,14 +401,14 @@ public class BoardTest {
     public void testUnmakeCastling() {
 
         Board board = new Board();
-        board.makeMove(Notation.fromCombinedNotation("e2e4"));
-        board.makeMove(Notation.fromCombinedNotation("d7d5"));
-        board.makeMove(Notation.fromCombinedNotation("g1f3"));
-        board.makeMove(Notation.fromCombinedNotation("b8c6"));
-        board.makeMove(Notation.fromCombinedNotation("f1b5"));
-        board.makeMove(Notation.fromCombinedNotation("c8g4"));
+        board.makeMove(Notation.fromUCI("e2e4"));
+        board.makeMove(Notation.fromUCI("d7d5"));
+        board.makeMove(Notation.fromUCI("g1f3"));
+        board.makeMove(Notation.fromUCI("b8c6"));
+        board.makeMove(Notation.fromUCI("f1b5"));
+        board.makeMove(Notation.fromUCI("c8g4"));
         board.makeMove(Notation.fromNotation("e1", "g1", Move.CASTLE_FLAG));
-        board.makeMove(Notation.fromCombinedNotation("d8d7"));
+        board.makeMove(Notation.fromUCI("d8d7"));
         board.makeMove(Notation.fromNotation("f1", "e1"));
         board.makeMove(Notation.fromNotation("e8","c8",Move.CASTLE_FLAG));
 
