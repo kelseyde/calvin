@@ -598,7 +598,7 @@ public class Searcher implements Search {
 
     private boolean shouldStopSoft() {
         if (currentDepth == 1) return false;
-        int bestMoveNodes = bestMoveRoot != null ? getNodes(bestMove) : nodes;
+        int bestMoveNodes = bestMoveRoot != null ? getNodes(bestMoveRoot) : nodes;
         double bestMoveNodeFraction = (double) bestMoveNodes / nodes;
         return !config.isPondering()
                 && tc != null

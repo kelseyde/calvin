@@ -22,7 +22,7 @@ public record TimeControl(Duration softLimit, Duration hardLimit, int maxNodes, 
     static final double SOFT_TIME_FACTOR = 0.6666;
     static final double HARD_TIME_FACTOR = 2.0;
 
-    // Values stolen from Simbelyne, will later be SPSA tuned:
+    // Values yoinked from Simbelyne, will later be SPSA tuned:
     // https://github.com/sroelants/simbelmyne/blob/main/simbelmyne/src/time_control.rs
     static final int NODE_FRAC_BASE = 152;
     static final int NODE_FRAC_MULTIPLIER = 174;
@@ -93,8 +93,7 @@ public record TimeControl(Duration softLimit, Duration hardLimit, int maxNodes, 
         if (depth >= BEST_MOVE_NODE_FRAC_MIN_DEPTH) {
             // Scale the soft limit based on the percentage of total nodes spent searching the best move. If we spent a
             // high percentage of time searching the best move, we can assume we don't need as much time to search further.
-            double nodeFactor = (NODE_FRAC_BASE / 100.0 * bestMoveNodeFraction) * NODE_FRAC_MULTIPLIER / 100.0;
-            System.out.println("Node factor: " + nodeFactor);
+            double nodeFactor = (NODE_FRAC_BASE / 100.0 - bestMoveNodeFraction) * NODE_FRAC_MULTIPLIER / 100.0;
             adjustedLimit *= nodeFactor;
         }
 
