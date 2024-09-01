@@ -62,6 +62,8 @@ public interface MoveOrdering {
      */
     void incrementHistoryScore(int depth, Move historyMove, boolean white);
 
+    void decrementHistoryScore(int depth, Move historyMove, boolean white);
+
     void ageHistoryScores(boolean white);
 
     /**
