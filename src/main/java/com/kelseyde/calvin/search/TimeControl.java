@@ -24,8 +24,8 @@ public record TimeControl(Duration softLimit, Duration hardLimit, int maxNodes, 
 
     // Values yoinked from Simbelyne, will later be SPSA tuned:
     // https://github.com/sroelants/simbelmyne/blob/main/simbelmyne/src/time_control.rs
-    static final int NODE_FRAC_BASE = 152;
-    static final int NODE_FRAC_MULTIPLIER = 174;
+    static final int NODE_FRAC_BASE = 150;
+    static final int NODE_FRAC_MULTIPLIER = 135;
     static final double[] BEST_MOVE_STABILITY_FACTOR = new double[] { 2.50, 1.20, 0.90, 0.80, 0.75 };
     static final double[] EVAL_STABILITY_FACTOR = new double[] { 1.25, 1.15, 1.00, 0.94, 0.88 };
     static final int EVAL_STABILITY_MIN_DEPTH = 7;
@@ -90,13 +90,15 @@ public record TimeControl(Duration softLimit, Duration hardLimit, int maxNodes, 
             adjustedLimit *= evalStabilityFactor;
         }
 
-        if (depth >= BEST_MOVE_NODE_FRAC_MIN_DEPTH) {
+        //if (depth >= BEST_MOVE_NODE_FRAC_MIN_DEPTH) {
             // Scale the soft limit based on the percentage of total nodes spent searching the best move. If we spent a
             // high percentage of time searching the best move, we can assume we don't need as much time to search further.
             double nodeFactor = (NODE_FRAC_BASE / 100.0 - bestMoveNodeFraction) * NODE_FRAC_MULTIPLIER / 100.0;
+            //const auto moveNodeScale = (1.5 - bestMoveFraction) * 1.35;
             adjustedLimit *= nodeFactor;
-        }
+        //}
 
+        adjustedLimit = Math.max(adjustedLimit, hardLimit.toMillis());
         return Duration.ofMillis((long) adjustedLimit);
     }
 
