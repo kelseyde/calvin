@@ -9,20 +9,20 @@ public class MoveTest {
     public void testStartSquareAndEndSquare() {
 
         Move move = new Move(2, 4);
-        Assertions.assertEquals(2, move.getStartSquare());
-        Assertions.assertEquals(4, move.getEndSquare());
+        Assertions.assertEquals(2, move.getFrom());
+        Assertions.assertEquals(4, move.getTo());
 
         move = new Move(63, 1);
-        Assertions.assertEquals(63, move.getStartSquare());
-        Assertions.assertEquals(1, move.getEndSquare());
+        Assertions.assertEquals(63, move.getFrom());
+        Assertions.assertEquals(1, move.getTo());
 
         move = new Move(0, 17);
-        Assertions.assertEquals(0, move.getStartSquare());
-        Assertions.assertEquals(17, move.getEndSquare());
+        Assertions.assertEquals(0, move.getFrom());
+        Assertions.assertEquals(17, move.getTo());
 
         move = new Move(24, 47);
-        Assertions.assertEquals(24, move.getStartSquare());
-        Assertions.assertEquals(47, move.getEndSquare());
+        Assertions.assertEquals(24, move.getFrom());
+        Assertions.assertEquals(47, move.getTo());
 
     }
 

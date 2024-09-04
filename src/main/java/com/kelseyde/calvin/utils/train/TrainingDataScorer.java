@@ -13,7 +13,7 @@ import com.kelseyde.calvin.search.ThreadManager;
 import com.kelseyde.calvin.search.TimeControl;
 import com.kelseyde.calvin.search.moveordering.MoveOrderer;
 import com.kelseyde.calvin.search.moveordering.MoveOrdering;
-import com.kelseyde.calvin.transposition.TranspositionTable;
+import com.kelseyde.calvin.tables.tt.TranspositionTable;
 import com.kelseyde.calvin.uci.UCI;
 import com.kelseyde.calvin.uci.UCICommand.ScoreDataCommand;
 import com.kelseyde.calvin.utils.FEN;

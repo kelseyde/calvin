@@ -60,7 +60,7 @@ public class Notation {
         if (move == null) {
             return "-";
         }
-        String notation = toNotation(move.getStartSquare()) + toNotation(move.getEndSquare());
+        String notation = toNotation(move.getFrom()) + toNotation(move.getTo());
         if (move.getPromotionPiece() != null) {
             notation += PIECE_CODE_INDEX.get(move.getPromotionPiece());
         }

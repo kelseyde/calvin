@@ -50,8 +50,8 @@ public class Board {
      */
     public boolean makeMove(Move move) {
 
-        int startSquare = move.getStartSquare();
-        int endSquare = move.getEndSquare();
+        int startSquare = move.getFrom();
+        int endSquare = move.getTo();
         Piece piece = pieceList[startSquare];
         if (piece == null) return false;
         Piece capturedPiece = move.isEnPassant() ? Piece.PAWN : pieceList[endSquare];
@@ -78,8 +78,8 @@ public class Board {
 
         whiteToMove = !whiteToMove;
         Move move = moveHistory.pop();
-        int startSquare = move.getStartSquare();
-        int endSquare = move.getEndSquare();
+        int startSquare = move.getFrom();
+        int endSquare = move.getTo();
         Piece piece = pieceAt(endSquare);
 
         if (move.isCastling())        unmakeCastlingMove(startSquare, endSquare);

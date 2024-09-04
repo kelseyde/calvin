@@ -1,13 +1,15 @@
 package com.kelseyde.calvin.search;
 
 import com.kelseyde.calvin.board.Board;
-import com.kelseyde.calvin.transposition.TranspositionTable;
+import com.kelseyde.calvin.tables.tt.TranspositionTable;
 
 /**
  * Search for the best move/evaluation (encapsulated in a {@link SearchResult}) within a give time limit.
  * See {@link Searcher} for a concrete implementation, using an iterative deepening approach.
  */
 public interface Search {
+
+    static int MAX_DEPTH = 256;
 
     /**
      * Set the position of the {@link Board}.

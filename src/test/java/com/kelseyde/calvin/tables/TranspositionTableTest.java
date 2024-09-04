@@ -1,8 +1,11 @@
-package com.kelseyde.calvin.transposition;
+package com.kelseyde.calvin.tables;
 
 import com.kelseyde.calvin.board.Board;
 import com.kelseyde.calvin.board.Move;
 import com.kelseyde.calvin.board.Piece;
+import com.kelseyde.calvin.tables.tt.HashEntry;
+import com.kelseyde.calvin.tables.tt.HashFlag;
+import com.kelseyde.calvin.tables.tt.TranspositionTable;
 import com.kelseyde.calvin.utils.FEN;
 import com.kelseyde.calvin.utils.Notation;
 import com.kelseyde.calvin.utils.TestUtils;

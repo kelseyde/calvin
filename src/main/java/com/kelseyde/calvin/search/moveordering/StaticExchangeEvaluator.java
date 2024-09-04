@@ -24,7 +24,7 @@ public class StaticExchangeEvaluator {
     public int evaluate(Board board, Move move) {
 
         int score = 0;
-        int square = move.getEndSquare();
+        int square = move.getTo();
         Piece capturedPiece = move.isEnPassant() ? Piece.PAWN : board.pieceAt(square);
         score += capturedPiece != null ? capturedPiece.getValue() : 0;
 
@@ -48,7 +48,7 @@ public class StaticExchangeEvaluator {
     public int evaluateAfterMove(Board board, Move move) {
 
         int score = 0;
-        int square = move.getEndSquare();
+        int square = move.getTo();
         Piece capturedPiece = board.getGameState().getCapturedPiece();
         score += capturedPiece != null ? capturedPiece.getValue() : 0;
 

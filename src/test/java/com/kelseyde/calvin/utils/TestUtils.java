@@ -19,7 +19,7 @@ import com.kelseyde.calvin.search.Searcher;
 import com.kelseyde.calvin.search.ThreadManager;
 import com.kelseyde.calvin.search.moveordering.MoveOrderer;
 import com.kelseyde.calvin.search.moveordering.MoveOrdering;
-import com.kelseyde.calvin.transposition.TranspositionTable;
+import com.kelseyde.calvin.tables.tt.TranspositionTable;
 
 import java.io.IOException;
 import java.nio.file.Files;

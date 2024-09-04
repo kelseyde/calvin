@@ -131,8 +131,8 @@ public class NNUE implements Evaluation {
     public void makeMove(Board board, Move move) {
         accumulatorHistory.push(accumulator.copy());
         boolean white = board.isWhiteToMove();
-        int startSquare = move.getStartSquare();
-        int endSquare = move.getEndSquare();
+        int startSquare = move.getFrom();
+        int endSquare = move.getTo();
         Piece piece = board.pieceAt(startSquare);
         if (piece == null) return;
         Piece newPiece = move.isPromotion() ? move.getPromotionPiece() : piece;
@@ -165,8 +165,8 @@ public class NNUE implements Evaluation {
     }
 
     private void handleCapture(Move move, Piece capturedPiece, boolean white, int newWhiteIdx, int newBlackIdx, int oldWhiteIdx, int oldBlackIdx) {
-        int captureSquare = move.getEndSquare();
-        if (move.isEnPassant()) captureSquare = white ? move.getEndSquare() - 8 : move.getEndSquare() + 8;
+        int captureSquare = move.getTo();
+        if (move.isEnPassant()) captureSquare = white ? move.getTo() - 8 : move.getTo() + 8;
         int capturedWhiteIdx = featureIndex(capturedPiece, captureSquare, !white, true);
         int capturedBlackIdx = featureIndex(capturedPiece, captureSquare, !white, false);
         accumulator.addSubSub(newWhiteIdx, newBlackIdx, oldWhiteIdx, oldBlackIdx, capturedWhiteIdx, capturedBlackIdx);

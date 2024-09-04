@@ -1,4 +1,4 @@
-package com.kelseyde.calvin.transposition;
+package com.kelseyde.calvin.tables.tt;
 
 import com.kelseyde.calvin.board.Move;
 import lombok.AllArgsConstructor;

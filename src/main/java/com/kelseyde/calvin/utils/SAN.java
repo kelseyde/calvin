@@ -14,11 +14,11 @@ public class SAN {
      * Note: the move must not yet have been made on the board
      */
     public static String fromMove(Move move, Board board) {
-        Piece pieceType = board.pieceAt(move.getStartSquare());
-        Piece capturedPieceType = board.pieceAt(move.getEndSquare());
+        Piece pieceType = board.pieceAt(move.getFrom());
+        Piece capturedPieceType = board.pieceAt(move.getTo());
 
         if (move.isCastling()) {
-            int delta = move.getEndSquare() - move.getStartSquare();
+            int delta = move.getTo() - move.getFrom();
             return delta == 2 ? "O-O" : "O-O-O";
         }
 
@@ -34,20 +34,20 @@ public class SAN {
 
             for (Move legalMove : legalMoves) {
 
-                if (legalMove.getStartSquare() != move.getStartSquare() && legalMove.getEndSquare() == move.getEndSquare()) {
-                    if (board.pieceAt(legalMove.getStartSquare()) == pieceType) {
-                        int fromFileIndex = Board.file(move.getStartSquare());
-                        int alternateFromFileIndex = Board.file(legalMove.getEndSquare());
-                        int fromRankIndex = Board.rank(move.getStartSquare());
-                        int alternateFromRankIndex = Board.rank(legalMove.getStartSquare());
+                if (legalMove.getFrom() != move.getFrom() && legalMove.getTo() == move.getTo()) {
+                    if (board.pieceAt(legalMove.getFrom()) == pieceType) {
+                        int fromFileIndex = Board.file(move.getFrom());
+                        int alternateFromFileIndex = Board.file(legalMove.getTo());
+                        int fromRankIndex = Board.rank(move.getFrom());
+                        int alternateFromRankIndex = Board.rank(legalMove.getFrom());
 
                         if (fromFileIndex != alternateFromFileIndex) {
-                            notation += Notation.getFileChar(move.getStartSquare());
+                            notation += Notation.getFileChar(move.getFrom());
                             break;
                         }
                         else if (fromRankIndex != alternateFromRankIndex)
                         {
-                            notation += Notation.getRankChar(move.getStartSquare());
+                            notation += Notation.getRankChar(move.getFrom());
                             break;
                         }
                     }
@@ -58,19 +58,19 @@ public class SAN {
         if (capturedPieceType != null) {
             // add 'x' to indicate capture
             if (pieceType == Piece.PAWN) {
-                notation += Notation.getFileChar(move.getStartSquare());
+                notation += Notation.getFileChar(move.getFrom());
             }
             notation += "x";
         }
         else {
             // Check if capturing en passant
             if (move.isEnPassant()) {
-                notation += Notation.getFileChar(move.getStartSquare()) + "x";
+                notation += Notation.getFileChar(move.getFrom()) + "x";
             }
         }
 
-        notation += Notation.getFileChar(move.getEndSquare());
-        notation += Notation.getRankChar(move.getEndSquare());
+        notation += Notation.getFileChar(move.getTo());
+        notation += Notation.getRankChar(move.getTo());
 
         // Add promotion piece type
         if (move.isPromotion()) {

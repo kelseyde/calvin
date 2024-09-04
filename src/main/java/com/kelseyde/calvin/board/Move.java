@@ -30,28 +30,28 @@ public record Move(int value) {
     public static final short PROMOTE_TO_BISHOP_FLAG = 0b0111;
 
     // Masks for extracting start and end squares from the value field
-    public static final int START_SQUARE_MASK = 0b0000000000111111;
-    public static final int END_SQUARE_MASK = 0b0000111111000000;
+    public static final int FROM_MASK = 0b0000000000111111;
+    public static final int TO_MASK = 0b0000111111000000;
 
     /**
      * Constructs a Move instance from the given start square and end square.
      *
-     * @param startSquare The starting square of the move (0 - 63).
-     * @param endSquare   The ending square of the move (0 - 63).
+     * @param from The starting square of the move (0 - 63).
+     * @param to   The ending square of the move (0 - 63).
      */
-    public Move(int startSquare, int endSquare) {
-        this(startSquare | endSquare << 6);
+    public Move(int from, int to) {
+        this(from | to << 6);
     }
 
     /**
      * Constructs a Move instance from the given start square, end square, and move flag.
      *
-     * @param startSquare The starting square of the move (0 - 63).
-     * @param endSquare   The ending square of the move (0 - 63).
+     * @param from The starting square of the move (0 - 63).
+     * @param to   The ending square of the move (0 - 63).
      * @param flag        The special move flag representing additional move information.
      */
-    public Move(int startSquare, int endSquare, int flag) {
-        this(startSquare | (endSquare << 6) | (flag << 12));
+    public Move(int from, int to, int flag) {
+        this(from | (to << 6) | (flag << 12));
     }
 
     /**
@@ -59,8 +59,8 @@ public record Move(int value) {
      *
      * @return The starting square of the move (0 - 63).
      */
-    public int getStartSquare() {
-        return value & START_SQUARE_MASK;
+    public int getFrom() {
+        return value & FROM_MASK;
     }
 
     /**
@@ -68,8 +68,8 @@ public record Move(int value) {
      *
      * @return The ending square of the move (0 - 63).
      */
-    public int getEndSquare() {
-        return (value & END_SQUARE_MASK) >>> 6;
+    public int getTo() {
+        return (value & TO_MASK) >>> 6;
     }
 
     /**
@@ -151,7 +151,7 @@ public record Move(int value) {
     // TODO Optional is slow, replace it
     public boolean matches(Move move) {
         if (move == null) return false;
-        boolean squareMatch = getStartSquare() == move.getStartSquare() && getEndSquare() == move.getEndSquare();
+        boolean squareMatch = getFrom() == move.getFrom() && getTo() == move.getTo();
         boolean promotionMatch = Optional.ofNullable(getPromotionPiece())
                 .map(piece -> piece.equals(move.getPromotionPiece()))
                 .orElse(true);

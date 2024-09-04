@@ -1,4 +1,4 @@
-package com.kelseyde.calvin.transposition;
+package com.kelseyde.calvin.tables.tt;
 
 public enum HashFlag {
 

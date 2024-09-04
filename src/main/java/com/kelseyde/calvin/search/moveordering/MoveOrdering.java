@@ -2,6 +2,7 @@ package com.kelseyde.calvin.search.moveordering;
 
 import com.kelseyde.calvin.board.Board;
 import com.kelseyde.calvin.board.Move;
+import com.kelseyde.calvin.search.SearchStack;
 
 import java.util.List;
 
@@ -23,7 +24,7 @@ public interface MoveOrdering {
      * @param depth            The current depth of the search.
      * @return The list of moves ordered by their estimated quality.
      */
-    List<Move> orderMoves(Board board, List<Move> moves, Move previousBestMove, int depth);
+    List<Move> orderMoves(Board board, SearchStack ss, List<Move> moves, Move previousBestMove, int depth);
 
     /**
      * Scores a single move based on heuristics to determine its likely quality.
@@ -34,7 +35,7 @@ public interface MoveOrdering {
      * @param depth            The current depth of the search.
      * @return The score representing the quality of the move.
      */
-    int scoreMove(Board board, Move move, Move previousBestMove, int depth);
+    int scoreMove(Board board, SearchStack ss, Move move, Move previousBestMove, int depth);
 
     /**
      * Scores a move using the Most Valuable Victim - Least Valuable Aggressor (MVV-LVA) heuristic.
@@ -56,13 +57,15 @@ public interface MoveOrdering {
     /**
      * Adds a move to the history heuristic table.
      *
-     * @param depth The remaining depth in the search.
      * @param historyMove The move to be added to the history table.
-     * @param white Whether the move was made by the white player.
+     * @param ss          The current search stack.
+     * @param depth       The remaining depth in the search.
+     * @param ply         The current ply in the search.
+     * @param white       Whether the move was made by the white player.
      */
-    void incrementHistoryScore(int depth, Move historyMove, boolean white);
+    void addHistoryScore(Move historyMove, SearchStack ss, int depth, int ply, boolean white);
 
-    void decrementHistoryScore(int depth, Move historyMove, boolean white);
+    void subHistoryScore(Move historyMove, SearchStack ss, int depth, int ply, boolean white);
 
     void ageHistoryScores(boolean white);
 
