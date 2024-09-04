@@ -636,14 +636,14 @@ public class Searcher implements Search {
     }
 
     private void addNodes(Move move, int nodes) {
-        int from = move.getStartSquare();
-        int to = move.getEndSquare();
+        int from = move.getFrom();
+        int to = move.getTo();
         nodesPerMove[from][to] += nodes;
     }
 
     private int getNodes(Move move) {
-        int from = move.getStartSquare();
-        int to = move.getEndSquare();
+        int from = move.getFrom();
+        int to = move.getTo();
         return nodesPerMove[from][to];
     }
 

@@ -22,10 +22,8 @@ public record TimeControl(Duration softLimit, Duration hardLimit, int maxNodes, 
     static final double SOFT_TIME_FACTOR = 0.6666;
     static final double HARD_TIME_FACTOR = 2.0;
 
-    // Values yoinked from Simbelyne, will later be SPSA tuned:
-    // https://github.com/sroelants/simbelmyne/blob/main/simbelmyne/src/time_control.rs
     static final int NODE_FRAC_BASE = 150;
-    static final int NODE_FRAC_MULTIPLIER = 135;
+    static final int NODE_FRAC_MULTIPLIER = 175;
     static final double[] BEST_MOVE_STABILITY_FACTOR = new double[] { 2.50, 1.20, 0.90, 0.80, 0.75 };
     static final double[] EVAL_STABILITY_FACTOR = new double[] { 1.25, 1.15, 1.00, 0.94, 0.88 };
     static final int EVAL_STABILITY_MIN_DEPTH = 7;
