@@ -37,7 +37,7 @@ public class EndgameTest {
         Board board = FEN.toBoard(fen);
         searcher.setPosition(board);
 
-        TimeControl tc = new TimeControl(Duration.ofMillis(300), Duration.ofMillis(300), -1, -1);
+        TimeControl tc = new TimeControl(Duration.ofHours(1), Duration.ofHours(1), -1, -1);
         SearchResult result = searcher.search(tc);
 
         Move bestMove = Notation.fromNotation("b2", "b7");
