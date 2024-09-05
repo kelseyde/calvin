@@ -1,23 +1,23 @@
 {
   "minThreadCount":1,
   "maxThreadCount":12,
-  "defaultThreadCount":9,
+  "defaultThreadCount":1,
 
   "minHashSizeMb":16,
   "maxHashSizeMb":1024,
-  "defaultHashSizeMb":512,
+  "defaultHashSizeMb":256,
 
-  "ownBookEnabled":true,
+  "ownBookEnabled":false,
   "ownBookFile": "/opening_book.txt",
   "ownBookMaxMoves":26,
 
-  "ownTablebaseEnabled":true,
+  "ownTablebaseEnabled":false,
   "maxTablebaseSupportedPieces":7,
   "lichessTablebaseBaseUrl":"http://tablebase.lichess.ovh",
   "lichessTablebaseDebugEnabled":false,
   "lichessTablebaseTimeoutMs":750,
 
-  "ponderEnabled":true,
+  "ponderEnabled":false,
   "pondering":false,
 
   "principalVariationLength":12,

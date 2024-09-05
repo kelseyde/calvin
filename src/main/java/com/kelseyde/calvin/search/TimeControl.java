@@ -54,15 +54,15 @@ public record TimeControl(Duration softLimit, Duration hardLimit, int maxNodes, 
 
     }
 
-    public boolean isHardLimitReached(Instant start, int depth, int nodes) {
-        if (maxNodes > 0 && nodes >= maxNodes) return true;
+    public boolean isHardLimitReached(Instant start, int depth) {
         if (maxDepth > 0 && depth >= maxDepth) return true;
         Duration expired = Duration.between(start, Instant.now());
         return expired.compareTo(hardLimit) > 0;
     }
 
-    public boolean isSoftLimitReached(Instant start, int depth, int bestMoveStability, int evalStability) {
+    public boolean isSoftLimitReached(Instant start, int depth, int nodes, int bestMoveStability, int evalStability) {
         if (maxDepth > 0 && depth >= maxDepth) return true;
+        if (maxNodes > 0 && nodes >= maxNodes) return true;
         Duration expired = Duration.between(start, Instant.now());
         Duration adjustedSoftLimit = adjustSoftLimit(softLimit, depth, bestMoveStability, evalStability);
         return expired.compareTo(adjustedSoftLimit) > 0;

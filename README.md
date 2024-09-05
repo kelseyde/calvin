@@ -38,7 +38,8 @@ The table below tracks the strength of previous Calvin releases, both on the CCR
 
 | 	Version	 | 	Release date | [Lichess](https://lichess.org/)	 | 	[CCRL Blitz](https://www.computerchess.org.uk/ccrl/404/)	 | [CCRL Rapid](https://www.computerchess.org.uk/ccrl/4040/)
 | 	:-----:	 | 	:-----:	 | 	:-----:	 | :-----:	 | :-----:	 |  
-| [4.0.0](https://github.com/kelseyde/calvin-chess-engine/releases/tag/4.0.0) | 2024-05-19 | ~2700 | 3011 | 3029 |
+| [4.0.0](https://github.com/kelseyde/calvin-chess-engine/releases/tag/4.1.0) | 2024-09-04 | - | - | - |
+| [4.0.0](https://github.com/kelseyde/calvin-chess-engine/releases/tag/4.0.0) | 2024-07-30 | ~2700 | 3011 | 3029 |
 | [3.4.0](https://github.com/kelseyde/calvin-chess-engine/releases/tag/3.4.0) | 2024-05-19 | ~2580 | - | 2492 |
 | [3.3.0](https://github.com/kelseyde/calvin-chess-engine/releases/tag/3.3.0) | 2024-05-10 | ~2550 | 2453 | - |
 | [3.2.0](https://github.com/kelseyde/calvin-chess-engine/releases/tag/3.2.0) | 2023-12-09 | ~2400 | 2233 | - |
@@ -95,5 +96,5 @@ If you would like to contribute, or just talk about chess/chess programming, get
 [release-badge]: https://img.shields.io/github/v/release/kelseyde/calvin-chess-engine?style=for-the-badge&color=ed5858
 [release-link]: https://github.com/kelseyde/calvin-chess-engine/releases/latest
 
-[lichess-badge]: https://img.shields.io/badge/Play-v4.0.2-ffd25c?logo=lichess&style=for-the-badge
+[lichess-badge]: https://img.shields.io/badge/Play-v4.1.0-ffd25c?logo=lichess&style=for-the-badge
 [lichess-link]: https://lichess.org/@/Calvin_Bot
