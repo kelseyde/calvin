@@ -192,7 +192,7 @@ public class Searcher implements Search {
     public int search(int depth, int ply, int alpha, int beta, boolean allowNull) {
 
         // If timeout is reached, exit immediately
-        if (shouldStop()) return alpha;
+        if (ply > 0 && shouldStop()) return 0;
 
         // If depth is reached, drop into quiescence search
         if (depth <= 0) return quiescenceSearch(alpha, beta, 1, ply);
@@ -280,7 +280,7 @@ public class Searcher implements Search {
         }
 
         Move bestMove = null;
-        int bestScore = alpha;
+        int bestScore = Score.MIN;
         HashFlag flag = HashFlag.UPPER;
         int movesSearched = 0;
         List<Move> quietsSearched = null;
@@ -387,46 +387,35 @@ public class Searcher implements Search {
             evaluator.unmakeMove();
             board.unmakeMove();
 
-            if (isQuiet && quietsSearched == null) {
-                quietsSearched = new ArrayList<>();
-            }
-
-            if (shouldStop()) {
-                return alpha;
+            if (isQuiet ) {
+                if (quietsSearched == null)
+                    quietsSearched = new ArrayList<>();
+                quietsSearched.add(move);
             }
 
             if (score > bestScore) {
                 bestScore = score;
             }
 
-            if (score >= beta) {
-
-                flag = HashFlag.LOWER;
-                bestMove = move;
-                if (isQuiet) {
-                    // Quiet moves which cause a beta cut-off are stored as 'killer' and 'history' moves for future move ordering
-                    moveOrderer.addKillerMove(ply, move);
-                    moveOrderer.addHistoryScore(move, ss, depth, ply, board.isWhiteToMove());
-                    for (Move quiet : quietsSearched) {
-                        moveOrderer.subHistoryScore(quiet, ss, depth, ply, board.isWhiteToMove());
-                    }
-                }
-
-               break;
-            }
-
-            if (isQuiet) quietsSearched.add(move);
-
             if (score > alpha) {
-
-                alpha = score;
                 bestMove = move;
+                alpha = score;
                 flag = HashFlag.EXACT;
-                if (rootNode) {
-                    bestMoveCurrentDepth = move;
-                    bestScoreCurrentDepth = score;
+                if (score >= beta) {
+                    flag = HashFlag.LOWER;
+                    break;
                 }
             }
+
+        }
+
+        if (rootNode) {
+            bestMoveCurrentDepth = bestMove;
+            bestScoreCurrentDepth = bestScore;
+        }
+
+        if (bestMove != null && quietsSearched != null) {
+            updateHistory(depth, ply, bestMove, quietsSearched);
         }
 
         if (movesSearched == 0) {
@@ -447,9 +436,8 @@ public class Searcher implements Search {
      * @see <a href="https://www.chessprogramming.org/Quiescence_Search">Chess Programming Wiki</a>
      */
     int quiescenceSearch(int alpha, int beta, int depth, int ply) {
-        if (shouldStop()) {
-            return alpha;
-        }
+
+        if (shouldStop()) return 0;
 
         QuiescentMovePicker movePicker = new QuiescentMovePicker(moveGenerator, moveOrderer, board);
 
@@ -573,6 +561,16 @@ public class Searcher implements Search {
 
     private boolean hasBestMove(HashEntry transposition) {
         return transposition != null && transposition.getMove() != null;
+    }
+
+    private void updateHistory(int depth, int ply, Move move, List<Move> quietsSearched) {
+        // Quiet moves which cause a beta cut-off are stored as 'killer' and 'history' moves for future move ordering
+        moveOrderer.addKillerMove(ply, move);
+        moveOrderer.addHistoryScore(move, ss, depth, ply, board.isWhiteToMove());
+        for (Move quiet : quietsSearched) {
+            if (quiet.equals(move)) continue;
+            moveOrderer.subHistoryScore(quiet, ss, depth, ply, board.isWhiteToMove());
+        }
     }
 
     private boolean foundMate(int currentDepth) {
