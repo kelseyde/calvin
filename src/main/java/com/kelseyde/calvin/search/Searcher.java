@@ -280,6 +280,7 @@ public class Searcher implements Search {
         }
 
         Move bestMove = null;
+        int bestScore = alpha;
         HashFlag flag = HashFlag.UPPER;
         int movesSearched = 0;
         List<Move> quietsSearched = null;
@@ -287,10 +288,6 @@ public class Searcher implements Search {
         while (true) {
 
             Move move = movePicker.pickNextMove();
-//            if (rootNode) {
-//                System.out.println("Move " + Notation.toNotation(move) + " Best move: " + (bestMove != null ? Notation.toNotation(bestMove):""));
-//            }
-            String notation = move != null ? Notation.toNotation(move) : "";
             if (move == null) break;
             if (bestMove == null) bestMove = move;
             movesSearched++;
@@ -390,10 +387,6 @@ public class Searcher implements Search {
             evaluator.unmakeMove();
             board.unmakeMove();
 
-//            if (rootNode) {
-//                System.out.println("    Move " + Notation.toNotation(move) + " eval " + eval);
-//            }
-
             if (isQuiet && quietsSearched == null) {
                 quietsSearched = new ArrayList<>();
             }
@@ -404,13 +397,10 @@ public class Searcher implements Search {
 
             if (eval >= beta) {
 
-//                if (rootNode) {
-//                    System.out.println("    Move " + Notation.toNotation(move) + " failed high at depth " + depth + " with eval " + eval);
-//                }
                 bestMove = move;
+                bestScore = beta;
                 flag = HashFlag.LOWER;
 
-                //transpositionTable.put(getKey(), HashFlag.LOWER, depth, ply, move, staticEval, beta);
                 if (isQuiet) {
                     // Quiet moves which cause a beta cut-off are stored as 'killer' and 'history' moves for future move ordering
                     moveOrderer.addKillerMove(ply, move);
@@ -426,11 +416,9 @@ public class Searcher implements Search {
             if (isQuiet) quietsSearched.add(move);
 
             if (eval > alpha) {
-//                if (rootNode) {
-//                    System.out.println("    Move " + Notation.toNotation(move) + " improved alpha at depth " + depth + " with eval " + eval);
-//                }
                 // We have found a new best move
                 bestMove = move;
+                bestScore = alpha;
                 alpha = eval;
                 flag = HashFlag.EXACT;
                 if (rootNode) {
@@ -453,8 +441,8 @@ public class Searcher implements Search {
             return eval;
         }
 
-        transpositionTable.put(getKey(), flag, depth, ply, bestMove, staticEval, flag == HashFlag.LOWER ? beta : alpha);
-        return flag == HashFlag.LOWER ? beta : alpha;
+        transpositionTable.put(getKey(), flag, depth, ply, bestMove, staticEval, bestScore);
+        return bestScore;
 
     }
 
