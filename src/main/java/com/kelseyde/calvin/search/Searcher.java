@@ -287,9 +287,10 @@ public class Searcher implements Search {
         while (true) {
 
             Move move = movePicker.pickNextMove();
-            if (rootNode) {
-                System.out.println("Move " + Notation.toNotation(move) + " Best move: " + (bestMove != null ? Notation.toNotation(bestMove):""));
-            }
+//            if (rootNode) {
+//                System.out.println("Move " + Notation.toNotation(move) + " Best move: " + (bestMove != null ? Notation.toNotation(bestMove):""));
+//            }
+            String notation = move != null ? Notation.toNotation(move) : "";
             if (move == null) break;
             if (bestMove == null) bestMove = move;
             movesSearched++;
@@ -389,9 +390,9 @@ public class Searcher implements Search {
             evaluator.unmakeMove();
             board.unmakeMove();
 
-            if (rootNode) {
-                System.out.println("    Move " + Notation.toNotation(move) + " eval " + eval);
-            }
+//            if (rootNode) {
+//                System.out.println("    Move " + Notation.toNotation(move) + " eval " + eval);
+//            }
 
             if (isQuiet && quietsSearched == null) {
                 quietsSearched = new ArrayList<>();
@@ -403,9 +404,9 @@ public class Searcher implements Search {
 
             if (eval >= beta) {
 
-                if (rootNode) {
-                    System.out.println("    Move " + Notation.toNotation(move) + " failed high at depth " + depth + " with eval " + eval);
-                }
+//                if (rootNode) {
+//                    System.out.println("    Move " + Notation.toNotation(move) + " failed high at depth " + depth + " with eval " + eval);
+//                }
                 bestMove = move;
                 flag = HashFlag.LOWER;
 
@@ -425,9 +426,9 @@ public class Searcher implements Search {
             if (isQuiet) quietsSearched.add(move);
 
             if (eval > alpha) {
-                if (rootNode) {
-                    System.out.println("    Move " + Notation.toNotation(move) + " improved alpha at depth " + depth + " with eval " + eval);
-                }
+//                if (rootNode) {
+//                    System.out.println("    Move " + Notation.toNotation(move) + " improved alpha at depth " + depth + " with eval " + eval);
+//                }
                 // We have found a new best move
                 bestMove = move;
                 alpha = eval;
@@ -453,7 +454,7 @@ public class Searcher implements Search {
         }
 
         transpositionTable.put(getKey(), flag, depth, ply, bestMove, staticEval, flag == HashFlag.LOWER ? beta : alpha);
-        return alpha;
+        return flag == HashFlag.LOWER ? beta : alpha;
 
     }
 
@@ -465,9 +466,6 @@ public class Searcher implements Search {
      * @see <a href="https://www.chessprogramming.org/Quiescence_Search">Chess Programming Wiki</a>
      */
     int quiescenceSearch(int alpha, int beta, int depth, int ply) {
-        if (ss.getMove(ply - 1) != null && ss.getMove(ply - 1).equals(Notation.fromUCI("b2b7"))) {
-            System.out.println("hello");
-        }
         if (shouldStop()) {
             return alpha;
         }
@@ -540,18 +538,22 @@ public class Searcher implements Search {
             if (!board.makeMove(move)) continue;
             nodes++;
             eval = isDraw() ? Score.DRAW : -quiescenceSearch(-beta, -alpha, depth + 1, ply + 1);
+//            System.out.println("        Q Move " + Notation.toNotation(move) + " eval " + eval);
             evaluator.unmakeMove();
             board.unmakeMove();
 
             if (eval >= beta) {
+//                System.out.println("        Q Move " + Notation.toNotation(move) + " failed high at depth " + depth + " with eval " + eval);
                 return beta;
             }
             if (eval > alpha) {
+//                System.out.println("        Q Move " + Notation.toNotation(move) + " improved alpha at depth " + depth + " with eval " + eval);
                 alpha = eval;
             }
         }
 
         if (movesSearched == 0 && isInCheck) {
+//            System.out.println("        Q Checkmate at depth " + depth);
             return -Score.MATE + ply;
         }
 
