@@ -433,14 +433,6 @@ public class Searcher implements Search {
             // If there are no legal moves, and it's check, then it's checkmate. Otherwise, it's stalemate.
             return isInCheck ? -Score.MATE + ply : Score.DRAW;
         }
-//        if (rootNode && movesSearched == 1) {
-//            // If there is only one legal move at the root node, play that move immediately.
-//            int eval = isDraw() ? Score.DRAW : staticEval;
-//            bestMoveCurrentDepth = bestMove;
-//            bestScoreCurrentDepth = eval;
-//            cancelled = true;
-//            return eval;
-//        }
 
         transpositionTable.put(getKey(), flag, depth, ply, bestMove, staticEval, bestScore);
         return bestScore;
