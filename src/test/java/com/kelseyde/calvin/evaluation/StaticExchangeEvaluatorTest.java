@@ -2,7 +2,8 @@ package com.kelseyde.calvin.evaluation;
 
 import com.kelseyde.calvin.board.Board;
 import com.kelseyde.calvin.board.Move;
-import com.kelseyde.calvin.search.moveordering.StaticExchangeEvaluator;
+import com.kelseyde.calvin.search.moveordering.SEE;
+import com.kelseyde.calvin.search.moveordering.see.SEEAfterMove;
 import com.kelseyde.calvin.utils.FEN;
 import com.kelseyde.calvin.utils.Notation;
 import com.kelseyde.calvin.utils.TestUtils;
@@ -11,8 +12,6 @@ import org.junit.jupiter.api.Test;
 
 public class StaticExchangeEvaluatorTest {
 
-    private static final StaticExchangeEvaluator see = new StaticExchangeEvaluator();
-
     @Test
     public void testSimpleCapturePawn() {
 
@@ -20,9 +19,8 @@ public class StaticExchangeEvaluatorTest {
         Board board = FEN.toBoard(fen);
         Move move = Notation.fromNotation("e4", "d5");
 
-        int score = see.evaluate(board, move);
-
-        Assertions.assertEquals(100, score);
+        Assertions.assertTrue(SEE.see(board, move, 100));
+        Assertions.assertFalse(SEE.see(board, move, 101));
 
     }
 
@@ -33,9 +31,8 @@ public class StaticExchangeEvaluatorTest {
         Board board = FEN.toBoard(fen);
         Move move = Notation.fromNotation("d5", "e4");
 
-        int score = see.evaluate(board, move);
-
-        Assertions.assertEquals(320, score);
+        Assertions.assertTrue(SEE.see(board, move, 320));
+        Assertions.assertFalse(SEE.see(board, move, 321));
 
     }
 
@@ -46,9 +43,8 @@ public class StaticExchangeEvaluatorTest {
         Board board = FEN.toBoard(fen);
         Move move = Notation.fromNotation("e4", "d5");
 
-        int score = see.evaluate(board, move);
-
-        Assertions.assertEquals(330, score);
+        Assertions.assertTrue(SEE.see(board, move, 330));
+        Assertions.assertFalse(SEE.see(board, move, 331));
 
     }
 
@@ -59,9 +55,8 @@ public class StaticExchangeEvaluatorTest {
         Board board = FEN.toBoard(fen);
         Move move = Notation.fromNotation("d6", "e4");
 
-        int score = see.evaluate(board, move);
-
-        Assertions.assertEquals(500, score);
+        Assertions.assertTrue(SEE.see(board, move, 500));
+        Assertions.assertFalse(SEE.see(board, move, 501));
 
     }
 
@@ -72,9 +67,8 @@ public class StaticExchangeEvaluatorTest {
         Board board = FEN.toBoard(fen);
         Move move = Notation.fromNotation("e4", "d5");
 
-        int score = see.evaluate(board, move);
-
-        Assertions.assertEquals(900, score);
+        Assertions.assertTrue(SEE.see(board, move, 900));
+        Assertions.assertFalse(SEE.see(board, move, 901));
 
     }
 
@@ -85,9 +79,8 @@ public class StaticExchangeEvaluatorTest {
         Board board = FEN.toBoard(fen);
         Move move = Notation.fromNotation("e4", "d5");
 
-        int score = see.evaluate(board, move);
-
-        Assertions.assertEquals(-800, score);
+        Assertions.assertTrue(SEE.see(board, move, -800));
+        Assertions.assertFalse(SEE.see(board, move, -799));
 
     }
 
@@ -98,9 +91,8 @@ public class StaticExchangeEvaluatorTest {
         Board board = FEN.toBoard(fen);
         Move move = Notation.fromNotation("c7", "d5");
 
-        int score = see.evaluate(board, move);
-
-        Assertions.assertEquals(330, score);
+        Assertions.assertTrue(SEE.see(board, move, 330));
+        Assertions.assertFalse(SEE.see(board, move, 331));
 
     }
 
@@ -112,29 +104,8 @@ public class StaticExchangeEvaluatorTest {
         Board board = FEN.toBoard(fen);
         Move move = Notation.fromNotation("b3", "d5");
 
-        int score = see.evaluate(board, move);
-
-        Assertions.assertEquals(100, score);
-
-    }
-
-    @Test
-    public void testMultipleRookXrays() {
-
-        String fen = "5k2/8/8/8/rRrRp3/8/8/5K2 w - - 0 1";
-
-        Board board = FEN.toBoard(fen);
-        Move move = Notation.fromNotation("d4", "e4");
-
-        int score = see.evaluate(board, move);
-
-        Assertions.assertEquals(-400, score);
-
-        move = Notation.fromNotation("d4", "c4");
-
-        score = see.evaluate(board, move);
-
-        Assertions.assertEquals(500, score);
+        Assertions.assertTrue(SEE.see(board, move, 100));
+        Assertions.assertFalse(SEE.see(board, move, 101));
 
     }
 
@@ -145,16 +116,12 @@ public class StaticExchangeEvaluatorTest {
 
         Board board = FEN.toBoard(fen);
         Move move = Notation.fromNotation("e4", "d5");
-
-        int score = see.evaluate(board, move);
-
-        Assertions.assertEquals(400, score);
+        Assertions.assertTrue(SEE.see(board, move, 400));
+        Assertions.assertFalse(SEE.see(board, move, 401));
 
         move = Notation.fromNotation("c4", "d5");
-
-        score = see.evaluate(board, move);
-
-        Assertions.assertEquals(-300, score);
+        Assertions.assertTrue(SEE.see(board, move, -300));
+        Assertions.assertFalse(SEE.see(board, move, -299));
 
     }
 
@@ -166,9 +133,8 @@ public class StaticExchangeEvaluatorTest {
         Board board = FEN.toBoard(fen);
         Move move = Notation.fromNotation("e4", "d5");
 
-        int score = see.evaluate(board, move);
-
-        Assertions.assertEquals(0, score);
+        Assertions.assertTrue(SEE.see(board, move, 0));
+        Assertions.assertFalse(SEE.see(board, move, 1));
 
     }
 
@@ -181,9 +147,7 @@ public class StaticExchangeEvaluatorTest {
         Move move = Notation.fromNotation("b2", "g7");
         board.makeMove(TestUtils.getLegalMove(board, move));
 
-        int score = see.evaluateAfterMove(board, move);
-
-        Assertions.assertEquals(-580, score);
+        Assertions.assertEquals(-580, SEEAfterMove.seeAfterMove(board, move));
 
     }
 

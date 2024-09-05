@@ -7,7 +7,7 @@ import com.kelseyde.calvin.tables.history.ContHistTable;
 import com.kelseyde.calvin.utils.Notation;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ContHistTableTest {
 

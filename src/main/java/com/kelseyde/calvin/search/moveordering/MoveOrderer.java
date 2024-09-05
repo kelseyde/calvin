@@ -4,7 +4,6 @@ import com.kelseyde.calvin.board.Board;
 import com.kelseyde.calvin.board.Move;
 import com.kelseyde.calvin.board.Piece;
 import com.kelseyde.calvin.search.SearchStack;
-import com.kelseyde.calvin.tables.history.ContHistTable;
 import com.kelseyde.calvin.tables.history.HistoryTable;
 import com.kelseyde.calvin.tables.history.KillerTable;
 import lombok.AccessLevel;

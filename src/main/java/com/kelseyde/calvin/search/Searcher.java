@@ -10,13 +10,13 @@ import com.kelseyde.calvin.generation.MoveGeneration;
 import com.kelseyde.calvin.generation.MoveGeneration.MoveFilter;
 import com.kelseyde.calvin.search.moveordering.MoveOrderer;
 import com.kelseyde.calvin.search.moveordering.MoveOrdering;
-import com.kelseyde.calvin.search.moveordering.StaticExchangeEvaluator;
+import com.kelseyde.calvin.search.moveordering.SEE;
+import com.kelseyde.calvin.search.moveordering.see.SEEAfterMove;
 import com.kelseyde.calvin.search.picker.MovePicker;
 import com.kelseyde.calvin.search.picker.QuiescentMovePicker;
 import com.kelseyde.calvin.tables.tt.HashEntry;
 import com.kelseyde.calvin.tables.tt.HashFlag;
 import com.kelseyde.calvin.tables.tt.TranspositionTable;
-import com.kelseyde.calvin.utils.Notation;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -50,7 +50,6 @@ public class Searcher implements Search {
     MoveGeneration moveGenerator;
     MoveOrdering moveOrderer;
     Evaluation evaluator;
-    StaticExchangeEvaluator see;
     TranspositionTable transpositionTable;
 
     Board board;
@@ -85,7 +84,6 @@ public class Searcher implements Search {
         this.moveOrderer = moveOrderer;
         this.evaluator = evaluator;
         this.transpositionTable = transpositionTable;
-        this.see = new StaticExchangeEvaluator();
     }
 
     /**
@@ -336,7 +334,7 @@ public class Searcher implements Search {
             // In certain interesting cases (e.g. promotions, or checks that do not immediately lose material), let's
             // extend the search depth by one ply.
             int extension = 0;
-            if (isPromotion || (isCheck && see.evaluateAfterMove(board, move) >= 0)) {
+            if (isPromotion || (isCheck && SEEAfterMove.seeAfterMove(board, move) >= 0)) {
                 extension = 1;
             }
 
@@ -371,7 +369,6 @@ public class Searcher implements Search {
                         reduction++;
                     }
                 }
-
                 // For all other moves apart from the principal variation, search with a null window (-alpha - 1, -alpha),
                 // to try and prove the move will fail low while saving the time spent on a full search.
                 eval = -search(depth - 1 + extension - reduction, ply + 1, -alpha - 1, -alpha, true);
@@ -511,9 +508,8 @@ public class Searcher implements Search {
                 // Static Exchange Evaluation - https://www.chessprogramming.org/Static_Exchange_Evaluation
                 // Evaluate the possible captures + recaptures on the target square, in order to filter out losing capture
                 // chains, such as capturing with the queen a pawn defended by another pawn.
-                int seeScore = see.evaluate(board, move);
-                boolean isBadCapture = (depth <= 3 && seeScore < 0) || (depth > 3 && seeScore <= 0);
-                if (isBadCapture) {
+                if ((depth <= 3 && !SEE.see(board, move, 0)) ||
+                        (depth > 3 && !SEE.see(board, move, 1))) {
                     continue;
                 }
             }

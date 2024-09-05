@@ -367,6 +367,17 @@ public class Board {
         return white ? whitePieces : blackPieces;
     }
 
+    public long getPieces(Piece piece, boolean white) {
+        return switch (piece) {
+            case PAWN -> getPawns(white);
+            case KNIGHT -> getKnights(white);
+            case BISHOP -> getBishops(white);
+            case ROOK -> getRooks(white);
+            case QUEEN -> getQueens(white);
+            case KING -> getKing(white);
+        };
+    }
+
     public int countPieces() {
         return Bitwise.countBits(occupied);
     }
