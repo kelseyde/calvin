@@ -192,7 +192,7 @@ public class Searcher implements Search {
     public int search(int depth, int ply, int alpha, int beta, boolean allowNull) {
 
         // If timeout is reached, exit immediately
-        if (ply > 0 && shouldStop()) return 0;
+        if (shouldStop()) return alpha;
 
         // If depth is reached, drop into quiescence search
         if (depth <= 0) return quiescenceSearch(alpha, beta, 1, ply);
@@ -393,6 +393,10 @@ public class Searcher implements Search {
                 quietsSearched.add(move);
             }
 
+            if (shouldStop()) {
+                return alpha;
+            }
+
             if (score > bestScore) {
                 bestScore = score;
             }
@@ -436,8 +440,9 @@ public class Searcher implements Search {
      * @see <a href="https://www.chessprogramming.org/Quiescence_Search">Chess Programming Wiki</a>
      */
     int quiescenceSearch(int alpha, int beta, int depth, int ply) {
-
-        if (shouldStop()) return 0;
+        if (shouldStop()) {
+            return alpha;
+        }
 
         QuiescentMovePicker movePicker = new QuiescentMovePicker(moveGenerator, moveOrderer, board);
 
