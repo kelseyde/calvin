@@ -92,8 +92,8 @@ public record TimeControl(Duration softLimit, Duration hardLimit, int maxNodes, 
         if (depth >= BEST_MOVE_NODE_FRAC_MIN_DEPTH && bestMoveNodes >= 0) {
             // Scale the soft limit based on the percentage of total nodes spent searching the best move. If we spent a
             // high percentage of time searching the best move, we can assume we don't need as much time to search further.
-            double nodeFactor = (NODE_FRAC_BASE / 100.0 - bestMoveNodeFraction) * NODE_FRAC_MULTIPLIER / 100.0;
-            //const auto moveNodeScale = (1.5 - bestMoveFraction) * 1.35;
+            double bestMoveFraction = bestMoveNodes / (double) nodes;
+            double nodeFactor = (NODE_FRAC_BASE / 100.0 - bestMoveFraction) * NODE_FRAC_MULTIPLIER / 100.0;
             adjustedLimit *= nodeFactor;
         }
 
