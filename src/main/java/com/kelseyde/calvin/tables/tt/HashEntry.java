@@ -4,8 +4,7 @@ import com.kelseyde.calvin.board.Move;
 import lombok.AllArgsConstructor;
 
 /**
- * Entry in the {@link TranspositionTable}. Contains a 64-bit key and a 64-bit value which encodes the relevant
- * information about the position.
+ * Entry in the {@link TranspositionTable}. Contains a 64-bit key, 32-bit int encoding search info, and 16-bit score.
  * </p>
  *
  * Key encoding:
@@ -14,27 +13,29 @@ import lombok.AllArgsConstructor;
  * 48-63: 16 bits representing the static eval of the position. Re-used to save calling the evaluation function again.
  * </p>
  *
- * Value encoding:
+ * Metadata encoding:
  * 0-11: the depth to which this position was last searched.
  * 12-15: the {@link HashFlag} indicating what type of node this is.
  * 16-31: the {@link Move} start square, end square, and special move flag.
- * 32-63: the eval of the position in centipawns.
+ * </p>
+ *
+ * Score: 16 bits representing the score of the position.
  */
 @AllArgsConstructor
 public class HashEntry {
 
-    public static final int SIZE_BYTES = 32;
+    public static final int SIZE_BYTES = 28;
 
     private static final long ZOBRIST_PART_MASK = 0x00000000ffffffffL;
     private static final long GENERATION_MASK = 0x0000ffff00000000L;
     private static final long STATIC_EVAL_MASK = 0xffff000000000000L;
-    private static final long SCORE_MASK = 0xffffffff00000000L;
-    private static final long MOVE_MASK = 0x00000000ffff0000L;
-    private static final long FLAG_MASK = 0x000000000000f000L;
-    private static final long DEPTH_MASK = 0x0000000000000fffL;
+    private static final long MOVE_MASK = 0xffff0000L;
+    private static final long FLAG_MASK = 0x0000f000L;
+    private static final long DEPTH_MASK = 0x00000fffL;
 
     private long key;
-    private long value;
+    private int info;
+    private short score;
 
     /**
      * Extracts the 48-bits representing the zobrist part of the given zobrist key.
@@ -82,37 +83,35 @@ public class HashEntry {
      * Gets the score from this entry's value.
      */
     public int getScore() {
-        long score = (value & SCORE_MASK) >>> 32;
-        return (int) score;
+        return score;
     }
 
     /**
      * Sets the score in this entry's value.
      */
     public void setScore(int score) {
-        value = (value &~ SCORE_MASK) | (long) score << 32;
+        this.score = (short) score;
     }
 
     /**
      * Creates a new {@link HashEntry} with the adjusted score.
      */
     public HashEntry withAdjustedScore(int score) {
-        long newValue = (value &~ SCORE_MASK) | (long) score << 32;
-        return new HashEntry(key, newValue);
+        return new HashEntry(key, info, (short) score);
     }
 
     /**
      * Sets the move in this entry's value.
      */
     public void setMove(Move move) {
-        value = (value &~ MOVE_MASK) | (long) move.value() << 16;
+        info = (int) ((info &~ MOVE_MASK) | move.value() << 16);
     }
 
     /**
      * Gets the move from this entry's value.
      */
     public Move getMove() {
-        long move = (value & MOVE_MASK) >>> 16;
+        long move = (info & MOVE_MASK) >>> 16;
         return move > 0 ? new Move((short) move) : null;
     }
 
@@ -120,7 +119,7 @@ public class HashEntry {
      * Gets the flag from this entry's value.
      */
     public HashFlag getFlag() {
-        long flag = (value & FLAG_MASK) >>> 12;
+        long flag = (info & FLAG_MASK) >>> 12;
         return HashFlag.valueOf((int) flag);
     }
 
@@ -128,7 +127,7 @@ public class HashEntry {
      * Gets the depth from this entry's value.
      */
     public int getDepth() {
-        return (int) (value & DEPTH_MASK);
+        return (int) (info & DEPTH_MASK);
     }
 
     /**
@@ -150,8 +149,8 @@ public class HashEntry {
         // Get the 3-bit encoded flag
         long flagValue = HashFlag.value(flag);
         // Combine the score, move, flag and depth to create the hash entry value
-        long value = (long) score << 32 | moveValue << 16 | flagValue << 12 | depth;
-        return new HashEntry(key, value);
+        int value = (int) (moveValue << 16 | flagValue << 12 | depth);
+        return new HashEntry(key, value, (short) score);
     }
 
 }

@@ -3,6 +3,7 @@ package com.kelseyde.calvin.tables;
 import com.kelseyde.calvin.board.Board;
 import com.kelseyde.calvin.board.Move;
 import com.kelseyde.calvin.board.Piece;
+import com.kelseyde.calvin.evaluation.Score;
 import com.kelseyde.calvin.tables.tt.HashEntry;
 import com.kelseyde.calvin.tables.tt.HashFlag;
 import com.kelseyde.calvin.tables.tt.TranspositionTable;
@@ -54,7 +55,7 @@ public class TranspositionTableTest {
         Board board = FEN.toBoard("3r1r1k/pQ1b2pp/4p1q1/2p1b3/2B2p2/2N1B2P/PPP2PP1/3R1RK1 w - - 0 23");
         long zobristKey = board.getGameState().getZobrist();
         int depth = 1;
-        int score = 1000000;
+        int score = Score.MATE;
         HashFlag flag = HashFlag.UPPER;
         Move move = Notation.fromNotation("e4", "e5");
         assertEntry(zobristKey, score, move, flag, depth);
@@ -65,7 +66,7 @@ public class TranspositionTableTest {
         Board board = FEN.toBoard("3r1r1k/pQ1b2pp/4p1q1/2p1b3/2B2p2/2N1B2P/PPP2PP1/3R1RK1 w - - 0 23");
         long zobristKey = board.getGameState().getZobrist();
         int depth = 1;
-        int score = -1000000;
+        int score = -Score.MATE;
         HashFlag flag = HashFlag.UPPER;
         Move move = Notation.fromNotation("e4", "e5");
         assertEntry(zobristKey, score, move, flag, depth);
@@ -202,7 +203,7 @@ public class TranspositionTableTest {
         board.makeMove(TestUtils.getLegalMove(board, "g8", "f6"));
         flag = HashFlag.LOWER;
         bestMove = null;
-        eval = 1000000;
+        eval = Score.MATE;
         depth = 10;
         table.put(board.getGameState().getZobrist(), flag, depth, ply + 2, bestMove, 0,  eval);
 
@@ -283,13 +284,13 @@ public class TranspositionTableTest {
         int plyRemaining = 10;
         int plyFromRoot = 0;
 
-        table.put(board.getGameState().getZobrist(), flag, plyRemaining, plyFromRoot, bestMove, 0,  1000000);
+        table.put(board.getGameState().getZobrist(), flag, plyRemaining, plyFromRoot, bestMove, 0, Score.MATE);
 
-        Assertions.assertEquals(1000000, table.get(board.getGameState().getZobrist(), 0).getScore());
+        Assertions.assertEquals(Score.MATE, table.get(board.getGameState().getZobrist(), 0).getScore());
 
-        table.put(board.getGameState().getZobrist(), flag, plyRemaining + 1, plyFromRoot, bestMove, 0,  -1000000);
+        table.put(board.getGameState().getZobrist(), flag, plyRemaining + 1, plyFromRoot, bestMove, 0, -Score.MATE);
 
-        Assertions.assertEquals(-1000000, table.get(board.getGameState().getZobrist(), 0).getScore());
+        Assertions.assertEquals(-Score.MATE, table.get(board.getGameState().getZobrist(), 0).getScore());
 
     }
 
@@ -301,13 +302,13 @@ public class TranspositionTableTest {
         int plyRemaining = 10;
         int plyFromRoot = 1;
 
-        table.put(board.getGameState().getZobrist(), flag, plyRemaining, plyFromRoot, bestMove, 0,  1000000);
+        table.put(board.getGameState().getZobrist(), flag, plyRemaining, plyFromRoot, bestMove, 0, Score.MATE);
 
-        Assertions.assertEquals(999999, table.get(board.getGameState().getZobrist(), 0).getScore());
+        Assertions.assertEquals(Score.MATE - 1, table.get(board.getGameState().getZobrist(), 0).getScore());
 
-        table.put(board.getGameState().getZobrist(), flag, plyRemaining + 1, plyFromRoot, bestMove, 0,  -1000000);
+        table.put(board.getGameState().getZobrist(), flag, plyRemaining + 1, plyFromRoot, bestMove, 0, -Score.MATE);
 
-        Assertions.assertEquals(-999999, table.get(board.getGameState().getZobrist(), 0).getScore());
+        Assertions.assertEquals(-Score.MATE + 1, table.get(board.getGameState().getZobrist(), 0).getScore());
 
     }
 
@@ -317,18 +318,18 @@ public class TranspositionTableTest {
         long zobrist = board.getGameState().getZobrist();
         HashFlag flag = HashFlag.EXACT;
         Move bestMove = Notation.fromNotation("g1", "f3", Move.PROMOTE_TO_QUEEN_FLAG);
-        int eval = 1000000;
+        int eval = Score.MATE;
         int plyRemaining = 10;
         int plyFromRoot = 5;
 
         table.put(board.getGameState().getZobrist(), flag, plyRemaining, plyFromRoot, bestMove, 0,  eval);
 
-        Assertions.assertEquals(1000000, table.get(zobrist, 5).getScore());
-        Assertions.assertEquals(999999, table.get(zobrist, 4).getScore());
-        Assertions.assertEquals(999998, table.get(zobrist, 3).getScore());
-        Assertions.assertEquals(999997, table.get(zobrist, 2).getScore());
-        Assertions.assertEquals(999996, table.get(zobrist, 1).getScore());
-        Assertions.assertEquals(999995, table.get(zobrist, 0).getScore());
+        Assertions.assertEquals(Score.MATE, table.get(zobrist, 5).getScore());
+        Assertions.assertEquals(Score.MATE - 1, table.get(zobrist, 4).getScore());
+        Assertions.assertEquals(Score.MATE - 2, table.get(zobrist, 3).getScore());
+        Assertions.assertEquals(Score.MATE - 3, table.get(zobrist, 2).getScore());
+        Assertions.assertEquals(Score.MATE - 4, table.get(zobrist, 1).getScore());
+        Assertions.assertEquals(Score.MATE - 5, table.get(zobrist, 0).getScore());
     }
 
     @Test
