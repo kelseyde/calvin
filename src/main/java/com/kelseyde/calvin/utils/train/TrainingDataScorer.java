@@ -1,10 +1,12 @@
 package com.kelseyde.calvin.utils.train;
 
 import com.kelseyde.calvin.board.Board;
+import com.kelseyde.calvin.board.Move;
 import com.kelseyde.calvin.engine.EngineConfig;
 import com.kelseyde.calvin.engine.EngineInitializer;
 import com.kelseyde.calvin.evaluation.Evaluation;
 import com.kelseyde.calvin.evaluation.NNUE;
+import com.kelseyde.calvin.evaluation.Score;
 import com.kelseyde.calvin.generation.MoveGeneration;
 import com.kelseyde.calvin.generation.MoveGenerator;
 import com.kelseyde.calvin.search.SearchResult;
@@ -37,10 +39,14 @@ import java.util.stream.Stream;
 
 public class TrainingDataScorer {
 
+    // 2220 pos/s current avg
+
     private static final int THREAD_COUNT = 20;
     private static final int BATCH_SIZE = THREAD_COUNT * 1000;
     private static final int TT_SIZE = 64;
+    private static final int TOTAL_POSITIONS_PER_FILE = 100000000;
     private static final Duration MAX_SEARCH_TIME = Duration.ofSeconds(30);
+    private static final MoveGenerator MOVE_GENERATOR = new MoveGenerator();
 
     private List<Searcher> searchers;
 
@@ -60,6 +66,7 @@ public class TrainingDataScorer {
             if (!Files.exists(outputPath)) Files.createFile(outputPath);
             int count = 0;
             AtomicInteger scored = new AtomicInteger(0);
+            AtomicInteger excluded = new AtomicInteger(0);
             List<String> batch = new ArrayList<>(BATCH_SIZE);
             Iterator<String> iterator = lines.iterator();
             while (iterator.hasNext()) {
@@ -69,12 +76,19 @@ public class TrainingDataScorer {
                 }
                 if (scored.get() > 0 && batch.isEmpty()) {
                     Duration duration = Duration.between(start, Instant.now());
-                    System.out.println("info string progress: scored " + scored + " positions, total time " + duration);
+                    int total = scored.get() + excluded.get() + command.resumeOffset();
+                    int totalSinceResume = total - command.resumeOffset();
+                    int remaining = TOTAL_POSITIONS_PER_FILE - command.resumeOffset() - total;
+                    double rate = (double) total / duration.toMillis() * 1000;
+                    Duration estimate = Duration.ofSeconds((long) (remaining / rate));
+                    System.out.printf("processed %d, since resume %d, scored %d, excluded %d, time %s, pos/s %s, remaining pos %s remaining time %s\n",
+                            total, totalSinceResume, scored.get(), excluded.get(), duration, rate, remaining, estimate);
                 }
                 String line = iterator.next();
                 batch.add(line);
                 if (batch.size() == BATCH_SIZE) {
                     List<String> scoredBatch = processBatch(batch, command.softNodeLimit());
+                    excluded.addAndGet(batch.size() - scoredBatch.size());
                     batch.clear();
                     scored.addAndGet(scoredBatch.size());
                     searchers.forEach(Searcher::clearHistory);
@@ -141,6 +155,10 @@ public class TrainingDataScorer {
         String fen = parts[0].trim();
         String result = parts[2].trim();
         Board board = FEN.toBoard(fen);
+        if (MOVE_GENERATOR.isCheck(board, board.isWhiteToMove())) {
+            // Filter out positions where the side to move is in check
+            return "";
+        }
         searcher.setPosition(board);
         TimeControl tc = new TimeControl(MAX_SEARCH_TIME, MAX_SEARCH_TIME, softNodeLimit, -1);
         SearchResult searchResult;
@@ -150,7 +168,17 @@ public class TrainingDataScorer {
             System.out.println("info error scoring fen " + fen + " " + e);
             return "";
         }
+        Move bestMove = searchResult.move();
+        boolean isCapture = board.pieceAt(bestMove.getTo()) != null;
+        if (isCapture) {
+            // Filter out positions where the best move is a capture
+            return "";
+        }
         int score = searchResult.eval();
+        if (Score.isMateScore(score)) {
+            // Filter out positions where there is forced mate
+            return "";
+        }
         if (!board.isWhiteToMove()) score = -score;
         return String.format("%s | %s | %s", fen, score, result);
     }

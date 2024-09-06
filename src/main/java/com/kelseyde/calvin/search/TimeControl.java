@@ -58,21 +58,22 @@ public record TimeControl(Duration softLimit, Duration hardLimit, int maxNodes, 
 
     }
 
-    public boolean isHardLimitReached(Instant start, int depth, int nodes) {
-        if (maxNodes > 0 && nodes >= maxNodes) return true;
+    public boolean isHardLimitReached(Instant start, int depth) {
         if (maxDepth > 0 && depth >= maxDepth) return true;
         Duration expired = Duration.between(start, Instant.now());
         return expired.compareTo(hardLimit) > 0;
     }
 
-    public boolean isSoftLimitReached(Instant start, int depth, double bestMoveNodeFraction, int bestMoveStability, int evalStability) {
+    public boolean isSoftLimitReached(
+            Instant start, int depth, int nodes, int bestMoveNodes, int bestMoveStability, int evalStability) {
         if (maxDepth > 0 && depth >= maxDepth) return true;
+        if (maxNodes > 0 && nodes >= maxNodes) return true;
         Duration expired = Duration.between(start, Instant.now());
-        Duration adjustedSoftLimit = adjustSoftLimit(softLimit, depth, bestMoveNodeFraction, bestMoveStability, evalStability);
+        Duration adjustedSoftLimit = adjustSoftLimit(softLimit, depth, nodes, bestMoveNodes, bestMoveStability, evalStability);
         return expired.compareTo(adjustedSoftLimit) > 0;
     }
 
-    private Duration adjustSoftLimit(Duration softLimit, int depth, double bestMoveNodeFraction, int bestMoveStability, int evalStability) {
+    private Duration adjustSoftLimit(Duration softLimit, int depth, int nodes, int bestMoveNodes, int bestMoveStability, int evalStability) {
 
         // Scale the soft limit based on the stability of the best move. If the best move has remained stable for several
         // iterations, we can safely assume that we don't need to spend as much time searching further.
@@ -88,13 +89,13 @@ public record TimeControl(Duration softLimit, Duration hardLimit, int maxNodes, 
             adjustedLimit *= evalStabilityFactor;
         }
 
-        //if (depth >= BEST_MOVE_NODE_FRAC_MIN_DEPTH) {
+        if (depth >= BEST_MOVE_NODE_FRAC_MIN_DEPTH && bestMoveNodes >= 0) {
             // Scale the soft limit based on the percentage of total nodes spent searching the best move. If we spent a
             // high percentage of time searching the best move, we can assume we don't need as much time to search further.
             double nodeFactor = (NODE_FRAC_BASE / 100.0 - bestMoveNodeFraction) * NODE_FRAC_MULTIPLIER / 100.0;
             //const auto moveNodeScale = (1.5 - bestMoveFraction) * 1.35;
             adjustedLimit *= nodeFactor;
-        //}
+        }
 
         adjustedLimit = Math.max(adjustedLimit, hardLimit.toMillis());
         return Duration.ofMillis((long) adjustedLimit);

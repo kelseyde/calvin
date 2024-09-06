@@ -15,7 +15,7 @@ public class Score {
     public static final int DRAW = 0;
 
     public static boolean isMateScore(int eval) {
-        return Math.abs(eval) >= Score.MATE - 100;
+        return Math.abs(eval) >= Score.MATE - Search.MAX_DEPTH;
     }
 
     /**
