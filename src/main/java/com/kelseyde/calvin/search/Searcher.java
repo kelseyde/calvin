@@ -13,6 +13,7 @@ import com.kelseyde.calvin.search.moveordering.MoveOrdering;
 import com.kelseyde.calvin.search.moveordering.StaticExchangeEvaluator;
 import com.kelseyde.calvin.search.picker.MovePicker;
 import com.kelseyde.calvin.search.picker.QuiescentMovePicker;
+import com.kelseyde.calvin.search.picker.ScoredMove;
 import com.kelseyde.calvin.tables.tt.HashEntry;
 import com.kelseyde.calvin.tables.tt.HashFlag;
 import com.kelseyde.calvin.tables.tt.TranspositionTable;
@@ -287,8 +288,9 @@ public class Searcher implements Search {
 
         while (true) {
 
-            Move move = movePicker.pickNextMove();
-            if (move == null) break;
+            ScoredMove scoredMove = movePicker.pickNextMove();
+            if (scoredMove == null) break;
+            Move move = scoredMove.move();
             if (bestMove == null) bestMove = move;
             movesSearched++;
 
@@ -496,8 +498,9 @@ public class Searcher implements Search {
 
         while (true) {
 
-            Move move = movePicker.pickNextMove();
-            if (move == null) break;
+            ScoredMove scoredMove = movePicker.pickNextMove();
+            if (scoredMove == null) break;
+            Move move = scoredMove.move();
             movesSearched++;
 
             if (!isInCheck) {
@@ -512,7 +515,7 @@ public class Searcher implements Search {
                 // Static Exchange Evaluation - https://www.chessprogramming.org/Static_Exchange_Evaluation
                 // Evaluate the possible captures + recaptures on the target square, in order to filter out losing capture
                 // chains, such as capturing with the queen a pawn defended by another pawn.
-                int seeScore = see.evaluate(board, move);
+                int seeScore = scoredMove.score();
                 boolean isBadCapture = (depth <= 3 && seeScore < 0) || (depth > 3 && seeScore <= 0);
                 if (isBadCapture) {
                     continue;

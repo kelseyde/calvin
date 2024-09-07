@@ -28,9 +28,9 @@ public class MovePickerTest {
 
         List<Move> moves = new ArrayList<>();
         while (true) {
-            Move move = picker.pickNextMove();
+            ScoredMove move = picker.pickNextMove();
             if (move == null) break;
-            moves.add(move);
+            moves.add(move.move());
         }
 
         Assertions.assertEquals(5, moves.size());

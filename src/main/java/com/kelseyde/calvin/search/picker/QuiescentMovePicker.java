@@ -6,6 +6,7 @@ import com.kelseyde.calvin.generation.MoveGeneration;
 import com.kelseyde.calvin.generation.MoveGeneration.MoveFilter;
 import com.kelseyde.calvin.search.moveordering.MoveOrderer;
 import com.kelseyde.calvin.search.moveordering.MoveOrdering;
+import com.kelseyde.calvin.search.moveordering.StaticExchangeEvaluator;
 import lombok.AccessLevel;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
@@ -18,6 +19,8 @@ import java.util.List;
  */
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class QuiescentMovePicker implements MovePicking {
+
+    private static final StaticExchangeEvaluator see = new StaticExchangeEvaluator();
 
     public enum Stage {
         TT_MOVE,
@@ -58,9 +61,9 @@ public class QuiescentMovePicker implements MovePicking {
      * @return the next move, or null if no moves are available
      */
     @Override
-    public Move pickNextMove() {
+    public ScoredMove pickNextMove() {
 
-        Move nextMove = null;
+        ScoredMove nextMove = null;
         while (nextMove == null) {
             nextMove = switch (stage) {
                 case TT_MOVE -> pickTTMove();
@@ -76,15 +79,15 @@ public class QuiescentMovePicker implements MovePicking {
     /**
      * Select the best move from the transposition table and advance to the next stage.
      */
-    private Move pickTTMove() {
+    private ScoredMove pickTTMove() {
         stage = Stage.NOISY;
-        return ttMove;
+        return ttMove != null ? new ScoredMove(ttMove, Integer.MAX_VALUE) : null;
     }
 
     /**
      * Select the next move from the move list.
      */
-    private Move pickMove() {
+    private ScoredMove pickMove() {
 
         if (moves == null) {
             List<Move> stagedMoves = moveGenerator.generateMoves(board, filter);
@@ -96,9 +99,9 @@ public class QuiescentMovePicker implements MovePicking {
             stage = Stage.END;
             return null;
         }
-        Move move = pick();
+        ScoredMove move = pick();
         moveIndex++;
-        if (move.equals(ttMove)) {
+        if (move != null && move.move().equals(ttMove)) {
             // Skip to the next move
             return pickMove();
         }
@@ -112,20 +115,20 @@ public class QuiescentMovePicker implements MovePicking {
     public void scoreMoves(List<Move> stagedMoves) {
         moves = new ScoredMove[stagedMoves.size()];
         for (int i = 0; i < stagedMoves.size(); i++) {
-            moves[i] = new ScoredMove(stagedMoves.get(i), moveOrderer.mvvLva(board, stagedMoves.get(i), ttMove));
+            moves[i] = new ScoredMove(stagedMoves.get(i), see.evaluate(board, stagedMoves.get(i)));
         }
     }
 
     /**
      * Select the move with the highest score and move it to the head of the move list.
      */
-    public Move pick() {
+    public ScoredMove pick() {
         for (int j = moveIndex + 1; j < moves.length; j++) {
             if (moves[j].score() > moves[moveIndex].score()) {
                 swap(moveIndex, j);
             }
         }
-        return moves[moveIndex].move();
+        return moves[moveIndex];
     }
 
     private void swap(int i, int j) {

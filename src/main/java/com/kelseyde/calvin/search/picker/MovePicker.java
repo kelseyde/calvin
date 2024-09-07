@@ -7,6 +7,7 @@ import com.kelseyde.calvin.generation.MoveGeneration.MoveFilter;
 import com.kelseyde.calvin.search.SearchStack;
 import com.kelseyde.calvin.search.moveordering.MoveOrderer;
 import com.kelseyde.calvin.search.moveordering.MoveOrdering;
+import com.kelseyde.calvin.utils.Notation;
 import lombok.AccessLevel;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
@@ -64,9 +65,9 @@ public class MovePicker implements MovePicking {
      * @return the next move, or null if no moves are available
      */
     @Override
-    public Move pickNextMove() {
+    public ScoredMove pickNextMove() {
 
-        Move nextMove = null;
+        ScoredMove nextMove = null;
         while (nextMove == null) {
             nextMove = switch (stage) {
                 case TT_MOVE -> pickTTMove();
@@ -83,9 +84,9 @@ public class MovePicker implements MovePicking {
     /**
      * Select the best move from the transposition table and advance to the next stage.
      */
-    private Move pickTTMove() {
+    private ScoredMove pickTTMove() {
         stage = Stage.NOISY;
-        return ttMove;
+        return ttMove != null ? new ScoredMove(ttMove, Integer.MAX_VALUE) : null;
     }
 
     /**
@@ -93,7 +94,7 @@ public class MovePicker implements MovePicking {
      * @param filter the move generation filter to use, if the moves are not yet generated
      * @param nextStage the next stage to move on to, if we have tried all moves in the current stage.
      */
-    private Move pickMove(MoveFilter filter, Stage nextStage) {
+    private ScoredMove pickMove(MoveFilter filter, Stage nextStage) {
 
         if (stage == Stage.QUIET && (skipQuiets || inCheck)) {
             stage = nextStage;
@@ -111,9 +112,9 @@ public class MovePicker implements MovePicking {
             stage = nextStage;
             return null;
         }
-        Move move = pick();
+        ScoredMove move = pick();
         moveIndex++;
-        if (move.equals(ttMove)) {
+        if (move != null && move.move().equals(ttMove)) {
             // Skip to the next move
             return pickMove(filter, nextStage);
         }
@@ -134,13 +135,13 @@ public class MovePicker implements MovePicking {
     /**
      * Select the move with the highest score and move it to the head of the move list.
      */
-    public Move pick() {
+    public ScoredMove pick() {
         for (int j = moveIndex + 1; j < moves.length; j++) {
             if (moves[j].score() > moves[moveIndex].score()) {
                 swap(moveIndex, j);
             }
         }
-        return moves[moveIndex].move();
+        return moves[moveIndex];
     }
 
     private void swap(int i, int j) {
