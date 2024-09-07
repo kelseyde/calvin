@@ -4,6 +4,7 @@ import com.kelseyde.calvin.board.Board;
 import com.kelseyde.calvin.board.Move;
 import com.kelseyde.calvin.generation.MoveGeneration;
 import com.kelseyde.calvin.generation.MoveGeneration.MoveFilter;
+import com.kelseyde.calvin.search.SearchStack;
 import com.kelseyde.calvin.search.moveordering.MoveOrderer;
 import com.kelseyde.calvin.search.moveordering.MoveOrdering;
 import com.kelseyde.calvin.search.moveordering.StaticExchangeEvaluator;
@@ -30,16 +31,17 @@ public class QuiescentMovePicker implements MovePicking {
 
     final MoveGeneration moveGenerator;
     final MoveOrdering moveOrderer;
-
     final Board board;
-    @Setter
-    MoveFilter filter;
-    Stage stage;
+    final SearchStack ss;
+    final int ply;
 
-    @Setter
-    Move ttMove;
-    ScoredMove[] moves;
+    Stage stage;
+    @Setter Move ttMove;
+    @Setter MoveFilter filter;
+    @Setter boolean inCheck;
+
     int moveIndex;
+    ScoredMove[] moves;
 
     /**
      * Constructs a MovePicker with the specified move generator, move orderer, board, and ply.
@@ -48,10 +50,12 @@ public class QuiescentMovePicker implements MovePicking {
      * @param moveOrderer   the move orderer to use for scoring and ordering moves
      * @param board         the current state of the board
      */
-    public QuiescentMovePicker(MoveGeneration moveGenerator, MoveOrdering moveOrderer, Board board) {
+    public QuiescentMovePicker(MoveGeneration moveGenerator, MoveOrdering moveOrderer, Board board, SearchStack ss, int ply) {
         this.moveGenerator = moveGenerator;
         this.moveOrderer = moveOrderer;
         this.board = board;
+        this.ss = ss;
+        this.ply = ply;
         this.stage = Stage.TT_MOVE;
     }
 
@@ -115,7 +119,11 @@ public class QuiescentMovePicker implements MovePicking {
     public void scoreMoves(List<Move> stagedMoves) {
         moves = new ScoredMove[stagedMoves.size()];
         for (int i = 0; i < stagedMoves.size(); i++) {
-            moves[i] = new ScoredMove(stagedMoves.get(i), see.evaluate(board, stagedMoves.get(i)));
+            Move move = stagedMoves.get(i);
+            int score = inCheck ?
+                    moveOrderer.scoreMove(board, ss, stagedMoves.get(i), ttMove, ply) :
+                    see.evaluate(board, move);
+            moves[i] = new ScoredMove(move, score);
         }
     }
 

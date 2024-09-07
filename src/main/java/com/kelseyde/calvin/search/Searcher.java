@@ -457,7 +457,7 @@ public class Searcher implements Search {
             return alpha;
         }
 
-        QuiescentMovePicker movePicker = new QuiescentMovePicker(moveGenerator, moveOrderer, board);
+        QuiescentMovePicker movePicker = new QuiescentMovePicker(moveGenerator, moveOrderer, board, ss, ply);
 
         // Exit the quiescence search early if we already have an accurate score stored in the hash table.
         HashEntry transposition = transpositionTable.get(getKey(), ply);
@@ -468,16 +468,17 @@ public class Searcher implements Search {
             movePicker.setTtMove(transposition.getMove());
         }
 
-        boolean isInCheck = moveGenerator.isCheck(board, board.isWhiteToMove());
+        boolean inCheck = moveGenerator.isCheck(board, board.isWhiteToMove());
+        movePicker.setInCheck(inCheck);
 
         // Re-use cached static eval if available. Don't compute static eval while in check.
         int eval = Integer.MIN_VALUE;
-        if (!isInCheck) {
+        if (!inCheck) {
             eval = transposition != null ? transposition.getStaticEval() : evaluator.evaluate();
         }
         int standPat = eval;
 
-        if (isInCheck) {
+        if (inCheck) {
             // If we are in check, we need to generate 'all' legal moves that evade check, not just captures. Otherwise,
             // we risk missing simple mate threats.
             movePicker.setFilter(MoveFilter.ALL);
@@ -503,7 +504,7 @@ public class Searcher implements Search {
             Move move = scoredMove.move();
             movesSearched++;
 
-            if (!isInCheck) {
+            if (!inCheck) {
                 // Delta Pruning - https://www.chessprogramming.org/Delta_Pruning
                 // If the captured piece + a margin still has no potential of raising alpha, let's assume this position
                 // is bad for us no matter what we do, and not bother searching any further
@@ -537,7 +538,7 @@ public class Searcher implements Search {
             }
         }
 
-        if (movesSearched == 0 && isInCheck) {
+        if (movesSearched == 0 && inCheck) {
             return -Score.MATE + ply;
         }
 
