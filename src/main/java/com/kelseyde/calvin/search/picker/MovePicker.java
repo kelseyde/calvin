@@ -19,11 +19,13 @@ import java.util.List;
  * checks and promotions). Finally, the remaining quiet moves are generated.
  */
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class MovePicker implements MovePicking {
+public class MovePicker {
 
     public enum Stage {
         TT_MOVE,
-        NOISY,
+        GOOD_NOISY,
+        KILLERS,
+        BAD_NOISY,
         QUIET,
         END
     }
@@ -40,6 +42,8 @@ public class MovePicker implements MovePicking {
     @Setter boolean inCheck;
     int moveIndex;
     ScoredMove[] moves;
+    int killerIndex;
+    Move[] killers;
 
     /**
      * Constructs a MovePicker with the specified move generator, move orderer, board, and ply.
@@ -63,14 +67,15 @@ public class MovePicker implements MovePicking {
      *
      * @return the next move, or null if no moves are available
      */
-    @Override
     public Move pickNextMove() {
 
         Move nextMove = null;
         while (nextMove == null) {
             nextMove = switch (stage) {
                 case TT_MOVE -> pickTTMove();
-                case NOISY -> pickMove(MoveFilter.NOISY, Stage.QUIET);
+                case GOOD_NOISY -> pickMove(MoveFilter.NOISY, Stage.KILLERS);
+                case KILLERS -> pickKiller();
+                case BAD_NOISY -> pickMove(MoveFilter.NOISY, Stage.QUIET);
                 case QUIET -> pickMove(MoveFilter.QUIET, Stage.END);
                 case END -> null;
             };
@@ -84,7 +89,7 @@ public class MovePicker implements MovePicking {
      * Select the best move from the transposition table and advance to the next stage.
      */
     private Move pickTTMove() {
-        stage = Stage.NOISY;
+        stage = Stage.GOOD_NOISY;
         return ttMove;
     }
 
@@ -95,7 +100,7 @@ public class MovePicker implements MovePicking {
      */
     private Move pickMove(MoveFilter filter, Stage nextStage) {
 
-        if (stage == Stage.QUIET && (skipQuiets || inCheck)) {
+        if (stage == Stage.BAD_NOISY && (skipQuiets || inCheck)) {
             stage = nextStage;
             moves = null;
             return null;
@@ -111,14 +116,42 @@ public class MovePicker implements MovePicking {
             stage = nextStage;
             return null;
         }
-        Move move = pick();
+        ScoredMove move = pick();
         moveIndex++;
-        if (move.equals(ttMove)) {
+        if (stage == Stage.GOOD_NOISY && !inCheck && move.score() < MoveOrderer.EQUAL_CAPTURE_BIAS) {
+            stage = Stage.BAD_NOISY;
+            return null;
+        }
+        if (wasTriedLazily(move.move())) {
             // Skip to the next move
             return pickMove(filter, nextStage);
         }
-        return move;
+        return move.move();
 
+    }
+
+    private Move pickKiller() {
+        if (killers == null) {
+            killers = moveOrderer.getKillers(ply);
+        }
+        if (killerIndex >= killers.length) {
+            stage = Stage.BAD_NOISY;
+            return null;
+        }
+        Move killer = killers[killerIndex];
+        if (killer == null) {
+            stage = Stage.BAD_NOISY;
+            return null;
+        }
+        boolean pseudoLegal = board.makeMove(killer);
+        if (!pseudoLegal || moveGenerator.isCheck(board, board.isWhiteToMove())) {
+            board.unmakeMove();
+            killerIndex++;
+            return pickKiller();
+        }
+        board.unmakeMove();
+        killerIndex++;
+        return killer;
     }
 
     /**
@@ -134,13 +167,28 @@ public class MovePicker implements MovePicking {
     /**
      * Select the move with the highest score and move it to the head of the move list.
      */
-    public Move pick() {
+    public ScoredMove pick() {
         for (int j = moveIndex + 1; j < moves.length; j++) {
             if (moves[j].score() > moves[moveIndex].score()) {
                 swap(moveIndex, j);
             }
         }
-        return moves[moveIndex].move();
+        return moves[moveIndex];
+    }
+
+    private boolean wasTriedLazily(Move move) {
+        if (move.equals(ttMove)) {
+            return true;
+        }
+        if (killers != null) for (Move killer : killers) {
+            if (killer == null) {
+                return false;
+            }
+            if (killer.equals(move)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void swap(int i, int j) {

@@ -6,6 +6,7 @@ import com.kelseyde.calvin.generation.MoveGenerator;
 import com.kelseyde.calvin.search.SearchStack;
 import com.kelseyde.calvin.search.moveordering.MoveOrderer;
 import com.kelseyde.calvin.utils.FEN;
+import com.kelseyde.calvin.utils.Notation;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -29,6 +30,7 @@ public class MovePickerTest {
         List<Move> moves = new ArrayList<>();
         while (true) {
             Move move = picker.pickNextMove();
+            System.out.println(Notation.toNotation(move));
             if (move == null) break;
             moves.add(move);
         }

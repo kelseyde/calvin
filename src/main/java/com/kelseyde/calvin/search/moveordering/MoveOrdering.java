@@ -69,6 +69,8 @@ public interface MoveOrdering {
 
     void ageHistoryScores(boolean white);
 
+    Move[] getKillers(int ply);
+
     /**
      * Clears all stored data related to move ordering heuristics.
      */
