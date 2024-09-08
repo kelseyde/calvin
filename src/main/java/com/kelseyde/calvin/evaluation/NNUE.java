@@ -195,10 +195,10 @@ public class NNUE implements Evaluation {
     }
 
     private int materialPhase(Board board) {
-        long knights = Bitwise.countBits(board.getKnights());
-        long bishops = Bitwise.countBits(board.getBishops());
-        long rooks = Bitwise.countBits(board.getRooks());
-        long queens = Bitwise.countBits(board.getQueens());
+        long knights = Bitwise.countBits(board.knights());
+        long bishops = Bitwise.countBits(board.bishops());
+        long rooks = Bitwise.countBits(board.rooks());
+        long queens = Bitwise.countBits(board.queens());
         return (int) (MATERIAL_BASE + 3 * knights + 3 * bishops + 5 * rooks + 10 * queens);
     }
 

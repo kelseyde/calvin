@@ -101,7 +101,7 @@ public class MoveOrderer implements MoveOrdering {
 
         // Then captures, sorted by MVV-LVA
         Piece capturedPiece = board.pieceAt(endSquare);
-        boolean isCapture = capturedPiece != null;
+        boolean isCapture = board.isCapture(move);
         if (isCapture) {
             moveScore += scoreCapture(board, startSquare, capturedPiece);
         }

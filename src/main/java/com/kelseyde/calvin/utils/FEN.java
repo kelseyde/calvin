@@ -238,11 +238,11 @@ public class FEN {
         Piece[] pieceList = new Piece[64];
         for (int square = 0; square < 64; square++) {
             long squareMask = 1L << square;
-            if ((squareMask & board.getPawns()) != 0)           pieceList[square] = Piece.PAWN;
-            else if ((squareMask & board.getKnights()) != 0)    pieceList[square] = Piece.KNIGHT;
-            else if ((squareMask & board.getBishops()) != 0)    pieceList[square] = Piece.BISHOP;
-            else if ((squareMask & board.getRooks()) != 0)      pieceList[square] = Piece.ROOK;
-            else if ((squareMask & board.getQueens()) != 0)     pieceList[square] = Piece.QUEEN;
+            if ((squareMask & board.pawns()) != 0)           pieceList[square] = Piece.PAWN;
+            else if ((squareMask & board.knights()) != 0)    pieceList[square] = Piece.KNIGHT;
+            else if ((squareMask & board.bishops()) != 0)    pieceList[square] = Piece.BISHOP;
+            else if ((squareMask & board.rooks()) != 0)      pieceList[square] = Piece.ROOK;
+            else if ((squareMask & board.queens()) != 0)     pieceList[square] = Piece.QUEEN;
             else if ((squareMask & board.getKings()) != 0)      pieceList[square] = Piece.KING;
         }
         return pieceList;

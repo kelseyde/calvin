@@ -57,11 +57,11 @@ public class Score {
     }
 
     public static boolean isInsufficientMaterial(Board board) {
-        if (board.getPawns() != 0 || board.getRooks() != 0 || board.getQueens() != 0) {
+        if (board.pawns() != 0 || board.rooks() != 0 || board.queens() != 0) {
             return false;
         }
-        long whitePieces = board.getKnights(true) | board.getBishops(true);
-        long blackPieces = board.getKnights(false) |  board.getBishops(false);
+        long whitePieces = board.knights(true) | board.bishops(true);
+        long blackPieces = board.knights(false) |  board.bishops(false);
 
         return (Bitwise.countBits(whitePieces) == 0 || Bitwise.countBits(whitePieces) == 1)
                 && (Bitwise.countBits(blackPieces) == 0 || Bitwise.countBits(blackPieces) == 1);

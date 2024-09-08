@@ -294,7 +294,7 @@ public class Searcher implements Search {
 
             Piece piece = board.pieceAt(move.getFrom());
             Piece capturedPiece = board.pieceAt(move.getTo());
-            boolean isCapture = capturedPiece != null;
+            boolean isCapture = board.isCapture(move);
             boolean isPromotion = move.getPromotionPiece() != null;
 
             // Futility Pruning - https://www.chessprogramming.org/Futility_Pruning

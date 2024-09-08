@@ -24,19 +24,19 @@ public class PinCalculator {
         pinMask = 0L;
         pinRayMasks = new long[64];
 
-        int kingSquare = Bitwise.getNextBit(board.getKing(white));
-        long friendlies = board.getPieces(white);
-        long opponents = board.getPieces(!white);
+        int kingSquare = Bitwise.getNextBit(board.king(white));
+        long friendlies = board.pieces(white);
+        long opponents = board.pieces(!white);
 
         // Calculate possible orthogonal (queen or rook) pins
-        long opponentOrthogonalSliders = board.getRooks(!white) | board.getQueens(!white);
+        long opponentOrthogonalSliders = board.rooks(!white) | board.queens(!white);
         if (opponentOrthogonalSliders != 0) {
             long possibleOrthogonalPinners = Attacks.rookAttacks(kingSquare, 0) & opponentOrthogonalSliders;
             calculatePins(kingSquare, friendlies, opponents, possibleOrthogonalPinners);
         }
 
         // Calculate possible diagonal (queen or bishop) pins
-        long opponentDiagonalSliders = board.getBishops(!white) | board.getQueens(!white);
+        long opponentDiagonalSliders = board.bishops(!white) | board.queens(!white);
         if (opponentDiagonalSliders != 0) {
             long possibleDiagonalPinners = Attacks.bishopAttacks(kingSquare, 0) & opponentDiagonalSliders;
             calculatePins(kingSquare, friendlies, opponents, possibleDiagonalPinners);

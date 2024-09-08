@@ -68,7 +68,7 @@ public class StaticExchangeEvaluator {
 
         boolean white = board.isWhiteToMove();
 
-        long pawns = board.getPawns(white);
+        long pawns = board.pawns(white);
         if (pawns > 0) {
             long pawnAttackMask = moveGenerator.getPawnAttacks(board, square, !white);
             if ((pawnAttackMask & pawns) != 0) {
@@ -77,7 +77,7 @@ public class StaticExchangeEvaluator {
             }
         }
 
-        long knights = board.getKnights(white);
+        long knights = board.knights(white);
         if (knights > 0) {
             long knightAttackMask = moveGenerator.getKnightAttacks(board, square, !white);
             if ((knightAttackMask & knights) != 0) {
@@ -86,7 +86,7 @@ public class StaticExchangeEvaluator {
             }
         }
 
-        long bishops = board.getBishops(white);
+        long bishops = board.bishops(white);
         if (bishops > 0) {
             long bishopAttackMask = moveGenerator.getBishopAttacks(board, square, !white);
             if ((bishopAttackMask & bishops) != 0) {
@@ -95,7 +95,7 @@ public class StaticExchangeEvaluator {
             }
         }
 
-        long rooks = board.getRooks(white);
+        long rooks = board.rooks(white);
         if (rooks > 0) {
             long rookAttackMask = moveGenerator.getRookAttacks(board, square, !white);
             if ((rookAttackMask & rooks) != 0) {
@@ -104,7 +104,7 @@ public class StaticExchangeEvaluator {
             }
         }
 
-        long queens = board.getQueens(white);
+        long queens = board.queens(white);
         if (queens > 0) {
             long queenAttackMask = moveGenerator.getQueenAttacks(board, square, !white);
             if ((queenAttackMask & queens) != 0) {
@@ -113,7 +113,7 @@ public class StaticExchangeEvaluator {
             }
         }
 
-        long king = board.getKing(white);
+        long king = board.king(white);
         long kingAttackMask = moveGenerator.getKingAttacks(board, square, !white);
         if ((kingAttackMask & king) != 0) {
             int kingStartSquare = Bitwise.getNextBit(kingAttackMask & king);
