@@ -4,6 +4,7 @@ import com.kelseyde.calvin.board.Board;
 import com.kelseyde.calvin.board.Move;
 import com.kelseyde.calvin.generation.MoveGeneration;
 import com.kelseyde.calvin.generation.MoveGeneration.MoveFilter;
+import com.kelseyde.calvin.search.SearchStack;
 import com.kelseyde.calvin.search.moveordering.MoveOrderer;
 import com.kelseyde.calvin.search.moveordering.MoveOrdering;
 import lombok.AccessLevel;
@@ -17,26 +18,9 @@ import java.util.List;
  * tried before any moves are generated. Then, all the noisy moves are generated and tried in order of their MVV-LVA score.
  */
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class QuiescentMovePicker implements MovePicking {
+public class QuiescentMovePicker extends AbstractMovePicker {
 
-    public enum Stage {
-        TT_MOVE,
-        NOISY,
-        END
-    }
-
-    final MoveGeneration moveGenerator;
-    final MoveOrdering moveOrderer;
-
-    final Board board;
-    @Setter
-    MoveFilter filter;
     Stage stage;
-
-    @Setter
-    Move ttMove;
-    ScoredMove[] moves;
-    int moveIndex;
 
     /**
      * Constructs a MovePicker with the specified move generator, move orderer, board, and ply.
@@ -57,7 +41,6 @@ public class QuiescentMovePicker implements MovePicking {
      *
      * @return the next move, or null if no moves are available
      */
-    @Override
     public Move pickNextMove() {
 
         Move nextMove = null;
@@ -65,7 +48,7 @@ public class QuiescentMovePicker implements MovePicking {
             nextMove = switch (stage) {
                 case TT_MOVE -> pickTTMove();
                 case NOISY -> pickMove();
-                case END -> null;
+                case QUIET, END -> null;
             };
             if (stage == Stage.END) break;
         }
@@ -106,32 +89,8 @@ public class QuiescentMovePicker implements MovePicking {
 
     }
 
-    /**
-     * Moves are scored using the {@link MoveOrderer} MVV-LVA routine.
-     */
-    public void scoreMoves(List<Move> stagedMoves) {
-        moves = new ScoredMove[stagedMoves.size()];
-        for (int i = 0; i < stagedMoves.size(); i++) {
-            moves[i] = new ScoredMove(stagedMoves.get(i), moveOrderer.mvvLva(board, stagedMoves.get(i), ttMove));
-        }
+    @Override
+    int scoreMove(Move move) {
+        return move.equals(ttMove) ? Integer.MIN_VALUE : moveOrderer.mvvLva(board, move, ttMove);
     }
-
-    /**
-     * Select the move with the highest score and move it to the head of the move list.
-     */
-    public Move pick() {
-        for (int j = moveIndex + 1; j < moves.length; j++) {
-            if (moves[j].score() > moves[moveIndex].score()) {
-                swap(moveIndex, j);
-            }
-        }
-        return moves[moveIndex].move();
-    }
-
-    private void swap(int i, int j) {
-        ScoredMove temp = moves[i];
-        moves[i] = moves[j];
-        moves[j] = temp;
-    }
-
 }

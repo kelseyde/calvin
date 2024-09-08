@@ -19,27 +19,14 @@ import java.util.List;
  * checks and promotions). Finally, the remaining quiet moves are generated.
  */
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class MovePicker implements MovePicking {
+public class MovePicker extends AbstractMovePicker {
 
-    public enum Stage {
-        TT_MOVE,
-        NOISY,
-        QUIET,
-        END
-    }
-
-    final MoveGeneration moveGenerator;
-    final MoveOrdering moveOrderer;
-    final Board board;
     final SearchStack ss;
     final int ply;
 
     Stage stage;
-    @Setter Move ttMove;
     @Setter boolean skipQuiets;
     @Setter boolean inCheck;
-    int moveIndex;
-    ScoredMove[] moves;
 
     /**
      * Constructs a MovePicker with the specified move generator, move orderer, board, and ply.
@@ -63,7 +50,6 @@ public class MovePicker implements MovePicking {
      *
      * @return the next move, or null if no moves are available
      */
-    @Override
     public Move pickNextMove() {
 
         Move nextMove = null;
@@ -121,32 +107,8 @@ public class MovePicker implements MovePicking {
 
     }
 
-    /**
-     * Moves are scored using the {@link MoveOrderer}.
-     */
-    public void scoreMoves(List<Move> stagedMoves) {
-        moves = new ScoredMove[stagedMoves.size()];
-        for (int i = 0; i < stagedMoves.size(); i++) {
-            moves[i] = new ScoredMove(stagedMoves.get(i), moveOrderer.scoreMove(board, ss, stagedMoves.get(i), ttMove, ply));
-        }
+    @Override
+    int scoreMove(Move move) {
+        return move.equals(ttMove) ? Integer.MIN_VALUE : moveOrderer.scoreMove(board, ss, move, ttMove, ply);
     }
-
-    /**
-     * Select the move with the highest score and move it to the head of the move list.
-     */
-    public Move pick() {
-        for (int j = moveIndex + 1; j < moves.length; j++) {
-            if (moves[j].score() > moves[moveIndex].score()) {
-                swap(moveIndex, j);
-            }
-        }
-        return moves[moveIndex].move();
-    }
-
-    private void swap(int i, int j) {
-        ScoredMove temp = moves[i];
-        moves[i] = moves[j];
-        moves[j] = temp;
-    }
-
 }
