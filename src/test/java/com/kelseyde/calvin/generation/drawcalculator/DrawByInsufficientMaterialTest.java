@@ -1,7 +1,7 @@
 package com.kelseyde.calvin.generation.drawcalculator;
 
 import com.kelseyde.calvin.board.Board;
-import com.kelseyde.calvin.evaluation.Score;
+import com.kelseyde.calvin.search.Score;
 import com.kelseyde.calvin.utils.FEN;
 import com.kelseyde.calvin.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;

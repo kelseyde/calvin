@@ -1,9 +1,8 @@
-package com.kelseyde.calvin.evaluation;
+package com.kelseyde.calvin.search;
 
 import com.kelseyde.calvin.board.Bitwise;
 import com.kelseyde.calvin.board.Board;
 import com.kelseyde.calvin.board.GameState;
-import com.kelseyde.calvin.search.Search;
 
 import java.util.Iterator;
 

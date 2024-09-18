@@ -5,7 +5,7 @@ import com.kelseyde.calvin.engine.Engine;
 import com.kelseyde.calvin.engine.EngineConfig;
 import com.kelseyde.calvin.engine.EngineInitializer;
 import com.kelseyde.calvin.evaluation.NNUE;
-import com.kelseyde.calvin.evaluation.Score;
+import com.kelseyde.calvin.search.Score;
 import com.kelseyde.calvin.search.SearchResult;
 import com.kelseyde.calvin.search.TimeControl;
 import com.kelseyde.calvin.uci.UCICommand.GoCommand;
@@ -163,7 +163,7 @@ public class UCI {
     }
 
     public static void handleEval(UCICommand command) {
-        NNUE nnue = new NNUE(ENGINE.getBoard());
+        NNUE nnue = new NNUE(ENGINE.getConfig().getNnueMode(), ENGINE.getBoard());
         write(String.valueOf(nnue.evaluate()));
     }
 

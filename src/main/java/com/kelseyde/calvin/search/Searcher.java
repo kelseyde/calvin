@@ -6,8 +6,6 @@ import com.kelseyde.calvin.board.Piece;
 import com.kelseyde.calvin.engine.EngineConfig;
 import com.kelseyde.calvin.evaluation.Evaluation;
 import com.kelseyde.calvin.evaluation.NNUE;
-import com.kelseyde.calvin.evaluation.SEE;
-import com.kelseyde.calvin.evaluation.Score;
 import com.kelseyde.calvin.generation.MoveGeneration;
 import com.kelseyde.calvin.generation.MoveGeneration.MoveFilter;
 import com.kelseyde.calvin.generation.MoveGenerator;
@@ -60,7 +58,7 @@ public class Searcher implements Search {
         this.config = config;
         this.tt = tt;
         this.td = td;
-        this.eval = new NNUE();
+        this.eval = new NNUE(config.getNnueMode());
         this.ss = new SearchStack();
         this.history = new SearchHistory();
         this.movegen = new MoveGenerator();

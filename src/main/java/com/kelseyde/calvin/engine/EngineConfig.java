@@ -1,5 +1,6 @@
 package com.kelseyde.calvin.engine;
 
+import com.kelseyde.calvin.evaluation.Mode;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,6 +12,8 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class EngineConfig {
+
+    Mode nnueMode;
 
     int minThreadCount;
     int maxThreadCount;

@@ -2,6 +2,7 @@ package com.kelseyde.calvin.evaluation;
 
 import com.kelseyde.calvin.board.Board;
 import com.kelseyde.calvin.board.Move;
+import com.kelseyde.calvin.search.SEE;
 import com.kelseyde.calvin.utils.FEN;
 import com.kelseyde.calvin.utils.Notation;
 import org.junit.jupiter.api.Assertions;

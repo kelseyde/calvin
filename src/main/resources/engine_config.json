@@ -1,4 +1,6 @@
 {
+  "nnueMode": "VECTOR",
+
   "minThreadCount":1,
   "maxThreadCount":12,
   "defaultThreadCount":1,

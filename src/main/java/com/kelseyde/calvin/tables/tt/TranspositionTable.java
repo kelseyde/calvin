@@ -1,7 +1,7 @@
 package com.kelseyde.calvin.tables.tt;
 
 import com.kelseyde.calvin.board.Move;
-import com.kelseyde.calvin.evaluation.Score;
+import com.kelseyde.calvin.search.Score;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 

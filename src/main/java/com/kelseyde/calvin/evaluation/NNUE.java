@@ -5,9 +5,8 @@ import com.kelseyde.calvin.board.Board;
 import com.kelseyde.calvin.board.Move;
 import com.kelseyde.calvin.board.Piece;
 import com.kelseyde.calvin.engine.EngineInitializer;
-import jdk.incubator.vector.ShortVector;
-import jdk.incubator.vector.VectorOperators;
-import jdk.incubator.vector.VectorSpecies;
+import com.kelseyde.calvin.evaluation.accumulator.Accumulator;
+import com.kelseyde.calvin.evaluation.inference.Inference;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 
@@ -36,38 +35,38 @@ public class NNUE implements Evaluation {
         public static final int INPUT_SIZE = 768;
         public static final int HIDDEN_SIZE = 384;
 
+        public static final int QA = 255;
+        public static final int QB = 64;
+        public static final int QAB = QA * QB;
+
+        public static final int COLOUR_OFFSET = 64 * 6;
+        public static final int PIECE_OFFSET = 64;
+        public static final int SCALE = 400;
+
         public static final Network NETWORK = EngineInitializer.loadNetwork(FILE, INPUT_SIZE, HIDDEN_SIZE);
 
     }
 
-    static final int COLOUR_OFFSET = 64 * 6;
-    static final int PIECE_OFFSET = 64;
-    static final int SCALE = 400;
-
-    static final int QA = 255;
-    static final int QB = 64;
-    static final int QAB = QA * QB;
-
     static final int MATERIAL_BASE = 22400;
     static final int MATERIAL_FACTOR = 32768;
 
-    static final VectorSpecies<Short> SPECIES = ShortVector.SPECIES_PREFERRED;
-    static final int UPPER_BOUND = SPECIES.loopBound(Network.HIDDEN_SIZE);
-
-    static final ShortVector FLOOR = ShortVector.broadcast(SPECIES, 0);
-    static final ShortVector CEIL = ShortVector.broadcast(SPECIES, QA);
-
-    // TODO test using array with single allocation at startup
+    final Mode mode;
+    final Inference inference;
     final Deque<Accumulator> accumulatorHistory = new ArrayDeque<>();
+
     Accumulator accumulator;
     Board board;
 
-    public NNUE() {
-        this.accumulator = new Accumulator(Network.HIDDEN_SIZE);
+    public NNUE(Mode mode) {
+        this.mode = mode;
+        this.inference = mode.inference.get();
+        this.accumulator = mode.accumulator.get();
     }
 
-    public NNUE(Board board) {
-        this.accumulator = new Accumulator(Network.HIDDEN_SIZE);
+    public NNUE(Mode mode, Board board) {
+        this.mode = mode;
+        this.inference = mode.inference.get();
+        this.accumulator = mode.accumulator.get();
         this.board = board;
         activateAll(board);
     }
@@ -79,32 +78,13 @@ public class NNUE implements Evaluation {
         short[] us = white ? accumulator.whiteFeatures : accumulator.blackFeatures;
         short[] them = white ? accumulator.blackFeatures : accumulator.whiteFeatures;
         int eval = Network.NETWORK.outputBias();
-        eval += forward(us, 0);
-        eval += forward(them, Network.HIDDEN_SIZE);
-        eval *= SCALE;
-        eval /= QAB;
+        eval += inference.forward(us, 0);
+        eval += inference.forward(them, Network.HIDDEN_SIZE);
+        eval *= Network.SCALE;
+        eval /= Network.QAB;
         eval = scaleEval(board, eval);
         return eval;
 
-    }
-
-    /**
-     * Forward pass through the network, using the clipped ReLU activation function.
-     * Implementation uses the Java Vector API to perform SIMD operations on multiple features at once.
-     */
-    private int forward(short[] features, int weightOffset) {
-        short[] weights = Network.NETWORK.outputWeights;
-        int sum = 0;
-
-        for (int i = 0; i < UPPER_BOUND; i += SPECIES.length()) {
-            sum += ShortVector.fromArray(SPECIES, features, i)
-                    .min(CEIL)
-                    .max(FLOOR)
-                    .mul(ShortVector.fromArray(SPECIES, weights, i + weightOffset))
-                    .reduceLanes(VectorOperators.ADD);
-        }
-
-        return sum;
     }
 
     private void activateAll(Board board) {
@@ -211,15 +191,15 @@ public class NNUE implements Evaluation {
     private static int featureIndex(Piece piece, int square, boolean whitePiece, boolean whitePerspective) {
         int squareIndex = whitePerspective ? square : square ^ 56;
         int pieceIndex = piece.getIndex();
-        int pieceOffset = pieceIndex * PIECE_OFFSET;
+        int pieceOffset = pieceIndex * Network.PIECE_OFFSET;
         boolean ourPiece = whitePiece == whitePerspective;
-        int colourOffset = ourPiece ? 0 : COLOUR_OFFSET;
+        int colourOffset = ourPiece ? 0 : Network.COLOUR_OFFSET;
         return colourOffset + pieceOffset + squareIndex;
     }
 
     @Override
     public void clearHistory() {
-        this.accumulator = new Accumulator(Network.HIDDEN_SIZE);
+        this.accumulator = this.mode.accumulator.get();
         this.accumulatorHistory.clear();
     }
 
