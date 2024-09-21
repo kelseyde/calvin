@@ -1,6 +1,7 @@
 package com.kelseyde.calvin.board;
 
 import com.kelseyde.calvin.movegen.Attacks;
+import com.kelseyde.calvin.utils.notation.FEN;
 
 import java.util.List;
 import java.util.Map;
@@ -185,6 +186,7 @@ public class Bits {
         }
 
         private static final long[] pinRayMasks = new long[Square.COUNT];
+        private static long pinMask;
         private static final PinData pinData = new PinData();
 
         /**
@@ -195,26 +197,37 @@ public class Bits {
          * @return The pin data containing the pin mask and pin ray masks.
          */
         public static PinData calculatePins(Board board, boolean white) {
-            long pinMask = 0L;
+
+            pinMask = 0L;
 
             int kingSquare = Bits.next(board.getKing(white));
+            if (kingSquare == 0) {
+                System.out.println(FEN.toFEN(board));
+                System.out.println(board.getMoves().stream().map(Move::toUCI).toList());
+            }
             long friendlies = board.getPieces(white);
             long opponents = board.getPieces(!white);
-
-            long possiblePinners = 0L;
 
             // Calculate possible orthogonal pins
             long orthogonalSliders = board.getRooks(!white) | board.getQueens(!white);
             if (orthogonalSliders != 0) {
-                possiblePinners |= Attacks.rookAttacks(kingSquare, 0) & orthogonalSliders;
+                long possiblePinners = Attacks.rookAttacks(kingSquare, 0) & orthogonalSliders;
+                findPinnedPieces(possiblePinners, friendlies, opponents, kingSquare);
             }
 
             // Calculate possible diagonal pins
             long diagonalSliders = board.getBishops(!white) | board.getQueens(!white);
             if (diagonalSliders != 0) {
-                possiblePinners |= Attacks.bishopAttacks(kingSquare, 0) & diagonalSliders;
+                long possiblePinners = Attacks.bishopAttacks(kingSquare, 0) & diagonalSliders;
+                findPinnedPieces(possiblePinners, friendlies, opponents, kingSquare);
             }
 
+            pinData.pinMask = pinMask;
+            pinData.pinRayMasks = pinRayMasks;
+            return pinData;
+        }
+
+        private static void findPinnedPieces(long possiblePinners, long friendlies, long opponents, int kingSquare) {
             while (possiblePinners != 0) {
                 int possiblePinner = Bits.next(possiblePinners);
                 long ray = Ray.between(kingSquare, possiblePinner);
@@ -235,10 +248,6 @@ public class Bits {
 
                 possiblePinners = Bits.pop(possiblePinners);
             }
-
-            pinData.pinMask = pinMask;
-            pinData.pinRayMasks = pinRayMasks;
-            return pinData;
         }
 
     }

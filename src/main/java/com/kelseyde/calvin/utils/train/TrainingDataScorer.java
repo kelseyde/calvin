@@ -157,7 +157,7 @@ public class TrainingDataScorer {
         try {
              searchResult = searcher.search(tc);
         } catch (Exception e) {
-            System.out.println("info error scoring fen " + fen + " " + e);
+            System.out.printf("info error %s, %s %s%n", e.getMessage(), e.getCause(), Arrays.toString(e.getStackTrace()));
             return "";
         }
         Move bestMove = searchResult.move();
