@@ -27,6 +27,7 @@ public class BlunderTest {
 
         String fen = "8/8/6k1/3R1N2/2n3P1/5P2/1q3BK1/8 b - - 0 55";
         engine.newGame();
+        UCI.outputEnabled = false;
         engine.setPosition(new PositionCommand(fen, Collections.emptyList()));
         Move move = engine.think(20000).move();
         System.out.println(Move.toUCI(move));

@@ -271,6 +271,7 @@ public class Board {
     }
 
     private void toggle(Piece type, boolean white, long toggleMask) {
+        boolean notNullKingBefore = getKing(white) != 0;
         switch (type) {
             case PAWN ->    pawns ^= toggleMask;
             case KNIGHT ->  knights ^= toggleMask;
@@ -285,6 +286,11 @@ public class Board {
             blackPieces ^= toggleMask;
         }
         occupied ^= toggleMask;
+
+        boolean nullKingAfter = getKing(white) == 0;
+//        if (type == Piece.KING && notNullKingBefore && nullKingAfter) {
+//            System.out.println("null king --------- " + FEN.toFEN(this));
+//        }
     }
 
     public void removeKing(boolean white) {
@@ -368,6 +374,9 @@ public class Board {
 
     public long getKing(boolean white) {
         final long side = white ? whitePieces : blackPieces;
+        if (side == 0) {
+            //System.out.println("uh oh!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        }
         return kings & side;
     }
 

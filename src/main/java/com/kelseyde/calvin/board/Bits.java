@@ -202,7 +202,7 @@ public class Bits {
 
             int kingSquare = Bits.next(board.getKing(white));
             if (kingSquare == 0) {
-                System.out.println(FEN.toFEN(board));
+                System.out.println(FEN.toFEN(board) + " " + white);
                 System.out.println(board.getMoves().stream().map(Move::toUCI).toList());
             }
             long friendlies = board.getPieces(white);

@@ -17,6 +17,7 @@ import com.kelseyde.calvin.tables.tt.HashEntry;
 import com.kelseyde.calvin.tables.tt.HashFlag;
 import com.kelseyde.calvin.tables.tt.TranspositionTable;
 import com.kelseyde.calvin.uci.UCI;
+import com.kelseyde.calvin.utils.notation.FEN;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -166,6 +167,8 @@ public class Searcher implements Search {
      * @param beta                The upper bound for child nodes at the current search depth.
      */
     public int search(int depth, int ply, int alpha, int beta) {
+
+        //System.out.printf("search fen %s white 0 %s black 0 %s \n", FEN.toFEN(board), board.getKing(true) == 0, board.getKing(false) == 0);
 
         // If timeout is reached, exit immediately
         if (shouldStop()) return alpha;
