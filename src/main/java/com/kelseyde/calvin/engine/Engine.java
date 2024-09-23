@@ -27,7 +27,8 @@ import java.util.stream.IntStream;
 public class Engine {
 
     final EngineConfig config;
-    final MoveGenerator moveGenerator;
+    final MoveGenerator movegen;
+    final TranspositionTable tt;
     final Search searcher;
 
     CompletableFuture<SearchResult> think;
@@ -36,8 +37,9 @@ public class Engine {
     public Engine() {
         this.config = new EngineConfig();
         this.board = Board.from(FEN.STARTPOS);
-        this.moveGenerator = new MoveGenerator();
-        this.searcher = new ParallelSearcher(config, new TranspositionTable(config.defaultHashSizeMb));
+        this.movegen = new MoveGenerator();
+        this.tt = new TranspositionTable(config.ttSizeDefault, config.ttBucketSize);
+        this.searcher = new ParallelSearcher(config, tt);
         this.searcher.setPosition(board);
     }
 
@@ -153,7 +155,7 @@ public class Engine {
      * corresponding 'legal' move which includes any special move flag (promotion, en passant, castling etc.)
      */
     private Move move(Move move) {
-        return moveGenerator.generateMoves(board).stream()
+        return movegen.generateMoves(board).stream()
                 .filter(move::matches)
                 .findAny()
                 .orElseThrow(() -> new IllegalArgumentException("Illegal move " + Move.toUCI(move)));

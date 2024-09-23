@@ -43,7 +43,7 @@ public class ParallelSearcher implements Search {
      */
     public ParallelSearcher(EngineConfig config, TranspositionTable tt) {
         this.config = config;
-        this.hashSize = config.defaultHashSizeMb;
+        this.hashSize = config.ttSizeDefault;
         this.threadCount = config.defaultThreadCount;
         this.tt = tt;
         this.searchers = initSearchers();
@@ -65,7 +65,7 @@ public class ParallelSearcher implements Search {
                     .toList();
 
             SearchResult result = selectResult(threads).get();
-            tt.incrementGeneration();
+            tt.incrementAge();
             return result;
         } catch (Exception e) {
             System.out.println("info error " + e);
@@ -95,7 +95,7 @@ public class ParallelSearcher implements Search {
     @Override
     public void setHashSize(int hashSizeMb) {
         this.hashSize = hashSizeMb;
-        this.tt = new TranspositionTable(this.hashSize);
+        this.tt = new TranspositionTable(this.hashSize, config.ttBucketSize);
         this.searchers = initSearchers();
     }
 

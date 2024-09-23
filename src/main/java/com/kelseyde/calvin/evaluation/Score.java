@@ -19,6 +19,20 @@ public class Score {
     }
 
     /**
+     * Calculates the mate score, adjusting it based on the ply from the root.
+     */
+    public static int writeMateScore(int score, int plyFromRoot) {
+        return score > 0 ? score - plyFromRoot : score + plyFromRoot;
+    }
+
+    /**
+     * Retrieves the mate score, adjusting it based on the ply from the root.
+     */
+    public static int readMateScore(int score, int plyFromRoot) {
+        return score > 0 ? score + plyFromRoot : score - plyFromRoot;
+    }
+
+    /**
      * Check for an 'effective' draw, which treats a single repetition of the position as a draw.
      * This is used during {@link Search} to quickly check for a draw; it will lead to some errors in edge cases, but the
      * gamble is that the boost in search speed is worth the potential cost.

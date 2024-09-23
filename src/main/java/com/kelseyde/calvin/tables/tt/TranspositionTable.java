@@ -1,5 +1,6 @@
 package com.kelseyde.calvin.tables.tt;
 
+import com.kelseyde.calvin.board.Bits;
 import com.kelseyde.calvin.board.Move;
 import com.kelseyde.calvin.evaluation.Score;
 
@@ -18,39 +19,37 @@ public class TranspositionTable {
 
     private int tableSize;
     private HashEntry[] entries;
-
+    private final int bucketSize;
     private int tries;
     private int hits;
-    private int generation;
+    private int age;
 
-    /**
-     * Constructs a transposition table of the given size in megabytes.
-     */
-    public TranspositionTable(int tableSizeMb) {
+    public TranspositionTable(int tableSizeMb, int bucketSize) {
         this.tableSize = (tableSizeMb * 1024 * 1024) / HashEntry.SIZE_BYTES;
-        entries = new HashEntry[tableSize];
-        tries = 0;
-        hits = 0;
-        generation = 0;
+        this.bucketSize = bucketSize;
+        this.entries = new HashEntry[tableSize];
+        this.tries = 0;
+        this.hits = 0;
+        this.age = 0;
     }
 
     /**
      * Retrieves an entry from the transposition table using the given zobrist key.
      *
-     * @param zobristKey the zobrist key of the position.
+     * @param key the zobrist key of the position.
      * @param ply the current ply in the search (used to adjust mate scores).
      */
-    public HashEntry get(long zobristKey, int ply) {
-        int index = getIndex(zobristKey);
-        long zobristPart = HashEntry.zobristPart(zobristKey);
+    public HashEntry get(long key, int ply) {
+        int index = index(key);
+        long keyPart = HashEntry.keyPart(key);
         tries++;
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < bucketSize; i++) {
             HashEntry entry = entries[index + i];
-            if (entry != null && entry.getZobristPart() == zobristPart) {
+            if (entry != null && entry.getKeyPart() == keyPart) {
                 hits++;
-                entry.setGeneration(generation);
+                entry.setAge(age);
                 if (Score.isMateScore(entry.getScore())) {
-                    int score = retrieveMateScore(entry.getScore(), ply);
+                    int score = Score.readMateScore(entry.getScore(), ply);
                     return entry.withAdjustedScore(score);
                 }
                 return entry;
@@ -71,21 +70,14 @@ public class TranspositionTable {
      * <li>The oldest entry in the bucket, stored further back in the game and so less likely to be relevant.</li>
      * <li>The entry with the lowest depth.</li>
      * </ol>
-     *
-     * @param zobristKey the zobrist key of the position.
-     * @param flag the flag indicating the type of node (e.g., exact, upper bound, lower bound).
-     * @param depth the search depth of the entry.
-     * @param ply the current ply from root in the search.
-     * @param move the best move found at this position.
-     * @param score the score of the position.
      */
     public void put(long zobristKey, HashFlag flag, int depth, int ply, Move move, int staticEval, int score) {
 
         // Get the start index of the 4-item bucket.
-        int startIndex = getIndex(zobristKey);
+        int startIndex = index(zobristKey);
 
         // If the eval is checkmate, adjust the score to reflect the number of ply from the root position
-        if (Score.isMateScore(score)) score = calculateMateScore(score, ply);
+        if (Score.isMateScore(score)) score = Score.writeMateScore(score, ply);
 
         int replacedIndex = -1;
         int minDepth = Integer.MAX_VALUE;
@@ -103,7 +95,7 @@ public class TranspositionTable {
 
             // Then, if the stored entry matches the zobrist key and the depth is >= the stored depth, replace it.
             // If the depth is < the store depth, don't replace it and exit (although this should never happen).
-            if (storedEntry.getZobristPart() == HashEntry.zobristPart(zobristKey)) {
+            if (storedEntry.getKeyPart() == HashEntry.keyPart(zobristKey)) {
                 if (depth >= storedEntry.getDepth()) {
                     // If the stored entry has a recorded best move but the new entry does not, use the stored one.
                     if (move == null && storedEntry.getMove() != null) {
@@ -117,7 +109,7 @@ public class TranspositionTable {
             }
 
             // Next, prefer to replace entries from earlier on in the game, since they are now less likely to be relevant.
-            if (generation > storedEntry.getGeneration()) {
+            if (age > storedEntry.getAge()) {
                 replacedByAge = true;
                 replacedIndex = i;
             }
@@ -132,15 +124,12 @@ public class TranspositionTable {
 
         // Store the new entry in the table at the chosen index.
         if (replacedIndex != -1) {
-            entries[replacedIndex] = HashEntry.of(zobristKey, score, staticEval, move, flag, depth, generation);
+            entries[replacedIndex] = HashEntry.of(zobristKey, score, staticEval, move, flag, depth, age);
         }
     }
 
-    /**
-     * Increments the generation counter for the transposition table.
-     */
-    public void incrementGeneration() {
-        generation++;
+    public void incrementAge() {
+        age++;
     }
 
     public void resize(int tableSizeMb) {
@@ -148,54 +137,27 @@ public class TranspositionTable {
         entries = new HashEntry[tableSize];
         tries = 0;
         hits = 0;
-        generation = 0;
+        age = 0;
     }
 
-    /**
-     * Clears the transposition table, resetting all entries and statistics.
-     */
     public void clear() {
         tries = 0;
         hits = 0;
-        generation = 0;
+        age = 0;
         entries = new HashEntry[tableSize];
     }
 
     /**
      * Compresses the 64-bit zobrist key into a 32-bit key, to be used as an index in the hash table.
-     *
-     * @param zobristKey the zobrist key of the position.
-     * @return a compressed 32-bit index.
      */
-    private int getIndex(long zobristKey) {
+    private int index(long key) {
         // XOR the upper and lower halves of the zobrist key together, producing a pseudo-random 32-bit result.
         // Then apply a mask ensuring the number is always positive, since it is to be used as an array index.
-        long index = (zobristKey ^ (zobristKey >>> 32)) & 0x7FFFFFFF;
-        // Modulo the result with the number of entries in the table, and align it with a multiple of 4,
-        // ensuring the entries are always divided into 4-sized buckets.
-        return (int) (index % (tableSize - 3)) & ~3;
-    }
+        long index = Bits.abs(key ^ (key >>> 32));
 
-    /**
-     * Calculates the mate score, adjusting it based on the ply from the root.
-     *
-     * @param score the score to adjust.
-     * @param plyFromRoot the ply from the root.
-     * @return the adjusted mate score.
-     */
-    private int calculateMateScore(int score, int plyFromRoot) {
-        return score > 0 ? score - plyFromRoot : score + plyFromRoot;
-    }
-
-    /**
-     * Retrieves the mate score, adjusting it based on the ply from the root.
-     *
-     * @param score the score to adjust.
-     * @param plyFromRoot the ply from the root.
-     * @return the adjusted mate score.
-     */
-    private int retrieveMateScore(int score, int plyFromRoot) {
-        return score > 0 ? score + plyFromRoot : score - plyFromRoot;
+        // Modulo the result with the number of entries in the table, and align it with a multiple of bucketSize,
+        // ensuring the entries are always divided into 'bucketSize'-sized buckets.
+        return (int) (index % (tableSize - (bucketSize - 1))) & -bucketSize;
     }
 
 }

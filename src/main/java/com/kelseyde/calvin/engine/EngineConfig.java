@@ -12,9 +12,10 @@ public class EngineConfig {
     public final int maxThreadCount = 12;
     public final int defaultThreadCount = 1;
 
-    public final int minHashSizeMb = 16;
-    public final int maxHashSizeMb = 1024;
-    public final int defaultHashSizeMb = 256;
+    public final int ttSizeMin = 16;
+    public final int ttSizeMax = 1024;
+    public final int ttSizeDefault = 256;
+    public final int ttBucketSize = 4;
 
     public boolean ponderEnabled = false;
 

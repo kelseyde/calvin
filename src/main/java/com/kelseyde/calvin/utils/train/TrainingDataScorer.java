@@ -181,7 +181,7 @@ public class TrainingDataScorer {
 
     private Searcher initSearcher(int i) {
         EngineConfig config = new EngineConfig();
-        TranspositionTable transpositionTable = new TranspositionTable(TT_SIZE);
+        TranspositionTable transpositionTable = new TranspositionTable(TT_SIZE, config.ttBucketSize);
         return new Searcher(config, transpositionTable, new ThreadData(i == 0));
     }
 

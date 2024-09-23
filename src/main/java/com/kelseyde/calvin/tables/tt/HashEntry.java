@@ -9,7 +9,7 @@ import com.kelseyde.calvin.board.Move;
  *
  * Key encoding:
  * 0-31: 32 bits representing half of the zobrist hash. Used to verify that the position truly matches.
- * 32-47: 16 bits representing the generation of the entry, i.e. how old it is. Used to gradually replace old entries.
+ * 32-47: 16 bits representing the age of the entry, i.e. how old it is. Used to gradually replace old entries.
  * 48-63: 16 bits representing the static eval of the position. Re-used to save calling the evaluation function again.
  * </p>
  *
@@ -23,8 +23,8 @@ public class HashEntry {
 
     public static final int SIZE_BYTES = 32;
 
-    private static final long ZOBRIST_PART_MASK = 0x00000000ffffffffL;
-    private static final long GENERATION_MASK = 0x0000ffff00000000L;
+    private static final long KEY_PART_MASK = 0x00000000ffffffffL;
+    private static final long AGE_MASK = 0x0000ffff00000000L;
     private static final long STATIC_EVAL_MASK = 0xffff000000000000L;
     private static final long SCORE_MASK = 0xffffffff00000000L;
     private static final long MOVE_MASK = 0x00000000ffff0000L;
@@ -40,31 +40,31 @@ public class HashEntry {
     }
 
     /**
-     * Extracts the 48-bits representing the zobrist part of the given zobrist key.
+     * Extracts the 32-bits representing lower part of the given zobrist key.
      */
-    public static long zobristPart(long zobrist) {
-        return zobrist & ZOBRIST_PART_MASK;
+    public static long keyPart(long zobrist) {
+        return zobrist & KEY_PART_MASK;
     }
 
     /**
-     * Returns the 48-bits representing zobrist part of the hash entry key.
+     * Returns the 32-bits representing zobrist key part of the hash entry key.
      */
-    public long getZobristPart() {
-        return key & ZOBRIST_PART_MASK;
+    public long getKeyPart() {
+        return key & KEY_PART_MASK;
     }
 
     /**
-     * Gets the generation part of this entry's key.
+     * Gets the age part of this entry's key.
      */
-    public int getGeneration() {
-        return (int) ((key & GENERATION_MASK) >>> 32);
+    public int getAge() {
+        return (int) ((key & AGE_MASK) >>> 32);
     }
 
     /**
-     * Sets the generation part of this entry's key.
+     * Sets the age part of this entry's key.
      */
-    public void setGeneration(int generation) {
-        key = (key & ~GENERATION_MASK) | ((long) generation << 32);
+    public void setAge(int age) {
+        key = (key & ~AGE_MASK) | ((long) age << 32);
     }
 
     /**
@@ -151,18 +151,10 @@ public class HashEntry {
 
     /**
      * Creates a new {@link HashEntry} with the specified parameters.
-     *
-     * @param zobristKey the Zobrist key
-     * @param score the score
-     * @param move the move
-     * @param flag the flag
-     * @param depth the depth
-     * @param generation the generation
-     * @return a new {@link HashEntry}
      */
-    public static HashEntry of(long zobristKey, int score, int staticEval, Move move, HashFlag flag, int depth, int generation) {
-        // Build the key using 32 bits for the zobrist part, 16 bits for the generation part, and 16 bits for the static evaluation part.
-        long key = (zobristKey & ZOBRIST_PART_MASK) | ((long) generation << 32) | ((long) (staticEval & 0xFFFF) << 48);
+    public static HashEntry of(long zobristKey, int score, int staticEval, Move move, HashFlag flag, int depth, int age) {
+        // Build the key using 32 bits for the zobrist part, 16 bits for the age part, and 16 bits for the static evaluation part.
+        long key = (zobristKey & KEY_PART_MASK) | ((long) age << 32) | ((long) (staticEval & 0xFFFF) << 48);
         // Get the 16-bit encoded move
         long moveValue = move != null ? move.value() : 0;
         // Get the 3-bit encoded flag

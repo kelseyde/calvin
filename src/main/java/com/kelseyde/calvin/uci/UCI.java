@@ -57,7 +57,7 @@ public class UCI {
         write("id author Dan Kelsey");
         EngineConfig config = ENGINE.getConfig();
         write(String.format("option name Hash type spin default %s min %s max %s",
-                config.defaultHashSizeMb, config.minHashSizeMb, config.maxHashSizeMb));
+                config.ttSizeDefault, config.ttSizeMin, config.ttSizeMax));
         write(String.format("option name Threads type spin default %s min %s max %s",
                 config.defaultThreadCount, config.minThreadCount, config.maxThreadCount));
         write(String.format("option name Ponder type check default %s", config.ponderEnabled));
@@ -212,8 +212,8 @@ public class UCI {
 
     private static void setHashSize(UCICommand command) {
         int hashSizeMb = command.getInt("value", -1, true);
-        int minHashSizeMb = ENGINE.getConfig().minHashSizeMb;
-        int maxHashSizeMb = ENGINE.getConfig().maxHashSizeMb;
+        int minHashSizeMb = ENGINE.getConfig().ttSizeMin;
+        int maxHashSizeMb = ENGINE.getConfig().ttSizeMax;
         if (hashSizeMb >= minHashSizeMb && hashSizeMb <= maxHashSizeMb) {
             ENGINE.setHashSize(hashSizeMb);
             write("info string Hash " + hashSizeMb);

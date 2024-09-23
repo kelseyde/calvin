@@ -17,6 +17,10 @@ public class Bits {
         return Long.bitCount(board);
     }
 
+    public static long abs(long board) {
+        return board & 0x7FFFFFFF;
+    }
+
     public static long north(long board) {
         return board << 8;
     }

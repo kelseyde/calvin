@@ -17,7 +17,7 @@ public class TestUtils {
     public static final Engine ENGINE = new Engine();
     public static final EngineConfig CONFIG = new EngineConfig();
     public static final MoveGenerator MOVEGEN = new MoveGenerator();
-    public static final TranspositionTable TT = new TranspositionTable(CONFIG.defaultHashSizeMb);
+    public static final TranspositionTable TT = new TranspositionTable(CONFIG.ttSizeDefault, CONFIG.ttBucketSize);
     public static final Searcher SEARCHER = new Searcher(CONFIG, TT, new ThreadData(true));
 
     public static Move getLegalMove(Board board, String from, String to) {
