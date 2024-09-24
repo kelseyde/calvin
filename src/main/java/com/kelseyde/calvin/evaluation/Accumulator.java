@@ -1,13 +1,9 @@
 package com.kelseyde.calvin.evaluation;
 
-import jdk.incubator.vector.ShortVector;
-import jdk.incubator.vector.VectorSpecies;
-
 import java.util.Arrays;
 
 public class Accumulator {
 
-    private static final VectorSpecies<Short> SPECIES = ShortVector.SPECIES_PREFERRED;
     private static final int HIDDEN_SIZE = NNUE.Network.HIDDEN_SIZE;
     private static final short[] WEIGHTS = NNUE.Network.NETWORK.inputWeights();
 
@@ -17,20 +13,17 @@ public class Accumulator {
     public final short[] whiteFeatures;
     public final short[] blackFeatures;
     private final int featureCount;
-    private final int loopLength;
 
     public Accumulator(int featureCount) {
         this.whiteFeatures = new short[featureCount];
         this.blackFeatures = new short[featureCount];
         this.featureCount = featureCount;
-        this.loopLength = SPECIES.loopBound(featureCount);
     }
 
     public Accumulator(short[] whiteFeatures, short[] blackFeatures) {
         this.whiteFeatures = whiteFeatures;
         this.blackFeatures = blackFeatures;
         this.featureCount = whiteFeatures.length;
-        this.loopLength = SPECIES.loopBound(this.featureCount);
     }
 
     public void add(int wx1, int bx1) {

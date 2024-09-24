@@ -6,8 +6,6 @@ import com.kelseyde.calvin.board.Bits.Square;
 import com.kelseyde.calvin.board.Board;
 import com.kelseyde.calvin.board.Move;
 import com.kelseyde.calvin.board.Piece;
-import jdk.incubator.vector.ShortVector;
-import jdk.incubator.vector.VectorSpecies;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -34,7 +32,7 @@ public class NNUE implements Evaluation {
 
     public record Network(short[] inputWeights, short[] inputBiases, short[] outputWeights, short outputBias) {
 
-        public static final String FILE = "dawn.nnue";
+        public static final String FILE = "sol.nnue";
         public static final int INPUT_SIZE = 768;
         public static final int HIDDEN_SIZE = 384;
 
@@ -68,12 +66,6 @@ public class NNUE implements Evaluation {
     static final int MATERIAL_BASE = 22400;
     static final int MATERIAL_FACTOR = 32768;
 
-    static final VectorSpecies<Short> SPECIES = ShortVector.SPECIES_PREFERRED;
-    static final int UPPER_BOUND = SPECIES.loopBound(Network.HIDDEN_SIZE);
-
-    static final ShortVector FLOOR = ShortVector.broadcast(SPECIES, 0);
-    static final ShortVector CEIL = ShortVector.broadcast(SPECIES, QA);
-
     // TODO test using array with single allocation at startup
     final Deque<Accumulator> accumulatorHistory = new ArrayDeque<>();
     Accumulator accumulator;
@@ -95,9 +87,10 @@ public class NNUE implements Evaluation {
         boolean white = board.isWhite();
         short[] us = white ? accumulator.whiteFeatures : accumulator.blackFeatures;
         short[] them = white ? accumulator.blackFeatures : accumulator.whiteFeatures;
-        int eval = Network.NETWORK.outputBias;
-        eval += forward(us, 0);
-        eval += forward(them, Network.HIDDEN_SIZE);
+        int eval = 0;
+        eval += forward(us, them);
+        eval /= QA;
+        eval += Network.NETWORK.outputBias;
         eval *= SCALE;
         eval /= QAB;
         eval = scaleEval(board, eval);
@@ -109,26 +102,13 @@ public class NNUE implements Evaluation {
      * Forward pass through the network, using the clipped ReLU activation function.
      * Implementation uses the Java Vector API to perform SIMD operations on multiple features at once.
      */
-    private int forward(short[] features, int weightOffset) {
+    private int forward(short[] us, short[] them) {
         short[] weights = Network.NETWORK.outputWeights;
-        short floor = 0;
-        short ceil = QA;
         int sum = 0;
 
-        // Loop through all the elements in the 'features' array
-        for (int i = 0; i < features.length; i++) {
-            // Get the feature and weight values
-            short featureValue = features[i];
-            short weightValue = weights[i + weightOffset];
-
-            // Clip the feature value between 'floor' and 'ceil'
-            short clippedValue = (short) Math.max(floor, Math.min(featureValue, ceil));
-
-            // Multiply the squared clipped value with the weight value
-            int result = clippedValue * weightValue;
-
-            // Add the result to the sum
-            sum += result;
+        for (int i = 0; i < Network.HIDDEN_SIZE; i++) {
+            sum += screlu[us[i] - (int) Short.MIN_VALUE] * (int) weights[i]
+                    + screlu[them[i] - (int) Short.MIN_VALUE] * (int) weights[i + Network.HIDDEN_SIZE];
         }
 
         return sum;
