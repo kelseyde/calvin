@@ -7,7 +7,6 @@ import com.kelseyde.calvin.board.Board;
 import com.kelseyde.calvin.board.Move;
 import com.kelseyde.calvin.board.Piece;
 import jdk.incubator.vector.ShortVector;
-import jdk.incubator.vector.VectorOperators;
 import jdk.incubator.vector.VectorSpecies;
 
 import java.io.FileNotFoundException;
@@ -41,6 +40,21 @@ public class NNUE implements Evaluation {
 
         public static final Network NETWORK = loadNetwork(FILE, INPUT_SIZE, HIDDEN_SIZE);
 
+    }
+
+    private final static int[] screlu = new int[Short.MAX_VALUE - Short.MIN_VALUE + 1];
+
+    static
+    {
+        for (int i = Short.MIN_VALUE; i <= Short.MAX_VALUE; i++)
+        {
+            screlu[i - (int) Short.MIN_VALUE] = screlu((short) (i));
+        }
+    }
+
+    private static int screlu(short i) {
+        int v = Math.max(0, Math.min(i, NNUE.QA));
+        return v * v;
     }
 
     static final int COLOUR_OFFSET = Square.COUNT * Piece.COUNT;
@@ -81,7 +95,7 @@ public class NNUE implements Evaluation {
         boolean white = board.isWhite();
         short[] us = white ? accumulator.whiteFeatures : accumulator.blackFeatures;
         short[] them = white ? accumulator.blackFeatures : accumulator.whiteFeatures;
-        int eval = Network.NETWORK.outputBias();
+        int eval = Network.NETWORK.outputBias;
         eval += forward(us, 0);
         eval += forward(them, Network.HIDDEN_SIZE);
         eval *= SCALE;
@@ -97,14 +111,24 @@ public class NNUE implements Evaluation {
      */
     private int forward(short[] features, int weightOffset) {
         short[] weights = Network.NETWORK.outputWeights;
+        short floor = 0;
+        short ceil = QA;
         int sum = 0;
 
-        for (int i = 0; i < UPPER_BOUND; i += SPECIES.length()) {
-            sum += ShortVector.fromArray(SPECIES, features, i)
-                    .min(CEIL)
-                    .max(FLOOR)
-                    .mul(ShortVector.fromArray(SPECIES, weights, i + weightOffset))
-                    .reduceLanes(VectorOperators.ADD);
+        // Loop through all the elements in the 'features' array
+        for (int i = 0; i < features.length; i++) {
+            // Get the feature and weight values
+            short featureValue = features[i];
+            short weightValue = weights[i + weightOffset];
+
+            // Clip the feature value between 'floor' and 'ceil'
+            short clippedValue = (short) Math.max(floor, Math.min(featureValue, ceil));
+
+            // Multiply the squared clipped value with the weight value
+            int result = clippedValue * weightValue;
+
+            // Add the result to the sum
+            sum += result;
         }
 
         return sum;

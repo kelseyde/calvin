@@ -1,33 +1,13 @@
 package com.kelseyde.calvin.utils.train;
 
-import com.kelseyde.calvin.board.Board;
-import com.kelseyde.calvin.board.Move;
-import com.kelseyde.calvin.engine.EngineConfig;
-import com.kelseyde.calvin.evaluation.Score;
 import com.kelseyde.calvin.movegen.MoveGenerator;
-import com.kelseyde.calvin.search.SearchResult;
-import com.kelseyde.calvin.search.Searcher;
-import com.kelseyde.calvin.search.ThreadData;
-import com.kelseyde.calvin.search.TimeControl;
-import com.kelseyde.calvin.tables.tt.TranspositionTable;
-import com.kelseyde.calvin.uci.UCI;
-import com.kelseyde.calvin.uci.UCICommand;
-import com.kelseyde.calvin.utils.notation.FEN;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.time.Duration;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.IntStream;
+import java.util.Iterator;
 import java.util.stream.Stream;
 
 public class DataDebugger {
