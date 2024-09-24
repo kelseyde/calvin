@@ -6,6 +6,8 @@ import com.kelseyde.calvin.board.Bits.Square;
 import com.kelseyde.calvin.board.Board;
 import com.kelseyde.calvin.board.Move;
 import com.kelseyde.calvin.board.Piece;
+import jdk.incubator.vector.IntVector;
+import jdk.incubator.vector.ShortVector;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -83,6 +85,9 @@ public class NNUE implements Evaluation {
 
     @Override
     public int evaluate() {
+
+        System.out.println(ShortVector.SPECIES_PREFERRED.length());
+        System.out.println(IntVector.SPECIES_PREFERRED.length());
 
         boolean white = board.isWhite();
         short[] us = white ? accumulator.whiteFeatures : accumulator.blackFeatures;
@@ -274,5 +279,6 @@ public class NNUE implements Evaluation {
             throw new RuntimeException("Failed to load NNUE network", e);
         }
     }
+
 
 }
