@@ -6,6 +6,7 @@ import com.kelseyde.calvin.board.Bits.Square;
 import com.kelseyde.calvin.board.Board;
 import com.kelseyde.calvin.board.Move;
 import com.kelseyde.calvin.board.Piece;
+import com.kelseyde.calvin.evaluation.Network.InputLayer;
 import jdk.incubator.vector.ShortVector;
 import jdk.incubator.vector.Vector;
 import jdk.incubator.vector.VectorOperators;
@@ -36,45 +37,37 @@ import static jdk.incubator.vector.VectorOperators.S2I;
  */
 public class NNUE implements Evaluation {
 
-    public record Network(short[] inputWeights, short[] inputBiases, short[] outputWeights, short outputBias) {
-
-        public static final String FILE = "sol.nnue";
-        public static final int INPUT_SIZE = 768;
-        public static final int HIDDEN_SIZE = 384;
-
-        public static final Network NETWORK = loadNetwork(FILE, INPUT_SIZE, HIDDEN_SIZE);
-
-    }
+    static final Network NETWORK = Network.builder()
+            .file("sol.nnue")
+            .inputSize(InputLayer.CHESS_768)
+            .hiddenSize(384)
+            .quantization(new int[]{255, 64})
+            .scale(400)
+            .build();
 
     static final int COLOUR_OFFSET = Square.COUNT * Piece.COUNT;
     static final int PIECE_OFFSET = Square.COUNT;
-    static final int SCALE = 400;
-
-    static final int QA = 255;
-    static final int QB = 64;
-    static final int QAB = QA * QB;
 
     static final int MATERIAL_BASE = 22400;
     static final int MATERIAL_FACTOR = 32768;
 
     static final VectorSpecies<Short> SPECIES = ShortVector.SPECIES_PREFERRED;
-    static final int UPPER_BOUND = SPECIES.loopBound(Network.HIDDEN_SIZE);
+    static final int UPPER_BOUND = SPECIES.loopBound(NETWORK.hiddenSize);
     static final int LOOP_LENGTH = SPECIES.length();
 
     static final ShortVector FLOOR = ShortVector.broadcast(SPECIES, 0);
-    static final ShortVector CEIL = ShortVector.broadcast(SPECIES, QA);
+    static final ShortVector CEIL = ShortVector.broadcast(SPECIES, NETWORK.quantization[0]);
 
-    // TODO test using array with single allocation at startup
     final Deque<Accumulator> accumulatorHistory = new ArrayDeque<>();
     Accumulator accumulator;
     Board board;
 
     public NNUE() {
-        this.accumulator = new Accumulator(Network.HIDDEN_SIZE);
+        this.accumulator = new Accumulator(NETWORK.hiddenSize);
     }
 
     public NNUE(Board board) {
-        this.accumulator = new Accumulator(Network.HIDDEN_SIZE);
+        this.accumulator = new Accumulator(NETWORK.hiddenSize);
         this.board = board;
         activateAll(board);
     }
@@ -83,7 +76,7 @@ public class NNUE implements Evaluation {
     public int evaluate() {
 
         boolean white = board.isWhite();
-        short[] weights = Network.NETWORK.outputWeights;
+        short[] weights = NETWORK.outputWeights;
 
         // Get the 'us-perspective' and 'them-perspective' feature sets, based on the side to move.
         short[] us = white ? accumulator.whiteFeatures : accumulator.blackFeatures;
@@ -98,7 +91,7 @@ public class NNUE implements Evaluation {
             ShortVector usInputs = ShortVector.fromArray(SPECIES, us, i);
             ShortVector themInputs = ShortVector.fromArray(SPECIES, them, i);
             ShortVector usWeights = ShortVector.fromArray(SPECIES, weights, i);
-            ShortVector themWeights = ShortVector.fromArray(SPECIES, weights, i + Network.HIDDEN_SIZE);
+            ShortVector themWeights = ShortVector.fromArray(SPECIES, weights, i + NETWORK.hiddenSize);
 
             // Clip the inputs to the range [0, 255].
             usInputs = usInputs.max(FLOOR).min(CEIL);
@@ -129,12 +122,13 @@ public class NNUE implements Evaluation {
         }
 
         // Since squaring the inputs also squares quantisation, we need to divide that out.
-        eval /= QA;
+        eval /= NETWORK.quantization[0];
 
         // Add the output bias, scale the result, and divide by the quantisation factor.
-        eval += Network.NETWORK.outputBias;
-        eval *= SCALE;
-        eval /= QAB;
+        eval += NETWORK.outputBias;
+        eval *= NETWORK.scale;
+        eval /= NETWORK.quantization[0];
+        eval *= NETWORK.quantization[1];
 
         // Scale the evaluation based on the material and proximity to 50-move rule draw.
         eval = scaleEval(board, eval);
@@ -145,9 +139,9 @@ public class NNUE implements Evaluation {
 
     private void activateAll(Board board) {
 
-        for (int i = 0; i < Network.HIDDEN_SIZE; i++) {
-            accumulator.whiteFeatures[i] = Network.NETWORK.inputBiases()[i];
-            accumulator.blackFeatures[i] = Network.NETWORK.inputBiases()[i];
+        for (int i = 0; i < NETWORK.hiddenSize; i++) {
+            accumulator.whiteFeatures[i] = NETWORK.inputBiases[i];
+            accumulator.blackFeatures[i] = NETWORK.inputBiases[i];
         }
 
         activateSide(board, board.getWhitePieces(), true);
@@ -255,53 +249,8 @@ public class NNUE implements Evaluation {
 
     @Override
     public void clearHistory() {
-        this.accumulator = new Accumulator(Network.HIDDEN_SIZE);
+        this.accumulator = new Accumulator(NETWORK.hiddenSize);
         this.accumulatorHistory.clear();
-    }
-
-    public static NNUE.Network loadNetwork(String file, int inputSize, int hiddenSize) {
-        try {
-            InputStream inputStream = NNUE.Network.class.getClassLoader().getResourceAsStream(file);
-            if (inputStream == null) {
-                throw new FileNotFoundException("NNUE file not found in resources");
-            }
-
-            byte[] fileBytes = inputStream.readAllBytes();
-            inputStream.close();
-            ByteBuffer buffer = ByteBuffer.wrap(fileBytes).order(ByteOrder.LITTLE_ENDIAN);
-
-            int inputWeightsOffset = inputSize * hiddenSize;
-            int inputBiasesOffset = hiddenSize;
-            int outputWeightsOffset = hiddenSize * 2;
-
-            short[] inputWeights = new short[inputWeightsOffset];
-            short[] inputBiases = new short[inputBiasesOffset];
-            short[] outputWeights = new short[outputWeightsOffset];
-
-            for (int i = 0; i < inputWeightsOffset; i++) {
-                inputWeights[i] = buffer.getShort();
-            }
-
-            for (int i = 0; i < inputBiasesOffset; i++) {
-                inputBiases[i] = buffer.getShort();
-            }
-
-            for (int i = 0; i < outputWeightsOffset; i++) {
-                outputWeights[i] = buffer.getShort();
-            }
-
-            short outputBias = buffer.getShort();
-
-            while (buffer.hasRemaining()) {
-                if (buffer.getShort() != 0) {
-                    throw new RuntimeException("Failed to load NNUE network: invalid file format");
-                }
-            }
-
-            return new NNUE.Network(inputWeights, inputBiases, outputWeights, outputBias);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to load NNUE network", e);
-        }
     }
 
 }
