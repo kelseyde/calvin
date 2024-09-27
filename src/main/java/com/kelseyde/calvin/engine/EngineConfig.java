@@ -99,6 +99,7 @@ public class EngineConfig {
     }
 
     private void calculateLmpMoves() {
+        lmpMoves = new int[2][16];
         int base = lmpBaseMoves.value;
         for (int improving = 0; improving < 2; improving++) {
             for (int depth = 0; depth < 16; depth++) {

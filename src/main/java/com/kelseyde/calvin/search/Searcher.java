@@ -333,7 +333,7 @@ public class Searcher implements Search {
             if (!pvNode
                 && !inCheck
                 && isQuiet
-                && movesSearched >= config.lmpMoves[improving ? 1 : 0][depth]) {
+                && movesSearched >= config.lmpMoves[improving ? 1 : 0][Math.min(15, depth)]) {
                 eval.unmakeMove();
                 board.unmakeMove();
                 ss.unsetMove(ply);
