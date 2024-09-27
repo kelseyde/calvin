@@ -330,12 +330,10 @@ public class Searcher implements Search {
             // Late Move Pruning - https://www.chessprogramming.org/Futility_Pruning#Move_Count_Based_Pruning
             // If the move is ordered very late in the list, and isn't a 'noisy' move like a check, capture or
             // promotion, let's assume it's less likely to be good, and fully skip searching that move.
-            int lmpCutoff = (depth * config.lmpMultiplier.value) / (1 + (improving ? 0 : 1));
             if (!pvNode
                 && !inCheck
                 && isQuiet
-                && depth <= config.lmpDepth.value
-                && movesSearched >= lmpCutoff) {
+                && movesSearched >= config.lmpMoves[improving ? 1 : 0][depth]) {
                 eval.unmakeMove();
                 board.unmakeMove();
                 ss.unsetMove(ply);

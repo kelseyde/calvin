@@ -35,8 +35,7 @@ public class EngineConfig {
     public final Tunable lmrBase =          new Tunable("LmrBase", 85, 50, 100, 5);
     public final Tunable lmrDivisor =       new Tunable("LmrDivisor", 310, 200, 400, 10);
     public final Tunable lmrMinMoves =      new Tunable("LmrMinSearchedMoves", 3, 2, 5, 1);
-    public final Tunable lmpDepth =         new Tunable("LmpDepth", 2, 0, 8, 1);
-    public final Tunable lmpMultiplier =    new Tunable("LmpMultiplier", 10, 1, 20, 1);
+    public final Tunable lmpBaseMoves =     new Tunable("LmpBaseMoves", 3, 2, 5, 1);
     public final Tunable iirDepth =         new Tunable("IirDepth", 4, 0, 8, 1);
     public final Tunable nmpMargin =        new Tunable("NmpMargin", 70, 0, 250, 10);
     public final Tunable dpMargin =         new Tunable("DpMargin", 140, 0, 250, 10);
@@ -46,11 +45,12 @@ public class EngineConfig {
     public final Tunable rfpMargin =        new Tunable("RfpMargin", 75, 0, 250, 10);
     public final Tunable rfpImpMargin =     new Tunable("RfpImpMargin", 40, 0, 250, 10);
     public int[][] lmrReductions;
+    public int[][] lmpMoves;
 
     public Set<Tunable> getTunables() {
         return Set.of(aspMargin, aspFailMargin, aspMaxReduction, nmpDepth, fpDepth, rfpDepth,
-                lmrDepth, lmrBase, lmrDivisor, lmrMinMoves, lmpDepth, lmpMultiplier, iirDepth,
-                nmpMargin, dpMargin, qsFpMargin, fpMargin, fpScale, rfpMargin, rfpImpMargin);
+                lmrDepth, lmrBase, lmrDivisor, lmrMinMoves, lmpBaseMoves, iirDepth, nmpMargin,
+                dpMargin, qsFpMargin, fpMargin, fpScale, rfpMargin, rfpImpMargin);
     }
 
     public void setTunable(UCICommand command) {
@@ -83,6 +83,7 @@ public class EngineConfig {
 
     public void postInitialise() {
         calculateLmrReductions();
+        calculateLmpMoves();
     }
 
     private void calculateLmrReductions() {
@@ -93,6 +94,15 @@ public class EngineConfig {
             lmrReductions[depth] = new int[250];
             for (int movesSearched = 1; movesSearched < 250; ++movesSearched) {
                 lmrReductions[depth][movesSearched] = (int) Math.round(lmrBaseFloat + (Math.log(movesSearched) * Math.log(depth) / lmrDivisorFloat));
+            }
+        }
+    }
+
+    private void calculateLmpMoves() {
+        int base = lmpBaseMoves.value;
+        for (int improving = 0; improving < 2; improving++) {
+            for (int depth = 0; depth < 16; depth++) {
+                lmpMoves[improving][depth] = (base + depth * depth) / (2 - improving);
             }
         }
     }
