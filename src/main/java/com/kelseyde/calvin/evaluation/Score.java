@@ -13,9 +13,14 @@ public class Score {
     public static final int MIN = -MAX;
     public static final int MATE = 32766;
     public static final int DRAW = 0;
+    public static final int WIN = 20000;
 
     public static boolean isMateScore(int eval) {
         return Math.abs(eval) >= Score.MATE - Search.MAX_DEPTH;
+    }
+
+    public static boolean isWinScore(int eval) {
+        return eval >= Score.WIN - Search.MAX_DEPTH;
     }
 
     /**

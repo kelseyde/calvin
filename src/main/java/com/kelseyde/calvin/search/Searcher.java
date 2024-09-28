@@ -496,7 +496,6 @@ public class Searcher implements Search {
 
             Move move = movePicker.pickNextMove();
             if (move == null) break;
-            movesSearched++;
 
             if (!inCheck) {
                 // Delta Pruning - https://www.chessprogramming.org/Delta_Pruning
@@ -520,6 +519,10 @@ public class Searcher implements Search {
                     continue;
                 }
 
+                if (bestScore >= -20000 && movesSearched >= 2) {
+                    break;
+                }
+
                 // SEE Pruning - https://www.chessprogramming.org/Static_Exchange_Evaluation
                 // Evaluate the possible captures + recaptures on the target square, in order to filter out losing capture
                 // chains, such as capturing with the queen a pawn defended by another pawn.
@@ -528,6 +531,8 @@ public class Searcher implements Search {
                     continue;
                 }
             }
+
+            movesSearched++;
 
             eval.makeMove(board, move);
             if (!board.makeMove(move)) continue;
