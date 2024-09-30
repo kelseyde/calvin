@@ -36,9 +36,9 @@ import static jdk.incubator.vector.VectorOperators.S2I;
  */
 public class NNUE implements Evaluation {
 
-    public record Network(short[] inputWeights, short[] inputBiases, short[] outputWeights, short outputBias) {
+    public record Network(short[] inputWeights, short[] inputBiases, short[][] outputWeights, short[] outputBias) {
 
-        public static final String FILE = "sol.nnue";
+        public static final String FILE = "sunbeam.nnue";
         public static final int INPUT_SIZE = 768;
         public static final int HIDDEN_SIZE = 384;
 
@@ -53,6 +53,8 @@ public class NNUE implements Evaluation {
     static final int QA = 255;
     static final int QB = 64;
     static final int QAB = QA * QB;
+
+    static final int OUTPUT_BUCKETS = 8;
 
     static final int MATERIAL_BASE = 22400;
     static final int MATERIAL_FACTOR = 32768;
@@ -83,7 +85,9 @@ public class NNUE implements Evaluation {
     public int evaluate() {
 
         boolean white = board.isWhite();
-        short[] weights = Network.NETWORK.outputWeights;
+        int outputBucket = bucketIndex(board);
+        short[] outputWeights = Network.NETWORK.outputWeights[outputBucket];
+        short outputBias = Network.NETWORK.outputBias[outputBucket];
 
         // Get the 'us-perspective' and 'them-perspective' feature sets, based on the side to move.
         short[] us = white ? accumulator.whiteFeatures : accumulator.blackFeatures;
@@ -97,8 +101,8 @@ public class NNUE implements Evaluation {
 
             ShortVector usInputs = ShortVector.fromArray(SPECIES, us, i);
             ShortVector themInputs = ShortVector.fromArray(SPECIES, them, i);
-            ShortVector usWeights = ShortVector.fromArray(SPECIES, weights, i);
-            ShortVector themWeights = ShortVector.fromArray(SPECIES, weights, i + Network.HIDDEN_SIZE);
+            ShortVector usWeights = ShortVector.fromArray(SPECIES, outputWeights, i);
+            ShortVector themWeights = ShortVector.fromArray(SPECIES, outputWeights, i + Network.HIDDEN_SIZE);
 
             // Clip the inputs to the range [0, 255].
             usInputs = usInputs.max(FLOOR).min(CEIL);
@@ -132,7 +136,7 @@ public class NNUE implements Evaluation {
         eval /= QA;
 
         // Add the output bias, scale the result, and divide by the quantisation factor.
-        eval += Network.NETWORK.outputBias;
+        eval += outputBias;
         eval *= SCALE;
         eval /= QAB;
 
@@ -226,8 +230,8 @@ public class NNUE implements Evaluation {
     }
 
     private int scaleEval(Board board, int eval) {
-        int materialPhase = materialPhase(board);
-        eval = eval * materialPhase / MATERIAL_FACTOR;
+        //int materialPhase = materialPhase(board);
+        //eval = eval * materialPhase / MATERIAL_FACTOR;
         eval = eval * (200 - board.getState().getHalfMoveClock()) / 200;
         return eval;
     }
@@ -253,6 +257,12 @@ public class NNUE implements Evaluation {
         return colourOffset + pieceOffset + squareIndex;
     }
 
+    private static int bucketIndex(Board board) {
+        int material = Bits.count(board.getOccupied());
+        return (material - 2) / 4;
+    }
+
+
     @Override
     public void clearHistory() {
         this.accumulator = new Accumulator(Network.HIDDEN_SIZE);
@@ -276,7 +286,8 @@ public class NNUE implements Evaluation {
 
             short[] inputWeights = new short[inputWeightsOffset];
             short[] inputBiases = new short[inputBiasesOffset];
-            short[] outputWeights = new short[outputWeightsOffset];
+            short[][] outputWeights = new short[OUTPUT_BUCKETS][outputWeightsOffset];
+            short[] outputBiases = new short[OUTPUT_BUCKETS];
 
             for (int i = 0; i < inputWeightsOffset; i++) {
                 inputWeights[i] = buffer.getShort();
@@ -286,11 +297,15 @@ public class NNUE implements Evaluation {
                 inputBiases[i] = buffer.getShort();
             }
 
-            for (int i = 0; i < outputWeightsOffset; i++) {
-                outputWeights[i] = buffer.getShort();
+            for (int bucket = 0; bucket < OUTPUT_BUCKETS; bucket++) {
+                for (int i = 0; i < hiddenSize * 2; i++) {
+                    outputWeights[bucket][i] = buffer.getShort();
+                }
             }
 
-            short outputBias = buffer.getShort();
+            for (int bucket = 0; bucket < OUTPUT_BUCKETS; bucket++) {
+                outputBiases[bucket] = buffer.getShort();
+            }
 
             while (buffer.hasRemaining()) {
                 if (buffer.getShort() != 0) {
@@ -298,7 +313,7 @@ public class NNUE implements Evaluation {
                 }
             }
 
-            return new NNUE.Network(inputWeights, inputBiases, outputWeights, outputBias);
+            return new NNUE.Network(inputWeights, inputBiases, outputWeights, outputBiases);
         } catch (IOException e) {
             throw new RuntimeException("Failed to load NNUE network", e);
         }
