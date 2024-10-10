@@ -178,11 +178,11 @@ public class TranspositionTable {
      * Clears the transposition table, resetting all entries and statistics.
      */
     public void clear() {
+        this.keys = new long[size];
+        this.values = new long[size];
         this.tries = 0;
         this.hits = 0;
         this.age = 0;
-        this.keys = new long[size];
-        this.values = new long[size];
     }
 
     /**

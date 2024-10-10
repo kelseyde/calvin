@@ -323,10 +323,11 @@ public class Searcher implements Search {
             // Futility Pruning - https://www.chessprogramming.org/Futility_Pruning
             // If the static evaluation + some margin is still < alpha, and the current move is not interesting (checks,
             // captures, promotions), then let's assume it will fail low and prune this node.
+            int futilityMargin = improving ? config.fpImpMargin.value : config.fpMargin.value;
             if (!pvNode
                 && depth <= config.fpDepth.value
                 && !inCheck && !isCapture && !isPromotion
-                && staticEval + config.fpMargin.value + depth * config.fpScale.value <= alpha) {
+                && staticEval + futilityMargin + depth * config.fpScale.value <= alpha) {
                 movePicker.setSkipQuiets(true);
                 continue;
             }
