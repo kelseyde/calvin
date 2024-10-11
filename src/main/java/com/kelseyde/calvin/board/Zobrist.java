@@ -79,15 +79,6 @@ public class Zobrist {
         return key;
     }
 
-    private static long updateKeyForPiece(long key, long whiteBitboard, long blackBitboard, int square, int pieceIndex) {
-        if (((whiteBitboard >>> square) & 1) == 1) {
-            key ^= PIECE_SQUARE_HASH[square][WHITE][pieceIndex];
-        } else if (((blackBitboard >>> square) & 1) == 1) {
-            key ^= PIECE_SQUARE_HASH[square][BLACK][pieceIndex];
-        }
-        return key;
-    }
-
     public static long generatePawnKey(Board board) {
         long key = 0L;
 
@@ -102,6 +93,47 @@ public class Zobrist {
             }
         }
 
+        return key;
+    }
+
+    public static long[] generateNonPawnKeys(Board board) {
+        long[] keys = new long[2];
+
+        // Array of piece types and their corresponding bitboards for both sides
+        long[][] nonPawnPieces = {
+                { board.getKnights(true), board.getKnights(false) },
+                { board.getBishops(true), board.getBishops(false) },
+                { board.getRooks(true), board.getRooks(false) },
+                { board.getQueens(true), board.getQueens(false) },
+                { board.getKing(true), board.getKing(false) }
+        };
+
+        // Array of corresponding piece indices
+        int[] pieceIndices = {
+                Piece.KNIGHT.index(), Piece.BISHOP.index(),
+                Piece.ROOK.index(), Piece.QUEEN.index(), Piece.KING.index()
+        };
+
+        // Loop through each square and update the keys based on the pieces on the board
+        for (int square = 0; square < 64; square++) {
+            for (int i = 0; i < nonPawnPieces.length; i++) {
+                if (((nonPawnPieces[i][WHITE] >>> square) & 1) == 1) {
+                    keys[WHITE] ^= PIECE_SQUARE_HASH[square][WHITE][pieceIndices[i]];
+                } else if (((nonPawnPieces[i][BLACK] >>> square) & 1) == 1) {
+                    keys[BLACK] ^= PIECE_SQUARE_HASH[square][BLACK][pieceIndices[i]];
+                }
+            }
+        }
+
+        return keys;
+    }
+
+    private static long updateKeyForPiece(long key, long whiteBitboard, long blackBitboard, int square, int pieceIndex) {
+        if (((whiteBitboard >>> square) & 1) == 1) {
+            key ^= PIECE_SQUARE_HASH[square][WHITE][pieceIndex];
+        } else if (((blackBitboard >>> square) & 1) == 1) {
+            key ^= PIECE_SQUARE_HASH[square][BLACK][pieceIndex];
+        }
         return key;
     }
 

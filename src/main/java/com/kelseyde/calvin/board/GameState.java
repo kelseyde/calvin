@@ -12,6 +12,7 @@ public class GameState {
 
     public long key;
     public long pawnKey;
+    public long[] nonPawnKeys;
     public int enPassantFile;
     public int rights;
     public int halfMoveClock;
@@ -20,15 +21,17 @@ public class GameState {
     public GameState() {
         this.key = 0L;
         this.pawnKey = 0L;
+        this.nonPawnKeys = new long[2];
         this.captured = null;
         this.enPassantFile = -1;
         this.rights = Castling.INITIAL_CASTLING_RIGHTS;
         this.halfMoveClock = 0;
     }
 
-    public GameState(long key, long pawnKey, Piece captured, int enPassantFile, int rights, int halfMoveClock) {
+    public GameState(long key, long pawnKey, long[] nonPawnKeys, Piece captured, int enPassantFile, int rights, int halfMoveClock) {
         this.key = key;
         this.pawnKey = pawnKey;
+        this.nonPawnKeys = nonPawnKeys;
         this.captured = captured;
         this.enPassantFile = enPassantFile;
         this.rights = rights;
@@ -77,6 +80,10 @@ public class GameState {
         this.pawnKey = pawnKey;
     }
 
+    public void setNonPawnKeys(long[] nonPawnKeys) {
+        this.nonPawnKeys = nonPawnKeys;
+    }
+
     public void setEnPassantFile(int enPassantFile) {
         this.enPassantFile = enPassantFile;
     }
@@ -90,7 +97,8 @@ public class GameState {
     }
 
     public GameState copy() {
-        return new GameState(key, pawnKey, captured, enPassantFile, rights, halfMoveClock);
+        long[] nonPawnKeysCopy = new long[]{nonPawnKeys[0], nonPawnKeys[1]};
+        return new GameState(key, pawnKey, nonPawnKeysCopy, captured, enPassantFile, rights, halfMoveClock);
     }
 
     @Override
@@ -100,6 +108,7 @@ public class GameState {
         GameState gameState = (GameState) o;
         return key == gameState.key
                 && pawnKey == gameState.pawnKey
+                && nonPawnKeys.equals(gameState.nonPawnKeys)
                 && enPassantFile == gameState.enPassantFile
                 && rights == gameState.rights
                 && halfMoveClock == gameState.halfMoveClock

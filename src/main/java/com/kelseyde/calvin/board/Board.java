@@ -112,20 +112,17 @@ public class Board {
         toggleSquares(Piece.KING, white, from, to);
         pieces[from] = null;
         pieces[to] = Piece.KING;
+        int colourIndex = Colour.index(white);
         state.key = Zobrist.updatePiece(state.key, from, to, Piece.KING, white);
+        state.nonPawnKeys[colourIndex] = Zobrist.updatePiece(state.nonPawnKeys[colourIndex], from, to, Piece.KING, white);
         final boolean kingside = File.of(to) == 6;
-        final int rookFrom, rookTo;
-        if (kingside) {
-            rookFrom = white ? 7 : 63;
-            rookTo = white ? 5 : 61;
-        } else {
-            rookFrom = white ? 0 : 56;
-            rookTo = white ? 3 : 59;
-        }
+        final int rookFrom = Castling.rookFrom(kingside, white);
+        final int rookTo = Castling.rookTo(kingside, white);
         toggleSquares(Piece.ROOK, white, rookFrom, rookTo);
         pieces[rookFrom] = null;
         pieces[rookTo] = Piece.ROOK;
         state.key = Zobrist.updatePiece(state.key, rookFrom, rookTo, Piece.ROOK, white);
+        state.nonPawnKeys[colourIndex] = Zobrist.updatePiece(state.nonPawnKeys[colourIndex], rookFrom, rookTo, Piece.ROOK, white);
     }
 
     private void makeEnPassantMove(int from, int to) {
@@ -153,11 +150,12 @@ public class Board {
         if (captured != null) {
             toggleSquare(captured, !white, to);
             state.key = Zobrist.updatePiece(state.key, to, captured, !white);
-            if (captured == Piece.PAWN) {
-                state.pawnKey = Zobrist.updatePiece(state.pawnKey, to, captured, !white);
-            }
+            int colourIndex = Colour.index(!white);
+            state.nonPawnKeys[colourIndex] = Zobrist.updatePiece(state.nonPawnKeys[colourIndex], to, captured, !white);
         }
         state.key = Zobrist.updatePiece(state.key, to, promoted, white);
+        int colourIndex = Colour.index(white);
+        state.nonPawnKeys[colourIndex] = Zobrist.updatePiece(state.nonPawnKeys[colourIndex], to, promoted, white);
     }
 
     private void makeStandardMove(int from, int to, Piece piece, Piece captured) {
@@ -167,6 +165,9 @@ public class Board {
             state.key = Zobrist.updatePiece(state.key, to, captured, !white);
             if (captured == Piece.PAWN) {
                 state.pawnKey = Zobrist.updatePiece(state.pawnKey, to, captured, !white);
+            } else {
+                int colourIndex = Colour.index(!white);
+                state.nonPawnKeys[colourIndex] = Zobrist.updatePiece(state.nonPawnKeys[colourIndex], to, captured, !white);
             }
         }
         pieces[from] = null;
@@ -174,6 +175,9 @@ public class Board {
         state.key = Zobrist.updatePiece(state.key, from, to, piece, white);
         if (piece == Piece.PAWN) {
             state.pawnKey = Zobrist.updatePiece(state.pawnKey, from, to, piece, white);
+        } else {
+            int colourIndex = Colour.index(white);
+            state.nonPawnKeys[colourIndex] = Zobrist.updatePiece(state.nonPawnKeys[colourIndex], from, to, piece, white);
         }
     }
 
@@ -196,14 +200,8 @@ public class Board {
     private void unmakeCastlingMove(int from, int to) {
         toggleSquares(Piece.KING, white, to, from);
         final boolean kingside = File.of(to) == 6;
-        final int rookFrom, rookTo;
-        if (kingside) {
-            rookFrom = white ? 5 : 61;
-            rookTo = white ? 7 : 63;
-        } else {
-            rookFrom = white ? 3 : 59;
-            rookTo = white ? 0 : 56;
-        }
+        final int rookFrom = Castling.rookTo(kingside, white);
+        final int rookTo = Castling.rookFrom(kingside, white);
         toggleSquares(Piece.ROOK, white, rookFrom, rookTo);
         pieces[from] = Piece.KING;
         pieces[to] = null;
@@ -245,8 +243,9 @@ public class Board {
      */
     public void makeNullMove() {
         white = !white;
-        final long key = Zobrist.updateKeyAfterNullMove(state.getKey(), state.getEnPassantFile());
-        GameState newState = new GameState(key, state.getPawnKey(), null, -1, state.getRights(), 0);
+        final long key = Zobrist.updateKeyAfterNullMove(state.key, state.enPassantFile);
+        final long[] nonPawnKeys = new long[] {state.nonPawnKeys[0], state.nonPawnKeys[1]};
+        final GameState newState = new GameState(key, state.pawnKey, nonPawnKeys, null, -1, state.getRights(), 0);
         states[ply++] = state;
         state = newState;
     }

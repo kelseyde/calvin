@@ -100,6 +100,7 @@ public class FEN {
             board.getState().setHalfMoveClock(fiftyMoveCounter);
             board.getState().setKey(Zobrist.generateKey(board));
             board.getState().setPawnKey(Zobrist.generatePawnKey(board));
+            board.getState().setNonPawnKeys(Zobrist.generateNonPawnKeys(board));
 
             return board;
 

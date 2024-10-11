@@ -216,6 +216,22 @@ public class Bits {
         public static final int CLEAR_BLACK_KINGSIDE_MASK = 0b1011;
         public static final int CLEAR_WHITE_QUEENSIDE_MASK = 0b1101;
         public static final int CLEAR_BLACK_QUEENSIDE_MASK = 0b0111;
+
+        public static int rookFrom(boolean kingside, boolean white) {
+            if (kingside) {
+                return white ? 7 : 63;
+            } else {
+                return white ? 0 : 56;
+            }
+        }
+
+        public static int rookTo(boolean kingside, boolean white) {
+            if (kingside) {
+                return white ? 5 : 61;
+            } else {
+                return white ? 3 : 59;
+            }
+        }
     }
 
 

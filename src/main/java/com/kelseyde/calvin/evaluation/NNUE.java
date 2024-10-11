@@ -1,6 +1,7 @@
 package com.kelseyde.calvin.evaluation;
 
 import com.kelseyde.calvin.board.Bits;
+import com.kelseyde.calvin.board.Bits.Castling;
 import com.kelseyde.calvin.board.Bits.File;
 import com.kelseyde.calvin.board.Bits.Square;
 import com.kelseyde.calvin.board.Board;
@@ -125,13 +126,13 @@ public class NNUE {
     }
 
     private void handleCastleMove(Accumulator acc, boolean white, int to, int oldWhiteIdx, int oldBlackIdx, int newWhiteIdx, int newBlackIdx) {
-        final boolean isKingside = File.of(to) == 6;
-        final int rookStart = isKingside ? white ? 7 : 63 : white ? 0 : 56;
-        final int rookEnd = isKingside ? white ? 5 : 61 : white ? 3 : 59;
-        final int rookStartWhiteIdx = featureIndex(Piece.ROOK, rookStart, white, true);
-        final int rookStartBlackIdx = featureIndex(Piece.ROOK, rookStart, white, false);
-        final int rookEndWhiteIdx = featureIndex(Piece.ROOK, rookEnd, white, true);
-        final int rookEndBlackIdx = featureIndex(Piece.ROOK, rookEnd, white, false);
+        final boolean kingside = File.of(to) == 6;
+        final int rookFrom = Castling.rookFrom(kingside, white);
+        final int rookTo = Castling.rookTo(kingside, white);
+        final int rookStartWhiteIdx = featureIndex(Piece.ROOK, rookFrom, white, true);
+        final int rookStartBlackIdx = featureIndex(Piece.ROOK, rookFrom, white, false);
+        final int rookEndWhiteIdx = featureIndex(Piece.ROOK, rookTo, white, true);
+        final int rookEndBlackIdx = featureIndex(Piece.ROOK, rookTo, white, false);
         acc.addAddSubSub(newWhiteIdx, newBlackIdx, rookEndWhiteIdx, rookEndBlackIdx, oldWhiteIdx, oldBlackIdx, rookStartWhiteIdx, rookStartBlackIdx);
     }
 
