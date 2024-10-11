@@ -36,7 +36,6 @@ public class FEN {
             long blackQueens = 0L;
             long blackKing = 0L;
 
-
             List<List<String>> rankFileHash = Arrays.stream(files)
                     .map(file -> Arrays.stream(file.split(""))
                             .flatMap(FEN::parseSquare)

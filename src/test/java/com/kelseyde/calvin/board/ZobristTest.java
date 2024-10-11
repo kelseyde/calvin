@@ -83,13 +83,31 @@ public class ZobristTest {
     }
 
     @Test
+    public void testStandardMove() {
+
+        String fenBeforeMove = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+        String fenAfterMove = "rnbqkbnr/pppppppp/8/8/8/4P3/PPPP1PPP/RNBQKBNR b KQkq - 0 1";
+
+        Board board1 = FEN.toBoard(fenBeforeMove);
+        board1.makeMove(Move.fromUCI("e2e3"));
+        long zobrist1 = board1.getState().getKey();
+
+        Board board2 = FEN.toBoard(fenAfterMove);
+        long zobrist2 = board2.getState().getKey();
+
+        Assertions.assertEquals(zobrist1, zobrist2);
+
+
+    }
+
+    @Test
     public void testPawnDoubleMove() {
 
         String fenBeforeMove = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
         String fenAfterMove = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1";
 
         Board board1 = FEN.toBoard(fenBeforeMove);
-        board1.makeMove(Move.fromUCI("e2e4"));
+        board1.makeMove(Move.fromUCI("e2e4", Move.PAWN_DOUBLE_MOVE_FLAG));
         long zobrist1 = board1.getState().getKey();
 
         Board board2 = FEN.toBoard(fenAfterMove);
@@ -106,12 +124,14 @@ public class ZobristTest {
         String fenAfterMove = "rnbqkbnr/ppp1pppp/8/3P4/8/8/PPPP1PPP/RNBQKBNR b KQkq - 0 2";
 
         Board board1 = FEN.toBoard(fenBeforeMove);
+        long zobrist0 = board1.getState().getKey();
         board1.makeMove(Move.fromUCI("e4d5"));
         long zobrist1 = board1.getState().getKey();
 
         Board board2 = FEN.toBoard(fenAfterMove);
         long zobrist2 = board2.getState().getKey();
 
+        Assertions.assertEquals(zobrist0, zobrist1);
         Assertions.assertEquals(zobrist1, zobrist2);
 
     }

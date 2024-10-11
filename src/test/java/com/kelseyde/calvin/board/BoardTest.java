@@ -110,6 +110,27 @@ public class BoardTest {
     }
 
     @Test
+    public void testUnmakeEnPassant() {
+
+        String fen = "rnbqkbnr/ppp1pppp/8/3pP3/8/8/PPPP1PPP/RNBQKBNR b KQkq - 0 2";
+        Board board = FEN.toBoard(fen);
+
+        long z1 = board.getState().getKey();
+        board.makeMove(Move.fromUCI("f7f5", Move.PAWN_DOUBLE_MOVE_FLAG));
+        long z2 = board.getState().getKey();
+        board.print();
+        board.makeMove(Move.fromUCI("e5f6", Move.EN_PASSANT_FLAG));
+        long z3 = board.getState().getKey();
+        board.print();
+        board.unmakeMove();
+        long z4 = board.getState().getKey();
+        board.print();
+
+        Assertions.assertEquals(z2, z4);
+
+    }
+
+    @Test
     public void testUnmakeMoveHandlesTurnSwitching() {
 
         Board board = Board.from(FEN.STARTPOS);
