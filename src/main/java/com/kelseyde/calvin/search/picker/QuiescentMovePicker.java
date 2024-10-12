@@ -20,17 +20,17 @@ public class QuiescentMovePicker extends MovePicker {
     @Override
     public Move pickNextMove() {
 
-        Move nextMove = null;
-        while (nextMove == null) {
+        short nextMove = 0;
+        while (nextMove == 0) {
             nextMove = switch (stage) {
                 case TT_MOVE -> pickTTMove();
                 case GEN_NOISY -> generate(filter, Stage.NOISY);
                 case NOISY -> pickMove(Stage.END);
-                case GEN_QUIET, QUIET, END -> null;
+                case GEN_QUIET, QUIET, END -> 0;
             };
             if (stage == Stage.END) break;
         }
-        return nextMove;
+        return nextMove != 0 ? new Move(nextMove) : null;
 
     }
 

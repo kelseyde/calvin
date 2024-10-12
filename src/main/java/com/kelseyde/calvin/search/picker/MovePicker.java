@@ -57,19 +57,19 @@ public class MovePicker {
 
     public Move pickNextMove() {
 
-        Move nextMove = null;
-        while (nextMove == null) {
+        short nextMove = 0;
+        while (nextMove == 0) {
             nextMove = switch (stage) {
                 case TT_MOVE ->         pickTTMove();
                 case GEN_NOISY ->       generate(MoveFilter.NOISY, Stage.NOISY);
                 case NOISY ->           pickMove(Stage.GEN_QUIET);
                 case GEN_QUIET ->       generate(MoveFilter.QUIET, Stage.QUIET);
                 case QUIET ->           pickMove(Stage.END);
-                case END ->             null;
+                case END ->             0;
             };
             if (stage == Stage.END) break;
         }
-        return nextMove;
+        return nextMove != 0 ? new Move(nextMove) : null;
 
     }
 
@@ -77,54 +77,54 @@ public class MovePicker {
      * Select the next move from the move list.
      * @param nextStage the next stage to move on to, if we have tried all moves in the current stage.
      */
-    protected Move pickMove(Stage nextStage) {
+    protected short pickMove(Stage nextStage) {
 
         if (stage == Stage.QUIET && (skipQuiets || inCheck)) {
             stage = nextStage;
-            return null;
+            return 0;
         }
         if (moveIndex >= moves.length) {
             stage = nextStage;
-            return null;
+            return 0;
         }
-        Move move = pick();
+        short move = pick();
         moveIndex++;
         return move;
 
     }
 
-    protected Move pickTTMove() {
+    protected short pickTTMove() {
         stage = Stage.GEN_NOISY;
-        return ttMove;
+        return ttMove.value();
     }
 
-    protected Move generate(MoveFilter filter, Stage nextStage) {
-        List<Move> stagedMoves = movegen.generateMoves(board, filter).toList();
+    protected short generate(MoveFilter filter, Stage nextStage) {
+        MoveList stagedMoves = movegen.generateMoves(board, filter);
         scoreMoves(stagedMoves);
         moveIndex = 0;
         stage = nextStage;
-        return null;
+        return 0;
     }
 
-    protected void scoreMoves(List<Move> stagedMoves) {
+    protected void scoreMoves(MoveList stagedMoves) {
         moves = new ScoredMove[stagedMoves.size()];
         for (int i = 0; i < stagedMoves.size(); i++) {
-            Move move = stagedMoves.get(i);
+            short move = stagedMoves.getValue(i);
             int score = scoreMove(board, move, ttMove, ply);
             moves[i] = new ScoredMove(move, score);
         }
     }
 
-    protected int scoreMove(Board board, Move move, Move ttMove, int ply) {
+    protected int scoreMove(Board board, short move, Move ttMove, int ply) {
 
-        int from = move.from();
-        int to = move.to();
+        int from = Move.from(move);
+        int to = Move.to(move);
 
-        if (move.equals(ttMove)) {
+        if (ttMove != null && move == ttMove.value()) {
             // Always put the TT move to the end - it will be tried first lazily
             return -MoveBonus.TT_MOVE_BONUS;
         }
-        if (move.isPromotion()) {
+        if (Move.isPromotion(move)) {
             return scorePromotion(move);
         }
 
@@ -155,25 +155,27 @@ public class MovePicker {
         return captureScore;
     }
 
-    protected int scoreQuiet(Board board, Move move, int ply) {
+    protected int scoreQuiet(Board board, short move, int ply) {
         boolean white = board.isWhite();
-        Piece piece = board.pieceAt(move.from());
+        int from = Move.from(move);
+        int to = Move.to(move);
+        Piece piece = board.pieceAt(from);
 
         // Check if the move is a killer move
         int killerIndex = history.getKillerTable().getIndex(move, ply);
         int killerScore = killerIndex >= 0 ? MoveBonus.KILLER_OFFSET * (KillerTable.KILLERS_PER_PLY - killerIndex) : 0;
 
         // Get the history score for the move
-        int historyScore = history.getHistoryTable().get(move, piece, white);
+        int historyScore = history.getHistoryTable().get(piece, to, white);
 
         // Get the continuation history score for the move
         Move prevMove = ss.getMove(ply - 1);
         Piece prevPiece = ss.getMovedPiece(ply - 1);
-        int contHistScore = history.getContHistTable().get(prevMove, prevPiece, move, piece, white);
+        int contHistScore = history.getContHistTable().get(prevPiece, to, piece, to, white);
 
         Move prevMove2 = ss.getMove(ply - 2);
         Piece prevPiece2 = ss.getMovedPiece(ply - 2);
-        contHistScore += history.getContHistTable().get(prevMove2, prevPiece2, move, piece, white);
+        contHistScore += history.getContHistTable().get(prevPiece2, to, prevPiece, to, white);
 
         // Killers are ordered higher than normal history moves
         int base = 0;
@@ -186,16 +188,16 @@ public class MovePicker {
         return base + killerScore + historyScore + contHistScore;
     }
 
-    protected int scorePromotion(Move move) {
-        return move.promoPiece() == Piece.QUEEN ? MoveBonus.QUEEN_PROMO_BONUS : MoveBonus.UNDER_PROMO_BONUS;
+    protected int scorePromotion(short move) {
+        return Move.promoPiece(move) == Piece.QUEEN ? MoveBonus.QUEEN_PROMO_BONUS : MoveBonus.UNDER_PROMO_BONUS;
     }
 
     /**
      * Select the move with the highest score and move it to the head of the move list.
      */
-    protected Move pick() {
+    protected short pick() {
         if (moveIndex >= moves.length) {
-            return null;
+            return 0;
         }
         int bestScore = moves[moveIndex].score();
         int bestIndex = moveIndex;
@@ -208,8 +210,8 @@ public class MovePicker {
         if (bestIndex != moveIndex) {
             swap(moveIndex, bestIndex);
         }
-        Move move = moves[moveIndex].move();
-        return wasTriedLazily(move) ? null : move;
+        ScoredMove move = moves[moveIndex];
+        return wasTriedLazily(move.move()) ? 0 : move.move();
     }
 
     protected void swap(int i, int j) {
@@ -222,10 +224,10 @@ public class MovePicker {
         this.skipQuiets = skipQuiets;
     }
 
-    private boolean wasTriedLazily(Move move) {
-        return move.equals(ttMove);
+    private boolean wasTriedLazily(short move) {
+        return ttMove != null && ttMove.value() == move;
     }
 
-    public record ScoredMove(Move move, int score) {}
+    public record ScoredMove(short move, int score) {}
 
 }

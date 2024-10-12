@@ -40,6 +40,40 @@ public record Move(short value) {
         return (short) (from | (to << 6) | (flag << 12));
     }
 
+    public static int from(short value) {
+        return value & FROM_MASK;
+    }
+
+    public static int to(short value) {
+        return (value & TO_MASK) >>> 6;
+    }
+
+    public static int flag(short value) {
+        return value >>> 12;
+    }
+
+    public static boolean isPromotion(short value) {
+        return (value >>> 12) >= PROMOTE_TO_QUEEN_FLAG;
+    }
+
+    public static boolean isEnPassant(short value) {
+        return (value >>> 12) == EN_PASSANT_FLAG;
+    }
+
+    public static boolean isCastling(short value) {
+        return (value >>> 12) == CASTLE_FLAG;
+    }
+
+    public static Piece promoPiece(short value) {
+        return switch (value >>> 12) {
+            case PROMOTE_TO_QUEEN_FLAG -> Piece.QUEEN;
+            case PROMOTE_TO_ROOK_FLAG -> Piece.ROOK;
+            case PROMOTE_TO_BISHOP_FLAG -> Piece.BISHOP;
+            case PROMOTE_TO_KNIGHT_FLAG -> Piece.KNIGHT;
+            default -> null;
+        };
+    }
+
     public int from() {
         return value & FROM_MASK;
     }

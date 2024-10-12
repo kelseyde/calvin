@@ -33,6 +33,14 @@ public class ContinuationHistoryTable extends AbstractHistoryTable {
         return table[colourIndex][prevPiece.index()][prevMove.to()][currPiece.index()][currMove.to()];
     }
 
+    public int get(Piece prevPiece, int prevTo, Piece currPiece, int currTo, boolean white) {
+        if (prevPiece == null || currPiece == null) {
+            return 0;
+        }
+        int colourIndex = Colour.index(white);
+        return table[colourIndex][prevPiece.index()][prevTo][currPiece.index()][currTo];
+    }
+
     public void set(Move prevMove, Piece prevPiece, Move currMove, Piece currPiece, int update, boolean white) {
         if (prevMove == null || prevPiece == null || currMove == null || currPiece == null) {
             return;

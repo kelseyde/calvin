@@ -36,6 +36,10 @@ public class MoveList {
         return new Move(moves[index]);
     }
 
+    public short getValue(int index) {
+        return moves[index];
+    }
+
     public int size() {
         return count;
     }

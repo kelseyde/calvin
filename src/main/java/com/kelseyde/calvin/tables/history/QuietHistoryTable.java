@@ -26,9 +26,9 @@ public class QuietHistoryTable extends AbstractHistoryTable {
         table[colourIndex][piece.index()][move.to()] = update;
     }
 
-    public int get(Move move, Piece piece, boolean white) {
+    public int get(Piece piece, int to, boolean white) {
         int colourIndex = Colour.index(white);
-        return table[colourIndex][piece.index()][move.to()];
+        return table[colourIndex][piece.index()][to];
     }
 
     public void ageScores(boolean white) {
