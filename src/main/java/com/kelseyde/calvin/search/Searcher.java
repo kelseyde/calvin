@@ -7,6 +7,7 @@ import com.kelseyde.calvin.engine.EngineConfig;
 import com.kelseyde.calvin.evaluation.NNUE;
 import com.kelseyde.calvin.movegen.MoveGenerator;
 import com.kelseyde.calvin.movegen.MoveGenerator.MoveFilter;
+import com.kelseyde.calvin.movegen.MoveList;
 import com.kelseyde.calvin.search.SearchStack.PlayedMove;
 import com.kelseyde.calvin.search.picker.MovePicker;
 import com.kelseyde.calvin.search.picker.QuiescentMovePicker;
@@ -67,7 +68,7 @@ public class Searcher implements Search {
     @Override
     public SearchResult search(TimeControl timeControl) {
 
-        final List<Move> rootMoves = movegen.generateMoves(board);
+        final MoveList rootMoves = movegen.generateMoves(board);
         if (rootMoves.size() == 1) {
             return handleOnlyOneLegalMove(rootMoves);
         }
@@ -665,7 +666,7 @@ public class Searcher implements Search {
         return lastEval < staticEval;
     }
 
-    private SearchResult handleOnlyOneLegalMove(List<Move> rootMoves) {
+    private SearchResult handleOnlyOneLegalMove(MoveList rootMoves) {
         // If there is only one legal move, play it immediately
         final Move move = rootMoves.get(0);
         final int eval = this.eval.evaluate();

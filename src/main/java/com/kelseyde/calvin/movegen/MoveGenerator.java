@@ -35,13 +35,13 @@ public class MoveGenerator {
     private long queens;
     private long king;
 
-    private List<Move> legalMoves;
+    private MoveList legalMoves;
 
-    public List<Move> generateMoves(Board board) {
+    public MoveList generateMoves(Board board) {
         return generateMoves(board, MoveFilter.ALL);
     }
 
-    public List<Move> generateMoves(Board board, MoveFilter filter) {
+    public MoveList generateMoves(Board board, MoveFilter filter) {
 
         white = board.isWhite();
 
@@ -61,7 +61,7 @@ public class MoveGenerator {
         checkersCount = Bits.count(checkersMask);
 
         final int estimatedLegalMoves = estimateLegalMoves();
-        legalMoves = new ArrayList<>(estimatedLegalMoves);
+        legalMoves = new MoveList(estimatedLegalMoves);
 
         if (checkersCount > 0 && filter == MoveFilter.QUIET) {
             return legalMoves;
@@ -147,7 +147,7 @@ public class MoveGenerator {
             final int to = Bits.next(singleMoves);
             final int from = white ? to - 8 : to + 8;
             if (!isPinned(from) || isMovingAlongPinRay(from, to)) {
-                legalMoves.add(new Move(from, to));
+                legalMoves.add(Move.valueOf(from, to));
             }
             singleMoves = Bits.pop(singleMoves);
         }
@@ -156,7 +156,7 @@ public class MoveGenerator {
             final int to = Bits.next(doubleMoves);
             final int from = white ? to - 16 : to + 16;
             if (!isPinned(from) || isMovingAlongPinRay(from, to)) {
-                legalMoves.add(new Move(from, to, Move.PAWN_DOUBLE_MOVE_FLAG));
+                legalMoves.add(Move.valueOf(from, to, Move.PAWN_DOUBLE_MOVE_FLAG));
             }
             doubleMoves = Bits.pop(doubleMoves);
         }
@@ -170,7 +170,7 @@ public class MoveGenerator {
             final int to = Bits.next(leftCaptures);
             final int from = white ? to - 7 : to + 9;
             if (!isPinned(from) || isMovingAlongPinRay(from, to)) {
-                legalMoves.add(new Move(from, to));
+                legalMoves.add(Move.valueOf(from, to));
             }
             leftCaptures = Bits.pop(leftCaptures);
         }
@@ -179,7 +179,7 @@ public class MoveGenerator {
             final int to = Bits.next(rightCaptures);
             final int from = white ? to - 9 : to + 7;
             if (!isPinned(from) || isMovingAlongPinRay(from, to)) {
-                legalMoves.add(new Move(from, to));
+                legalMoves.add(Move.valueOf(from, to));
             }
             rightCaptures = Bits.pop(rightCaptures);
         }
@@ -200,7 +200,7 @@ public class MoveGenerator {
             final int to = Bits.next(promotionMask);
             final int from = white ? to - offsetWhite : to + offsetBlack;
             if (!isPinned(from) || isMovingAlongPinRay(from, to)) {
-                legalMoves.addAll(getPromotionMoves(from, to));
+                addPromotionMoves(from, to);
             }
             promotionMask = Bits.pop(promotionMask);
         }
@@ -223,7 +223,7 @@ public class MoveGenerator {
             final int from = white ? to - offsetWhite : to + offsetBlack;
             final Move move = new Move(from, to, Move.EN_PASSANT_FLAG);
             if (!leavesKingInCheck(board, move, white)) {
-                legalMoves.add(move);
+                legalMoves.add(move.value());
             }
             enPassantMask = Bits.pop(enPassantMask);
         }
@@ -263,7 +263,7 @@ public class MoveGenerator {
             long possibleMoves = getKnightAttacks(board, from, white) & (pushMask | captureMask) & filterMask;
             while (possibleMoves != 0) {
                 final int to = Bits.next(possibleMoves);
-                legalMoves.add(new Move(from, to));
+                legalMoves.add(Move.valueOf(from, to));
                 possibleMoves = Bits.pop(possibleMoves);
             }
             unpinnedKnights = Bits.pop(unpinnedKnights);
@@ -294,7 +294,7 @@ public class MoveGenerator {
             final int to = Bits.next(kingMoves);
             // Check if the end square is not attacked by the opponent
             if (!isAttacked(board, white, Bits.of(to))) {
-                legalMoves.add(new Move(from, to));
+                legalMoves.add(Move.valueOf(from, to));
             }
             kingMoves = Bits.pop(kingMoves);
         }
@@ -329,7 +329,7 @@ public class MoveGenerator {
         final long safeSquares = getCastleSafeSquares(white, isKingside);
         if (blockedSquares == 0 && !isAttacked(board, white, safeSquares)) {
             int to = getCastleEndSquare(white, isKingside);
-            legalMoves.add(new Move(from, to, Move.CASTLE_FLAG));
+            legalMoves.add(Move.valueOf(from, to, Move.CASTLE_FLAG));
         }
     }
 
@@ -377,7 +377,7 @@ public class MoveGenerator {
             sliders = Bits.pop(sliders);
             while (attackMask != 0) {
                 final int to = Bits.next(attackMask);
-                legalMoves.add(new Move(from, to));
+                legalMoves.add(Move.valueOf(from, to));
                 attackMask = Bits.pop(attackMask);
             }
         }
@@ -580,11 +580,11 @@ public class MoveGenerator {
 
     }
 
-    private List<Move> getPromotionMoves(int from, int to) {
-        return List.of(new Move(from, to, Move.PROMOTE_TO_QUEEN_FLAG),
-                        new Move(from, to, Move.PROMOTE_TO_ROOK_FLAG),
-                        new Move(from, to, Move.PROMOTE_TO_BISHOP_FLAG),
-                        new Move(from, to, Move.PROMOTE_TO_KNIGHT_FLAG));
+    private void addPromotionMoves(int from, int to) {
+        legalMoves.add(Move.valueOf(from, to, Move.PROMOTE_TO_QUEEN_FLAG));
+        legalMoves.add(Move.valueOf(from, to, Move.PROMOTE_TO_ROOK_FLAG));
+        legalMoves.add(Move.valueOf(from, to, Move.PROMOTE_TO_BISHOP_FLAG));
+        legalMoves.add(Move.valueOf(from, to, Move.PROMOTE_TO_KNIGHT_FLAG));
     }
 
 

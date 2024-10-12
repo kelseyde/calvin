@@ -3,6 +3,7 @@ package com.kelseyde.calvin.utils.perft;
 import com.kelseyde.calvin.board.Board;
 import com.kelseyde.calvin.board.Move;
 import com.kelseyde.calvin.movegen.MoveGenerator;
+import com.kelseyde.calvin.movegen.MoveList;
 import com.kelseyde.calvin.uci.UCI;
 
 import java.util.Comparator;
@@ -33,12 +34,13 @@ public class PerftService {
 
     public long perft(Board board, int depth, int originalDepth) {
         nodesSearched++;
-        List<Move> moves = movegen.generateMoves(board);
+        MoveList moves = movegen.generateMoves(board);
         if (depth == 1) {
             return moves.size();
         }
         long totalMoveCount = 0;
-        for (Move move : moves) {
+        for (int i = 0; i < moves.size(); i++) {
+            Move move = moves.get(i);
             board.makeMove(move);
             totalMoveCount += perft(board, depth - 1, originalDepth);
             if (depth == originalDepth) {

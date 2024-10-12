@@ -32,7 +32,7 @@ public class SAN {
 
         // Check if any ambiguity exists in notation (e.g. if e2 can be reached via Nfe2 and Nbe2)
         if (piece != Piece.PAWN && piece != Piece.KING) {
-            List<Move> legalMoves = moveGenerator.generateMoves(board);
+            List<Move> legalMoves = moveGenerator.generateMoves(board).toList();
 
             for (Move legalMove : legalMoves) {
 
@@ -82,7 +82,7 @@ public class SAN {
 
         board.makeMove(move);
         if (moveGenerator.isCheck(board, board.isWhite())) {
-            List<Move> legalMoves = moveGenerator.generateMoves(board);
+            List<Move> legalMoves = moveGenerator.generateMoves(board).toList();
             notation += legalMoves.isEmpty() ? "#" : "+";
         }
         board.unmakeMove();

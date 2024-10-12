@@ -172,7 +172,7 @@ public class Engine {
      * corresponding 'legal' move which includes any special move flag (promotion, en passant, castling etc.)
      */
     private Move move(Move move) {
-        return movegen.generateMoves(board).stream()
+        return movegen.generateMoves(board).toList().stream()
                 .filter(move::matches)
                 .findAny()
                 .orElseThrow(() -> new IllegalArgumentException("Illegal move " + Move.toUCI(move)));

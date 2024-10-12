@@ -5,6 +5,7 @@ import com.kelseyde.calvin.board.Move;
 import com.kelseyde.calvin.board.Piece;
 import com.kelseyde.calvin.movegen.MoveGenerator;
 import com.kelseyde.calvin.movegen.MoveGenerator.MoveFilter;
+import com.kelseyde.calvin.movegen.MoveList;
 import com.kelseyde.calvin.search.SearchHistory;
 import com.kelseyde.calvin.search.SearchStack;
 import com.kelseyde.calvin.tables.history.KillerTable;
@@ -98,7 +99,7 @@ public class MovePicker {
     }
 
     protected Move generate(MoveFilter filter, Stage nextStage) {
-        List<Move> stagedMoves = movegen.generateMoves(board, filter);
+        List<Move> stagedMoves = movegen.generateMoves(board, filter).toList();
         scoreMoves(stagedMoves);
         moveIndex = 0;
         stage = nextStage;

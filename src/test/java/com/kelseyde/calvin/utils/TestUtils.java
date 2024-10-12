@@ -22,7 +22,7 @@ public class TestUtils {
 
     public static Move getLegalMove(Board board, String from, String to) {
         Move move = Move.fromUCI(from + to);
-        List<Move> legalMoves = MOVEGEN.generateMoves(board);
+        List<Move> legalMoves = MOVEGEN.generateMoves(board).toList();
         Optional<Move> legalMove = legalMoves.stream()
                 .filter(m -> m.matches(move))
                 .findAny();
@@ -33,7 +33,7 @@ public class TestUtils {
     }
 
     public static Move getLegalMove(Board board, Move move) {
-        List<Move> legalMoves = MOVEGEN.generateMoves(board);
+        List<Move> legalMoves = MOVEGEN.generateMoves(board).toList();
         Optional<Move> legalMove = legalMoves.stream()
                 .filter(m -> m.matches(move))
                 .findAny();

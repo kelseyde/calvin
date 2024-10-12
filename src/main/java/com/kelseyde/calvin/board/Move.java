@@ -32,6 +32,14 @@ public record Move(short value) {
         this((short) (from | (to << 6) | (flag << 12)));
     }
 
+    public static short valueOf(int from, int to) {
+        return (short) (from | to << 6);
+    }
+
+    public static short valueOf(int from, int to, int flag) {
+        return (short) (from | (to << 6) | (flag << 12));
+    }
+
     public int from() {
         return value & FROM_MASK;
     }
