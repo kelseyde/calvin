@@ -20,6 +20,7 @@ public class SearchHistory {
     private final CaptureHistoryTable captureHistoryTable;
     private final CorrectionHistoryTable pawnCorrHistTable;
     private final CorrectionHistoryTable[] nonPawnCorrHistTables;
+    private final HistoryCorrectionHistoryTable historyCorrHistTable;
 
     private int bestMoveStability = 0;
     private int bestScoreStability = 0;
@@ -33,10 +34,11 @@ public class SearchHistory {
         this.nonPawnCorrHistTables = new CorrectionHistoryTable[] {
                 new CorrectionHistoryTable(), new CorrectionHistoryTable()
         };
+        this.historyCorrHistTable = new HistoryCorrectionHistoryTable();
     }
 
     public void updateHistory(
-            PlayedMove bestMove, boolean white, int depth, int ply, SearchStack ss, List<PlayedMove> quiets, List<PlayedMove> captures) {
+            PlayedMove bestMove, boolean white, int depth, int ply, int score, int staticEval, SearchStack ss, List<PlayedMove> quiets, List<PlayedMove> captures) {
 
         if (bestMove.isQuiet()) {
 
@@ -44,6 +46,7 @@ public class SearchHistory {
             for (PlayedMove quiet : quiets) {
                 boolean good = bestMove.move().equals(quiet.move());
                 quietHistoryTable.update(quiet.move(), quiet.piece(), depth, white, good);
+                historyCorrHistTable.update(quiet.move(), quiet.piece(), white, depth, score, staticEval);
 
                 for (int prevPly : CONT_HIST_PLIES) {
                     Move prevMove = ss.getMove(ply - prevPly);
@@ -113,6 +116,10 @@ public class SearchHistory {
         return captureHistoryTable;
     }
 
+    public HistoryCorrectionHistoryTable getHistoryCorrHistTable() {
+        return historyCorrHistTable;
+    }
+
     public void reset() {
         bestMoveStability = 0;
         bestScoreStability = 0;
@@ -128,6 +135,7 @@ public class SearchHistory {
         pawnCorrHistTable.clear();
         nonPawnCorrHistTables[Colour.WHITE].clear();
         nonPawnCorrHistTables[Colour.BLACK].clear();
+        historyCorrHistTable.clear();
     }
 
 }

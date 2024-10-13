@@ -326,13 +326,20 @@ public class Searcher implements Search {
             final boolean isCapture = captured != null;
             final boolean isPromotion = move.promoPiece() != null;
 
+            int moveStaticEval = staticEval;
+
+            if (!isCapture) {
+                int historyCorrectedEval = history.getHistoryCorrHistTable().correctEvaluation(move, piece, board.isWhite(), staticEval);
+                moveStaticEval = historyCorrectedEval;
+            }
+
             // Futility Pruning - https://www.chessprogramming.org/Futility_Pruning
             // If the static evaluation + some margin is still < alpha, and the current move is not interesting (checks,
             // captures, promotions), then let's assume it will fail low and prune this node.
             if (!pvNode
                 && depth <= config.fpDepth.value
                 && !inCheck && !isCapture && !isPromotion
-                && staticEval + config.fpMargin.value + depth * config.fpScale.value <= alpha) {
+                && moveStaticEval + config.fpMargin.value + depth * config.fpScale.value <= alpha) {
                 movePicker.setSkipQuiets(true);
                 continue;
             }
@@ -466,7 +473,7 @@ public class Searcher implements Search {
         if (bestScore >= beta) {
             final PlayedMove best = ss.getBestMove(ply);
             final int historyDepth = depth + (staticEval > alpha ? 1 : 0);
-            history.updateHistory(best, board.isWhite(), historyDepth, ply, ss, quietsSearched, capturesSearched);
+            history.updateHistory(best, board.isWhite(), historyDepth, ply, bestScore, staticEval, ss, quietsSearched, capturesSearched);
         }
 
         if (!inCheck
