@@ -375,6 +375,20 @@ public class Searcher implements Search {
                 continue;
             }
 
+            // Late Move Pruning - https://www.chessprogramming.org/Futility_Pruning#Move_Count_Based_Pruning
+            // If the move is ordered very late in the list, and isn't a 'noisy' move like a check, capture or
+            // promotion, let's assume it's less likely to be good, and fully skip searching that move.
+            final int lmpCutoff = (depth * config.lmpMultiplier.value) / (1 + (improving ? 0 : 1));
+            if (!pvNode
+                    && !inCheck
+                    && scoredMove.isQuiet()
+                    && depth <= config.lmpDepth.value
+                    && movesSearched >= lmpCutoff) {
+                sse.currentMove = null;
+                movePicker.setSkipQuiets(true);
+                continue;
+            }
+
             eval.makeMove(board, move);
             if (!board.makeMove(move)) {
                 eval.unmakeMove();
@@ -384,29 +398,12 @@ public class Searcher implements Search {
             td.nodes++;
 
             final boolean isCheck = movegen.isCheck(board, board.isWhite());
-            final boolean isQuiet = !isCheck && !isCapture && !isPromotion;
 
-            playedMove.quiet = isQuiet;
+            playedMove.quiet = !isCheck && !isCapture && !isPromotion;;
             playedMove.capture = isCapture;
 
             sse.currentMove = playedMove;
             sse.searchedMoves.add(playedMove);
-
-            // Late Move Pruning - https://www.chessprogramming.org/Futility_Pruning#Move_Count_Based_Pruning
-            // If the move is ordered very late in the list, and isn't a 'noisy' move like a check, capture or
-            // promotion, let's assume it's less likely to be good, and fully skip searching that move.
-            final int lmpCutoff = (depth * config.lmpMultiplier.value) / (1 + (improving ? 0 : 1));
-            if (!pvNode
-                    && !inCheck
-                    && isQuiet
-                    && depth <= config.lmpDepth.value
-                    && movesSearched >= lmpCutoff) {
-                eval.unmakeMove();
-                board.unmakeMove();
-                sse.currentMove = null;
-                movePicker.setSkipQuiets(true);
-                continue;
-            }
 
             int score;
 
