@@ -66,8 +66,54 @@ public class MovePickerTest {
                 maxIndex = currentIndex;
                 tried++;
             }
+
+            Assertions.assertEquals(legalMoves.size(), tried);
         }
 
+    }
+
+    @Test
+    public void testSingle() {
+
+        String fen = "6k1/1R3p2/6p1/2Bp3p/3P2q1/P7/1P2rQ1K/5R2 b - - 4 44";
+        System.out.println(fen);
+        Board board = FEN.toBoard(fen);
+        SearchStack ss = new SearchStack();
+        List<Move> legalMoves = moveGenerator.generateMoves(board);
+        SearchHistory history = new SearchHistory(new EngineConfig());
+        List<MoveType> expectedOrder = List.of(MoveType.TT_MOVE, MoveType.GOOD_NOISY, MoveType.BAD_NOISY, MoveType.KILLER, MoveType.QUIET);
+
+        Move ttMove = legalMoves.get(new Random().nextInt(legalMoves.size()));
+        Move killer1 = legalMoves.get(new Random().nextInt(legalMoves.size()));
+        Move killer2 = legalMoves.get(new Random().nextInt(legalMoves.size()));
+        System.out.println("ttMove: " + Move.toUCI(ttMove));
+        System.out.println("killer1: " + Move.toUCI(killer1));
+        System.out.println("killer2: " + Move.toUCI(killer2));
+        history.getKillerTable().add(0, killer1);
+        history.getKillerTable().add(0, killer2);
+
+        MovePicker picker = new MovePicker(moveGenerator, ss, history, board, 0, ttMove, false);
+
+        int maxIndex = -1;
+        int tried = 0;
+        while (true) {
+            ScoredMove move = picker.pickNextMove();
+            if (move == null) break;  // No more moves to pick
+
+            // Get the move type from the current move
+            MoveType currentMoveType = move.moveType();
+
+            System.out.println("Picking " + Move.toUCI(move.move()) + ", " + currentMoveType);
+
+            // Ensure the move type is in the expected order
+            int currentIndex = expectedOrder.indexOf(currentMoveType);
+            Assertions.assertTrue(currentIndex >= 0, "Unknown move type encountered.");
+            Assertions.assertTrue(currentIndex >= maxIndex, "Move types are out of order.");
+
+            // Update the highest index seen
+            maxIndex = currentIndex;
+            tried++;
+        }
     }
 
     @Test

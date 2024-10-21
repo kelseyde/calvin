@@ -141,12 +141,17 @@ public class MovePicker {
         List<Move> stagedMoves = movegen.generateMoves(board, filter);
         for (Move move : stagedMoves) {
             ScoredMove scoredMove = scoreMove(board, move, ttMove, ply);
-            switch (scoredMove.moveType()) {
-                case GOOD_NOISY ->  goodNoisies[goodNoisyIndex++] = scoredMove;
-                case KILLER ->      killers[killerIndex++] = scoredMove;
-                case BAD_NOISY ->   badNoisies[badNoisyIndex++] = scoredMove;
-                case QUIET ->       quiets[quietIndex++] = scoredMove;
-            }
+            System.out.printf("Score %s %s: %s\n", move, scoredMove.moveType(), scoredMove.score());
+//            if (scoredMove.isQuiet() && stage == Stage.GEN_NOISY) {
+//                badNoisies[badNoisyIndex++] = scoredMove;
+//            } else {
+                switch (scoredMove.moveType()) {
+                    case GOOD_NOISY ->  goodNoisies[goodNoisyIndex++] = scoredMove;
+                    case KILLER ->      killers[killerIndex++] = scoredMove;
+                    case BAD_NOISY ->   badNoisies[badNoisyIndex++] = scoredMove;
+                    case QUIET ->       quiets[quietIndex++] = scoredMove;
+                }
+//            }
         }
         moveIndex = 0;
         stage = nextStage;
