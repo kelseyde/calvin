@@ -311,6 +311,14 @@ public class Searcher implements Search {
                 }
             }
 
+            if (depth < 8
+                && staticEval >= beta + 200 + 50 * depth) {
+                depth--;
+                if (depth <= 0) {
+                    return quiescenceSearch(alpha, beta, 1, ply);
+                }
+            }
+
         }
 
         Move bestMove = null;
