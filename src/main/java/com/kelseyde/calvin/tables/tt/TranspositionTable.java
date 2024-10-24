@@ -19,10 +19,11 @@ import java.util.stream.IntStream;
 public class TranspositionTable {
 
     private static final int BUCKET_SIZE = 4;
-    private static final int ENTRY_SIZE_BYTES = 16;
+    private static final int ENTRY_SIZE_BYTES = 14;
 
     private long[] keys;
-    private long[] values;
+    private int[] values;
+    private short[] scores;
     private int size;
     private int age;
     private int tries;
@@ -34,7 +35,8 @@ public class TranspositionTable {
     public TranspositionTable(int tableSizeMb) {
         this.size = (tableSizeMb * 1024 * 1024) / ENTRY_SIZE_BYTES;
         this.keys = new long[size];
-        this.values = new long[size];
+        this.values = new int[size];
+        this.scores = new short[size];
         this.tries = 0;
         this.hits = 0;
         this.age = 0;
@@ -55,13 +57,12 @@ public class TranspositionTable {
                 hits++;
                 storedKey = HashEntry.Key.setAge(storedKey, age);
                 keys[index + i] = storedKey;
-                long storedValue = values[index + i];
-                int score = HashEntry.Value.getScore(storedValue);
+                int storedValue = values[index + i];
+                int score = scores[index + i];
                 if (Score.isMateScore(score)) {
                     score = retrieveMateScore(score, ply);
-                    storedValue = HashEntry.Value.setScore(storedValue, score);
                 }
-                return HashEntry.of(storedKey, storedValue);
+                return HashEntry.of(storedKey, storedValue, score);
             }
         }
         return null;
@@ -109,7 +110,7 @@ public class TranspositionTable {
                 break;
             }
 
-            long storedValue = values[i];
+            int storedValue = values[i];
             int storedDepth = HashEntry.Value.getDepth(values[i]);
             // Then, if the stored entry matches the zobrist key and the depth is >= the stored depth, replace it.
             // If the depth is < the store depth, don't replace it and exit (although this should never happen).
@@ -144,7 +145,8 @@ public class TranspositionTable {
         // Store the new entry in the table at the chosen index.
         if (replacedIndex != -1) {
             keys[replacedIndex] = HashEntry.Key.of(key, staticEval, age);
-            values[replacedIndex] = HashEntry.Value.of(score, move, flag, depth);
+            values[replacedIndex] = HashEntry.Value.of(move, flag, depth);
+            scores[replacedIndex] = (short) score;
         }
     }
 
@@ -168,7 +170,8 @@ public class TranspositionTable {
     public void resize(int tableSizeMb) {
         this.size = (tableSizeMb * 1024 * 1024) / ENTRY_SIZE_BYTES;
         this.keys = new long[size];
-        this.values = new long[size];
+        this.values = new int[size];
+        this.scores = new short[size];
         this.tries = 0;
         this.hits = 0;
         this.age = 0;
@@ -182,7 +185,8 @@ public class TranspositionTable {
         this.hits = 0;
         this.age = 0;
         this.keys = new long[size];
-        this.values = new long[size];
+        this.values = new int[size];
+        this.scores = new short[size];
     }
 
     /**

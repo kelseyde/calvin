@@ -12,11 +12,10 @@ import com.kelseyde.calvin.board.Move;
  */
 public record HashEntry(Move move, int score, int staticEval, HashFlag flag, int depth) {
 
-    public static HashEntry of(long key, long value) {
+    public static HashEntry of(long key, int value, int score) {
         final Move move       = Value.getMove(value);
         final HashFlag flag   = Value.getFlag(value);
         final int depth       = Value.getDepth(value);
-        final int score       = Value.getScore(value);
         final int staticEval  = Key.getStaticEval(key);
         return new HashEntry(move, score, staticEval, flag, depth);
     }
@@ -51,29 +50,20 @@ public record HashEntry(Move move, int score, int staticEval, HashFlag flag, int
 
     public static class Value {
 
-        private static final long SCORE_MASK    = 0xffffffff00000000L;
-        private static final long MOVE_MASK     = 0x00000000ffff0000L;
-        private static final long FLAG_MASK     = 0x000000000000f000L;
-        private static final long DEPTH_MASK    = 0x0000000000000fffL;
+        private static final long MOVE_MASK     = 0xffff0000L;
+        private static final long FLAG_MASK     = 0x0000f000L;
+        private static final long DEPTH_MASK    = 0x00000fffL;
 
-        public static int getScore(long value) {
-            return (int) ((value & SCORE_MASK) >>> 32);
-        }
-
-        public static long setScore(long value, int score) {
-            return (value & ~SCORE_MASK) | (long) score << 32;
-        }
-
-        public static Move getMove(long value) {
-            long move = (value & MOVE_MASK) >>> 16;
+        public static Move getMove(int value) {
+            int move = (int) ((value & MOVE_MASK) >>> 16);
             return move > 0 ? new Move((short) move) : null;
         }
 
-        public static long setMove(long value, Move move) {
-            return (value &~ MOVE_MASK) | (long) move.value() << 16;
+        public static int setMove(int value, Move move) {
+            return (int) ((value &~ MOVE_MASK) | (long) move.value() << 16);
         }
 
-        public static HashFlag getFlag(long value) {
+        public static HashFlag getFlag(int value) {
             long flag = (value & FLAG_MASK) >>> 12;
             return HashFlag.valueOf((int) flag);
         }
@@ -82,10 +72,10 @@ public record HashEntry(Move move, int score, int staticEval, HashFlag flag, int
             return (int) (value & DEPTH_MASK);
         }
 
-        public static long of(int score, Move move, HashFlag flag, int depth) {
+        public static int of(Move move, HashFlag flag, int depth) {
             long moveValue = move != null ? move.value() : 0;
             long flagValue = HashFlag.value(flag);
-            return (long) score << 32 | moveValue << 16 | flagValue << 12 | depth;
+            return (int) (moveValue << 16 | flagValue << 12 | depth);
         }
 
     }
