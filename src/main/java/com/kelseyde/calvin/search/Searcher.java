@@ -319,6 +319,7 @@ public class Searcher implements Search {
 
         sse.searchedMoves = new ArrayList<>();
         int movesSearched = 0;
+        int originalAlpha = alpha;
 
         while (true) {
 
@@ -363,6 +364,18 @@ public class Searcher implements Search {
 
                 // Reduce moves with a bad history score more aggressively, and reduce less if the history score is good.
                 reduction -= 2 * historyScore / config.quietHistMaxScore.value;
+
+            }
+
+            if (!pvNode
+                    && depth <= 4
+                    && !inCheck
+                    && !isCapture
+                    && !isPromotion
+                    && movesSearched >= 3
+                    && bestScore <= originalAlpha
+                    && staticEval < alpha) {
+                reduction++;
             }
 
             // History pruning - https://www.chessprogramming.org/History_Leaf_Pruning
