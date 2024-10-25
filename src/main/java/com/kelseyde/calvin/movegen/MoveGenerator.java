@@ -819,10 +819,6 @@ public class MoveGenerator {
         else return white ? 2 : 58;
     }
 
-    public long[] getPinRayMasks() {
-        return pinRayMasks;
-    }
-
     public long getPinMask() {
         return pinMask;
     }

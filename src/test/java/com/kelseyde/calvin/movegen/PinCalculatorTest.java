@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 
 public class PinCalculatorTest {
 
-    private MoveGenerator movegen = new MoveGenerator();
+    private final MoveGenerator movegen = new MoveGenerator();
 
     @Test
     public void testNoSlidersAndNoPins() {

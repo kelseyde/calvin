@@ -526,10 +526,6 @@ public class Board {
         return state.nonPawnKeys;
     }
 
-    public int countPieces() {
-        return Bits.count(occupied);
-    }
-
     public boolean hasPiecesRemaining(boolean white) {
         return white ?
                 (getKnights(true) != 0 || getBishops(true) != 0 || getRooks(true) != 0 || getQueens(true) != 0) :

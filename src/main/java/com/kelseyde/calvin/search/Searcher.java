@@ -86,6 +86,7 @@ public class Searcher implements Search {
 
         int retries = 0;
         int reduction = 0;
+
         final int maxReduction = config.aspMaxReduction.value;
         final int margin = config.aspMargin.value;
         final int failMargin = config.aspFailMargin.value;
@@ -210,7 +211,7 @@ public class Searcher implements Search {
 
         final boolean inCheck = movegen.isCheck(board, board.isWhite());
 
-        final MovePicker movePicker = new MovePicker(movegen, ss, history, board, ply, ttMove, inCheck);
+        final MovePicker movePicker = new MovePicker(movegen, history, ss, board, ply, ttMove, inCheck);
 
         // Check extension - https://www.chessprogramming.org/Check_Extension
         // If we are in check then there if a forcing sequence, so we could benefit from searching one ply deeper to
@@ -404,7 +405,7 @@ public class Searcher implements Search {
 
             final boolean isCheck = movegen.isCheck(board, board.isWhite());
 
-            playedMove.quiet = !isCheck && !isCapture && !isPromotion;;
+            playedMove.quiet = !isCheck && !isCapture && !isPromotion;
             playedMove.capture = isCapture;
 
             sse.currentMove = playedMove;

@@ -182,7 +182,6 @@ public class TranspositionTableTest {
     @Test
     public void testCanStorePromotionFlag() {
 
-        long zobrist = board.getState().getKey();
         HashFlag flag = HashFlag.EXACT;
         Move bestMove = Move.fromUCI("e7e8b");
         int eval = 60;

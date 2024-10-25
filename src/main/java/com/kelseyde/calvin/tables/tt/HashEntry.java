@@ -69,10 +69,6 @@ public record HashEntry(Move move, int score, int staticEval, HashFlag flag, int
             return move > 0 ? new Move((short) move) : null;
         }
 
-        public static long setMove(long value, Move move) {
-            return (value &~ MOVE_MASK) | (long) move.value() << 16;
-        }
-
         public static HashFlag getFlag(long value) {
             long flag = (value & FLAG_MASK) >>> 12;
             return HashFlag.valueOf((int) flag);

@@ -9,7 +9,6 @@ public enum MoveType {
     QUIET       (1_000_000);
 
     public static final int MVV_OFFSET = 5000;
-    public static final int KILLER_OFFSET = 10000;
 
     final int bonus;
 

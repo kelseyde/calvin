@@ -5,9 +5,9 @@ import com.kelseyde.calvin.board.Piece;
 
 public class PlayedMove {
 
-    public Move move;
-    public Piece piece;
-    public Piece captured;
+    public final Move move;
+    public final Piece piece;
+    public final Piece captured;
     public int score;
     public boolean quiet;
     public boolean capture;

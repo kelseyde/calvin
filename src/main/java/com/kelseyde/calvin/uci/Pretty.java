@@ -119,7 +119,7 @@ public class Pretty {
 
     private static String formatHashfull(float hashfull) {
         final int hashfullLength = 5;
-        String formatted = String.format(Locale.ROOT, "%.1f", (float) hashfull / 10);
+        String formatted = String.format(Locale.ROOT, "%.1f", hashfull / 10);
         int buffer = Math.max(0, hashfullLength - formatted.length());
         return GRAY + " ".repeat(buffer) + formatted + "%" + RESET;
     }

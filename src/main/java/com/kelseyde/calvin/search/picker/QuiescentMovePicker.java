@@ -13,7 +13,7 @@ public class QuiescentMovePicker extends MovePicker {
 
     public QuiescentMovePicker(
             MoveGenerator movegen, SearchStack ss, SearchHistory history, Board board, int ply, Move ttMove, boolean inCheck) {
-        super(movegen, ss, history, board, ply, ttMove, inCheck);
+        super(movegen, history, ss, board, ply, ttMove, inCheck);
         this.stage = ttMove != null ? Stage.TT_MOVE : Stage.QSEARCH_GEN_NOISY;
         this.skipQuiets = true;
     }
