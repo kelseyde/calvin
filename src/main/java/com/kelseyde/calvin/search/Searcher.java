@@ -274,19 +274,18 @@ public class Searcher implements Search {
                 int baseMargin = depth * (improving ? config.rfpImpMargin.value : config.rfpMargin.value);
                 int blend = depth * 4;
 
+                // At the stricter margin we prune the entire node; at the softer margin we reduce quiet moves only.
                 int pruneMargin = baseMargin - blend;
                 int reduceMargin = baseMargin + blend;
 
-                // If the evaluation is significantly higher than beta, prune the node entirely
                 if (staticEval - pruneMargin >= beta) {
                     return (staticEval + beta) / 2;
-                }
-
-                // Else, apply reduction to quiet moves, using a dynamic scaling based on how far the eval is from beta
-                else if (staticEval - reduceMargin >= beta) {
+                } else if (staticEval - reduceMargin >= beta) {
                     // Calculate distance from beta in units of 'blend' to scale reduction dynamically
-                    int delta = (staticEval - beta) - reduceMargin;
-                    quietReduction = 1 + Math.min(2, delta / blend);
+                    int distFromBeta = (staticEval - beta) - reduceMargin;
+
+                    int maxReduction = config.rfpDepth.value;
+                    quietReduction = 1 + Math.min(distFromBeta / blend, maxReduction - 1);
                 }
             }
 
