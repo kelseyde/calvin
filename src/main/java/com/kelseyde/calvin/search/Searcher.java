@@ -424,6 +424,18 @@ public class Searcher implements Search {
                 continue;
             }
 
+            // SEE Pruning - https://www.chessprogramming.org/Static_Exchange_Evaluation
+            // If the move loses material beyond a certain threshold once all the pieces on that square are swapped off,
+            // then we can assume it's a bad move and prune it.
+            if (!pvNode
+                && !rootNode
+                && !inCheck
+                && scoredMove.isQuiet()
+                && depth <= config.pvsSeeMaxDepth.value
+                && SEE.see(board, move) < depth * config.pvsSeeQuietMargin.value) {
+                continue;
+            }
+
             eval.makeMove(board, move);
             if (!board.makeMove(move)) {
                 eval.unmakeMove();
