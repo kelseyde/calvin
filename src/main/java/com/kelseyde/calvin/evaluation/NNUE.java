@@ -26,7 +26,7 @@ import com.kelseyde.calvin.search.Search;
 public class NNUE {
 
     public static final Network NETWORK = Network.builder()
-            .file("argonaut.nnue")
+            .file("galloway.nnue")
             .inputSize(768)
             .hiddenSize(768)
             .activation(Activation.SCReLU)
