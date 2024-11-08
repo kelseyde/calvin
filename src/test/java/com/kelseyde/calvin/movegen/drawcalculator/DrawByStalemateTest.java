@@ -18,7 +18,7 @@ public class DrawByStalemateTest {
         String fen = "k7/2K5/8/8/8/8/8/1Q6 w - - 0 1";
         Board board = FEN.toBoard(fen);
 
-        Assertions.assertFalse(Score.isEffectiveDraw(board));
+        Assertions.assertFalse(Score.isEffectiveDraw(board, false));
 
         board.makeMove(TestUtils.getLegalMove(board, "b1", "b6"));
 
@@ -31,7 +31,7 @@ public class DrawByStalemateTest {
     public void testSimpleKingAndPawnStalemate() {
 
         Board board = FEN.toBoard("4k3/4P3/3K4/8/8/8/8/8 w - - 0 1");
-        Assertions.assertFalse(Score.isEffectiveDraw(board));
+        Assertions.assertFalse(Score.isEffectiveDraw(board, false));
 
         board.makeMove(TestUtils.getLegalMove(board, "d6", "e6"));
 
@@ -56,7 +56,7 @@ public class DrawByStalemateTest {
     public void testStalemateWithPinnedPawn() {
 
         Board board = FEN.toBoard("7k/6p1/7P/4BBK1/8/8/1Q6/8 w - - 0 1");
-        Assertions.assertFalse(Score.isEffectiveDraw(board));
+        Assertions.assertFalse(Score.isEffectiveDraw(board, false));
 
         board.makeMove(TestUtils.getLegalMove(board, "b2", "a2"));
 

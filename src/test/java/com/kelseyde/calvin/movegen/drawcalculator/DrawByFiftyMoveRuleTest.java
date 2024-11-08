@@ -100,13 +100,13 @@ public class DrawByFiftyMoveRuleTest {
         board.makeMove(TestUtils.getLegalMove(board, "c1", "b1"));
         board.makeMove(TestUtils.getLegalMove(board, "f8", "g8"));
 
-        Assertions.assertFalse(Score.isEffectiveDraw(board));
+        Assertions.assertFalse(Score.isEffectiveDraw(board, false));
 
         board.makeMove(TestUtils.getLegalMove(board, "b1", "a1"));
         board.makeMove(TestUtils.getLegalMove(board, "g8", "h8"));
 
         // position now repeated once
-        Assertions.assertTrue(Score.isEffectiveDraw(board));
+        Assertions.assertTrue(Score.isEffectiveDraw(board, false));
 
         board.makeMove(TestUtils.getLegalMove(board, "a1", "a2"));
         board.makeMove(TestUtils.getLegalMove(board, "h8", "h7"));

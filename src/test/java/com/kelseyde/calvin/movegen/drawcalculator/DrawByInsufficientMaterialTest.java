@@ -15,7 +15,7 @@ public class DrawByInsufficientMaterialTest {
         String fen = "8/8/4k3/8/3qK3/8/8/8 w - - 0 1";
         Board board = FEN.toBoard(fen);
 
-        Assertions.assertFalse(Score.isEffectiveDraw(board));
+        Assertions.assertFalse(Score.isEffectiveDraw(board, false));
 
         board.makeMove(TestUtils.getLegalMove(board, "e4", "d4"));
 
@@ -30,7 +30,7 @@ public class DrawByInsufficientMaterialTest {
         String fen = "8/8/3qk3/8/1B2K3/8/8/8 w - - 0 1";
         Board board = FEN.toBoard(fen);
 
-        Assertions.assertFalse(Score.isEffectiveDraw(board));
+        Assertions.assertFalse(Score.isEffectiveDraw(board, false));
 
         board.makeMove(TestUtils.getLegalMove(board, "b4", "d6"));
 
@@ -45,7 +45,7 @@ public class DrawByInsufficientMaterialTest {
         String fen = "8/8/3qk3/8/2N1K3/8/8/8 w - - 0 1";
         Board board = FEN.toBoard(fen);
 
-        Assertions.assertFalse(Score.isEffectiveDraw(board));
+        Assertions.assertFalse(Score.isEffectiveDraw(board, false));
 
         board.makeMove(TestUtils.getLegalMove(board, "c4", "d6"));
 
@@ -60,7 +60,7 @@ public class DrawByInsufficientMaterialTest {
         String fen = "8/5b2/3qk3/8/1B2K3/8/8/8 w - - 0 1";
         Board board = FEN.toBoard(fen);
 
-        Assertions.assertFalse(Score.isEffectiveDraw(board));
+        Assertions.assertFalse(Score.isEffectiveDraw(board, false));
 
         board.makeMove(TestUtils.getLegalMove(board, "b4", "d6"));
 
@@ -75,7 +75,7 @@ public class DrawByInsufficientMaterialTest {
         String fen = "8/5nn1/3qk3/8/2N1K3/8/8/8 w - - 0 1";
         Board board = FEN.toBoard(fen);
 
-        Assertions.assertFalse(Score.isEffectiveDraw(board));
+        Assertions.assertFalse(Score.isEffectiveDraw(board, false));
 
         board.makeMove(TestUtils.getLegalMove(board, "c4", "d6"));
 

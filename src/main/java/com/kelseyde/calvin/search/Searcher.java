@@ -172,7 +172,7 @@ public class Searcher implements Search {
         if (depth <= 0) return quiescenceSearch(alpha, beta, 1, ply);
 
         // If the game is drawn by repetition, insufficient material or fifty move rule, return zero
-        if (ply > 0 && isDraw()) return Score.DRAW;
+        if (ply > 0 && isDraw(true)) return Score.DRAW;
 
         final boolean rootNode = ply == 0;
         final boolean pvNode = beta - alpha > 1;
@@ -645,7 +645,7 @@ public class Searcher implements Search {
             eval.makeMove(board, move);
             if (!board.makeMove(move)) continue;
             td.nodes++;
-            final int score = isDraw() ? Score.DRAW : -quiescenceSearch(-beta, -alpha, depth + 1, ply + 1);
+            final int score = isDraw(false) ? Score.DRAW : -quiescenceSearch(-beta, -alpha, depth + 1, ply + 1);
             eval.unmakeMove();
             board.unmakeMove();
 
@@ -699,8 +699,8 @@ public class Searcher implements Search {
         return tc.isSoftLimitReached(td.start, td.depth, td.nodes, bestMoveNodes, bestMoveStability, scoreStability);
     }
 
-    private boolean isDraw() {
-        return Score.isEffectiveDraw(board);
+    private boolean isDraw(boolean threefold) {
+        return Score.isEffectiveDraw(board, threefold);
     }
 
     /**
