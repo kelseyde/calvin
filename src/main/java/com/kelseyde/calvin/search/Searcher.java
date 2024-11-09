@@ -151,6 +151,11 @@ public class Searcher implements Search {
         // Clear move ordering cache and return the search result
         history.getKillerTable().clear();
 
+        if (bestMoveRoot == null) {
+            // If time expired before a best move was found in search, pick the first legal move.
+            bestMoveRoot = !rootMoves.isEmpty() ? rootMoves.get(0) : null;
+        }
+
         return SearchResult.of(bestMoveRoot, bestScoreRoot, td);
 
     }
@@ -173,6 +178,9 @@ public class Searcher implements Search {
 
         // If the game is drawn by repetition, insufficient material or fifty move rule, return zero
         if (ply > 0 && isDraw()) return Score.DRAW;
+
+        // If the maximum depth is reached, return the static evaluation of the position
+        if (ply >= MAX_DEPTH) return movegen.isCheck(board) ? 0 : eval.evaluate();
 
         final boolean rootNode = ply == 0;
         final boolean pvNode = beta - alpha > 1;
@@ -208,7 +216,7 @@ public class Searcher implements Search {
             ttMove = ttEntry.move();
         }
 
-        final boolean inCheck = movegen.isCheck(board, board.isWhite());
+        final boolean inCheck = movegen.isCheck(board);
 
         final MovePicker movePicker = new MovePicker(movegen, ss, history, board, ply, ttMove, inCheck);
 
@@ -432,7 +440,7 @@ public class Searcher implements Search {
             final int nodesBefore = td.nodes;
             td.nodes++;
 
-            final boolean isCheck = movegen.isCheck(board, board.isWhite());
+            final boolean isCheck = movegen.isCheck(board);
 
             boolean isQuiet = !isCheck && !isCapture && !isPromotion;
             playedMove.quiet = isQuiet;
@@ -544,6 +552,12 @@ public class Searcher implements Search {
             return alpha;
         }
 
+        // If the game is drawn by repetition, insufficient material or fifty move rule, return zero.
+        if (ply > 0 && isDraw()) return Score.DRAW;
+
+        // If the maximum depth is reached, return the static evaluation of the position.
+        if (ply >= MAX_DEPTH) return movegen.isCheck(board) ? 0 : eval.evaluate();
+
         final boolean pvNode = beta - alpha > 1;
 
         // Exit the quiescence search early if we already have an accurate score stored in the hash table.
@@ -559,7 +573,7 @@ public class Searcher implements Search {
             ttMove = ttEntry.move();
         }
 
-        final boolean inCheck = movegen.isCheck(board, board.isWhite());
+        final boolean inCheck = movegen.isCheck(board);
 
         final QuiescentMovePicker movePicker = new QuiescentMovePicker(movegen, ss, history, board, ply, ttMove, inCheck);
 
@@ -644,7 +658,7 @@ public class Searcher implements Search {
             eval.makeMove(board, move);
             if (!board.makeMove(move)) continue;
             td.nodes++;
-            final int score = isDraw() ? Score.DRAW : -quiescenceSearch(-beta, -alpha, depth + 1, ply + 1);
+            final int score = -quiescenceSearch(-beta, -alpha, depth + 1, ply + 1);
             eval.unmakeMove();
             board.unmakeMove();
 

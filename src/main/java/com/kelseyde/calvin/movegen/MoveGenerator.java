@@ -110,6 +110,10 @@ public class MoveGenerator {
         return isAttacked(board, white, king);
     }
 
+    public boolean isCheck(Board board) {
+        return isCheck(board, board.isWhite());
+    }
+
     private void generatePawnMoves(Board board) {
         if (pawns == 0) return;
 
