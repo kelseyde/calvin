@@ -32,18 +32,18 @@ From there, use the "help" option or refer to UCI documentation for further info
 
 The table below tracks the strength of previous Calvin releases, both on the CCRL leaderboards and on Lichess.
 
-| 	Version	 | 	Release date | Estimated | [Lichess](https://lichess.org/)	 | 	[CCRL Blitz](https://www.computerchess.org.uk/ccrl/404/)	 | [CCRL Rapid](https://www.computerchess.org.uk/ccrl/4040/)
-| 	:-----:	 | 	:-----:	 | 	:-----:	 | :-----:	|  :-----:	 | :-----:	 |  
-| [4.3.0](https://github.com/kelseyde/calvin-chess-engine/releases/tag/4.3.0) | 2024-10-05 | 3400 | - | - | 3400 |
-| [4.2.0](https://github.com/kelseyde/calvin-chess-engine/releases/tag/4.2.0) | 2024-09-19 | 3230 | - | - | 3224 |
-| [4.1.0](https://github.com/kelseyde/calvin-chess-engine/releases/tag/4.1.0) | 2024-09-04 | 3150 | ~2850 | 3171 | 3161 |
-| [4.0.0](https://github.com/kelseyde/calvin-chess-engine/releases/tag/4.0.0) | 2024-07-30 | 3000 | ~2700 | 3011 | 3029 |
-| [3.4.0](https://github.com/kelseyde/calvin-chess-engine/releases/tag/3.4.0) | 2024-05-19 | 2500 | ~2580 | - | 2492 |
-| [3.3.0](https://github.com/kelseyde/calvin-chess-engine/releases/tag/3.3.0) | 2024-05-10 | 2450 | ~2550 | 2453 | - |
-| [3.2.0](https://github.com/kelseyde/calvin-chess-engine/releases/tag/3.2.0) | 2023-12-09 | 2250 | ~2400 | 2233 | - |
-| [3.1.0](https://github.com/kelseyde/calvin-chess-engine/releases/tag/3.1.0) | 2023-12-05 | 2220 | ~2390 | - | - |
-| [3.0.0](https://github.com/kelseyde/calvin-chess-engine/releases/tag/3.0.0) | 2023-12-02 | 2200 | ~2380 | - | - |
-| [2.6.2](https://github.com/kelseyde/calvin-chess-engine/releases/tag/2.6.2) | 2023-11-12 | 2175 | ~2300 | 2173 | - |
+| 	Version	 | 	Release date | Estimated | [Lichess](https://lichess.org/)	 | 	[CCRL Blitz](https://www.computerchess.org.uk/ccrl/404/)	 | [CCRL Rapid](https://www.computerchess.org.uk/ccrl/4040/) 
+| 	:-----:	 | 	:-----:	 |:---------:| :-----:	|  :-----:	 |:---------------------------------------------------------:|  
+| [4.3.0](https://github.com/kelseyde/calvin-chess-engine/releases/tag/4.3.0) | 2024-10-05 |   3300    | - | - |                           3277                            |
+| [4.2.0](https://github.com/kelseyde/calvin-chess-engine/releases/tag/4.2.0) | 2024-09-19 |   3230    | - | - |                           3224                            |
+| [4.1.0](https://github.com/kelseyde/calvin-chess-engine/releases/tag/4.1.0) | 2024-09-04 |   3150    | ~2850 | 3171 |                           3161                            |
+| [4.0.0](https://github.com/kelseyde/calvin-chess-engine/releases/tag/4.0.0) | 2024-07-30 |   3000    | ~2700 | 3011 |                           3029                            |
+| [3.4.0](https://github.com/kelseyde/calvin-chess-engine/releases/tag/3.4.0) | 2024-05-19 |   2500    | ~2580 | - |                           2492                            |
+| [3.3.0](https://github.com/kelseyde/calvin-chess-engine/releases/tag/3.3.0) | 2024-05-10 |   2450    | ~2550 | 2453 |                             -                             |
+| [3.2.0](https://github.com/kelseyde/calvin-chess-engine/releases/tag/3.2.0) | 2023-12-09 |   2250    | ~2400 | 2233 |                             -                             |
+| [3.1.0](https://github.com/kelseyde/calvin-chess-engine/releases/tag/3.1.0) | 2023-12-05 |   2220    | ~2390 | - |                             -                             |
+| [3.0.0](https://github.com/kelseyde/calvin-chess-engine/releases/tag/3.0.0) | 2023-12-02 |   2200    | ~2380 | - |                             -                             |
+| [2.6.2](https://github.com/kelseyde/calvin-chess-engine/releases/tag/2.6.2) | 2023-11-12 |   2175    | ~2300 | 2173 |                             -                             |
 
 ## Features
 
@@ -116,8 +116,6 @@ The neural network was trained using the excellent [bullet](https://github.com/j
 - Other engines - I have drawn inspiration from countless others' engines, including but not limited to: [Chess Coding Adventure](https://github.com/SebLague/Chess-Coding-Adventure) (whose Youtube video inspired me to write my own engine); [Stockfish](https://github.com/official-stockfish/Stockfish) (the queen of all engines); [Leorik](https://github.com/lithander/Leorik) (whose author keeps an excellent devlog on the TalkChess forum); [Lynx](https://github.com/lynx-chess/Lynx) (my frequent Lichess rival); [Rustic](https://github.com/mvanthoor/rustic), [Simbelyne](https://github.com/sroelants/simbelmyne) and [Mantissa](https://github.com/jtheardw/mantissa) (who taught me that Rust is Cool); and many others.
 
 If you would like to contribute, or just talk about chess/chess programming, get in touch!
-
-<p align="center"><img src="src/main/resources/hobbes.png" width="160"></p>
 
 [release-badge]: https://img.shields.io/github/v/release/kelseyde/calvin-chess-engine?style=for-the-badge&color=ed5858
 [release-link]: https://github.com/kelseyde/calvin-chess-engine/releases/latest

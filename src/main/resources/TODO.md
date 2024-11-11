@@ -17,9 +17,12 @@
 
 ### Search
 
-- [x] SPSA tune
+- [ ] SPRT SPSA tune branch
+- [ ] LTC 1024 net
 - [ ] Threefold repetition ( CCRL bug ? )
 - [ ] TT cut after RFP if depth - quietReduction <= ttDepth?
+- [ ] Fractional depth
+- [ ] Improving rate
 - [ ] PV table
 - [ ] Exponentially widening aspiration window
 - [ ] Write to TT during QS stand-pat cutoff
