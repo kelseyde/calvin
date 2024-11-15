@@ -64,7 +64,7 @@ public class Engine {
         board = FEN.toBoard(command.fen());
         for (Move move : command.moves()) {
             Move legalMove = move(move);
-            board.makeMove(legalMove, false);
+            board.makeMove(legalMove);
         }
         searcher.setPosition(board.copy());
     }
