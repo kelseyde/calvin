@@ -53,24 +53,18 @@ public class Board {
         this.ply         = 0;
     }
 
-    public boolean makeMove(Move move) {
-        return makeMove(move, true);
-    }
-
     /**
      * Updates the internal board representation with the {@link Move} just made. Toggles the piece bitboards to move the
      * piece + remove the captured piece, plus special rules for pawn double-moves, castling, promotion and en passant.
      */
-    public boolean makeMove(Move move, boolean incrementPly) {
+    public boolean makeMove(Move move) {
 
         final int from = move.from();
         final int to = move.to();
         final Piece piece = pieces[from];
         if (piece == null) return false;
         final Piece captured = move.isEnPassant() ? Piece.PAWN : pieces[to];
-        if (incrementPly) {
-            states[ply] = state.copy();
-        }
+        states[ply] = state.copy();
 
         if (move.isPawnDoubleMove())  makePawnDoubleMove(from, to);
         else if (move.isCastling())   makeCastleMove(from, to);
@@ -79,9 +73,7 @@ public class Board {
         else                          makeStandardMove(from, to, piece, captured);
 
         updateState(from, to, piece, captured, move);
-        if (incrementPly) {
-            moves[ply++] = move;
-        }
+        moves[ply++] = move;
         checkMaxPly();
         white = !white;
 
@@ -621,10 +613,10 @@ public class Board {
 
     private void checkMaxPly() {
         if (ply >= states.length) {
-            BoardState[] newStates = new BoardState[states.length + 64];
+            BoardState[] newStates = new BoardState[states.length + (states.length / 2)];
             System.arraycopy(states, 0, newStates, 0, states.length);
 
-            Move[] newMoves = new Move[moves.length + 64];
+            Move[] newMoves = new Move[moves.length + (moves.length / 2)];
             System.arraycopy(moves, 0, newMoves, 0, moves.length);
 
             states = newStates;

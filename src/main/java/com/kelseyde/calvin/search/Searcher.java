@@ -163,10 +163,10 @@ public class Searcher implements Search {
     /**
      * Run a single iteration of the iterative deepening search for a specific depth.
      *
-     * @param depth               The number of ply deeper left to go in the current search ('ply remaining').
-     * @param ply                 The number of ply already examined in the current search ('ply from root').
-     * @param alpha               The lower bound for search scores ('we can do at least this well').
-     * @param beta                The upper bound for search scores ('our opponent can do at most this well').
+     * @param depth    The number of ply deeper left to go in the current search ('ply remaining').
+     * @param ply      The number of ply already examined in the current search ('ply from root').
+     * @param alpha    The lower bound for search scores ('we can do at least this well').
+     * @param beta     The upper bound for search scores ('our opponent can do at most this well').
      */
     public int search(int depth, int ply, int alpha, int beta) {
 
@@ -176,14 +176,14 @@ public class Searcher implements Search {
         // If depth is reached, drop into quiescence search
         if (depth <= 0) return quiescenceSearch(alpha, beta, 1, ply);
 
+        final boolean rootNode = ply == 0;
+        final boolean pvNode = beta - alpha > 1;
+
         // If the game is drawn by repetition, insufficient material or fifty move rule, return zero
-        if (ply > 0 && isDraw()) return Score.DRAW;
+        if (ply > 0 && isDraw(pvNode || ply == 1)) return Score.DRAW;
 
         // If the maximum depth is reached, return the static evaluation of the position
         if (ply >= MAX_DEPTH) return movegen.isCheck(board) ? 0 : eval.evaluate();
-
-        final boolean rootNode = ply == 0;
-        final boolean pvNode = beta - alpha > 1;
 
         // Mate Distance Pruning - https://www.chessprogramming.org/Mate_Distance_Pruning
         // Exit early if we have already found a forced mate at an earlier ply
@@ -554,13 +554,13 @@ public class Searcher implements Search {
             return alpha;
         }
 
+        final boolean pvNode = beta - alpha > 1;
+
         // If the game is drawn by repetition, insufficient material or fifty move rule, return zero.
-        if (ply > 0 && isDraw()) return Score.DRAW;
+        if (ply > 0 && isDraw(false)) return Score.DRAW;
 
         // If the maximum depth is reached, return the static evaluation of the position.
         if (ply >= MAX_DEPTH) return movegen.isCheck(board) ? 0 : eval.evaluate();
-
-        final boolean pvNode = beta - alpha > 1;
 
         // Exit the quiescence search early if we already have an accurate score stored in the hash table.
         final HashEntry ttEntry = tt.get(board.key(), ply);
@@ -723,8 +723,8 @@ public class Searcher implements Search {
         return tc.isSoftLimitReached(td.start, td.depth, td.nodes, bestMoveNodes, bestMoveStability, scoreStability);
     }
 
-    private boolean isDraw() {
-        return Score.isEffectiveDraw(board);
+    private boolean isDraw(boolean threefold) {
+        return Score.isEffectiveDraw(board, threefold);
     }
 
     /**
