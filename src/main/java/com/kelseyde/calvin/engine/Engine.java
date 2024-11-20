@@ -133,24 +133,6 @@ public class Engine {
         return entry != null ? entry.move() : null;
     }
 
-    public List<Move> extractPrincipalVariation() {
-        List<Move> pv = new ArrayList<>();
-        TranspositionTable tt = searcher.getTranspositionTable();
-        int moves = 0;
-        while (moves < 24) {
-            long key = board.key();
-            HashEntry entry = tt.get(key, 0);
-            if (entry == null || entry.move() == null) {
-                break;
-            }
-            pv.add(entry.move());
-            board.makeMove(entry.move());
-            moves++;
-        }
-        IntStream.range(0, moves).forEach(i -> board.unmakeMove());
-        return pv;
-    }
-
     public int hashfull() {
         return searcher.getTranspositionTable().fill();
     }

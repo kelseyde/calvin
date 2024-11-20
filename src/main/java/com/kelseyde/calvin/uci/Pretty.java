@@ -3,6 +3,7 @@ package com.kelseyde.calvin.uci;
 import com.kelseyde.calvin.board.Move;
 import com.kelseyde.calvin.search.Score;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -46,7 +47,7 @@ public class Pretty {
         UCI.write("");
     }
 
-    public static void writeSearchInfo(int depth, int score, long time, int nodes, long nps, float hashfull, List<Move> pv) {
+    public static void writeSearchInfo(int depth, int score, long time, int nodes, long nps, float hashfull, Move[] pv) {
 
         String formattedDepth = formatDepth(depth);
         String formattedScore = formatScore(score);
@@ -124,8 +125,8 @@ public class Pretty {
         return GRAY + " ".repeat(buffer) + formatted + "%" + RESET;
     }
 
-    private static String formatPv(List<Move> pv) {
-        return ITALIC_ON + pv.stream().map(Move::toUCI).collect(Collectors.joining("  ")) + ITALIC_OFF;
+    private static String formatPv(Move[] pv) {
+        return ITALIC_ON + Arrays.stream(pv).map(Move::toUCI).collect(Collectors.joining("  ")) + ITALIC_OFF;
     }
 
 }

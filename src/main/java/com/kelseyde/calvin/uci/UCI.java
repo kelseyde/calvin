@@ -284,11 +284,11 @@ public class UCI {
         int nodes = searchResult.nodes();
         long nps = searchResult.nps();
         int hashfull = ENGINE.hashfull();
-        List<Move> pv = ENGINE.extractPrincipalVariation();
+        Move[] pv = searchResult.pv();
         if (Options.pretty) {
             Pretty.writeSearchInfo(depth, score, time, nodes, nps, hashfull, pv);
         } else {
-            String pvString = pv.stream().map(Move::toUCI).collect(Collectors.joining(" "));
+            String pvString = Arrays.stream(pv).map(Move::toUCI).collect(Collectors.joining(" "));
             write(String.format("info depth %s score %s nodes %s time %s nps %s hashfull %s pv %s",
                     depth, formatScore(score), nodes, time, nps, hashfull, pvString));
         }

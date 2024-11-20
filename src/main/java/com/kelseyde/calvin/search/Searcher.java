@@ -184,6 +184,7 @@ public class Searcher implements Search {
 
         final boolean rootNode = ply == 0;
         final boolean pvNode = beta - alpha > 1;
+        td.pv.resetLength(ply);
 
         // Mate Distance Pruning - https://www.chessprogramming.org/Mate_Distance_Pruning
         // Exit early if we have already found a forced mate at an earlier ply
@@ -497,6 +498,8 @@ public class Searcher implements Search {
                 bestMove = move;
                 alpha = score;
                 flag = HashFlag.EXACT;
+
+                td.pv.update(ply, move);
 
                 sse.bestMove = playedMove;
                 if (rootNode) {
