@@ -340,6 +340,39 @@ public class Searcher implements Search {
                 }
             }
 
+            if (depth > 3
+                    && ttHit
+                    && ttMove != null
+                    && staticEval >= beta) {
+
+                board.makeMove(ttMove);
+                eval.makeMove(board, ttMove);
+
+                final HashEntry counterTtEntry = tt.get(board.key(), ply + 1);
+                if (counterTtEntry != null
+                    && counterTtEntry.move() != null) {
+
+                    board.makeMove(counterTtEntry.move());
+                    eval.makeMove(board, counterTtEntry.move());
+
+                    final int score = -search(depth - 2, ply + 2, -beta, -alpha);
+
+                    eval.unmakeMove();
+                    board.unmakeMove();
+
+                    if (score < alpha) {
+                        board.unmakeMove();
+                        eval.unmakeMove();
+                        return score;
+                    }
+
+                }
+
+                board.unmakeMove();
+                eval.unmakeMove();
+
+            }
+
         }
 
         Move bestMove = null;
