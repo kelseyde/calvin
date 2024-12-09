@@ -18,6 +18,7 @@ public record Network(int inputSize,
                       int hiddenSize,
                       Activation activation,
                       boolean horizontalMirror,
+                      int[] inputBuckets,
                       int[] quantisations,
                       int scale,
                       short[] inputWeights,
@@ -36,6 +37,7 @@ public record Network(int inputSize,
         private int hiddenSize;
         private Activation activation;
         private boolean horizontalMirror;
+        private int[] inputBuckets;
         private int[] quantisations;
         private int scale;
 
@@ -61,6 +63,11 @@ public record Network(int inputSize,
 
         public Builder horizontalMirror(boolean horizontalMirror) {
             this.horizontalMirror = horizontalMirror;
+            return this;
+        }
+
+        public Builder inputBuckets(int[] inputBuckets) {
+            this.inputBuckets = inputBuckets;
             return this;
         }
 
@@ -118,7 +125,7 @@ public record Network(int inputSize,
                 }
 
                 return new Network(
-                        inputSize, hiddenSize, activation, horizontalMirror, quantisations, scale,
+                        inputSize, hiddenSize, activation, horizontalMirror, inputBuckets, quantisations, scale,
                         inputWeights, inputBiases, outputWeights, outputBias
                 );
             } catch (IOException e) {

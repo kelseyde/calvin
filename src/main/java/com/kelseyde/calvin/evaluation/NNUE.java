@@ -28,6 +28,16 @@ public class NNUE {
             .hiddenSize(1024)
             .activation(Activation.SCReLU)
             .horizontalMirror(true)
+            .inputBuckets(new int[] {
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+                    0, 0, 0, 0,
+                    0, 0, 0, 0,
+            })
             .quantisations(new int[]{255, 64})
             .scale(400)
             .build();
