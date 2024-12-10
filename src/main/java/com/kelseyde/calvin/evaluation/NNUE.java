@@ -99,7 +99,7 @@ public class NNUE {
      */
     public void makeMove(Board board, Move move) {
 
-        final Accumulator acc = accumulatorStack[current];
+        Accumulator acc = accumulatorStack[current];
         final boolean white = board.isWhite();
         final int from = move.from();
         final int to = move.to();
@@ -111,20 +111,20 @@ public class NNUE {
         boolean whiteMirror = NETWORK.horizontalMirror() && shouldMirror(whiteKingSquare);
         boolean blackMirror = NETWORK.horizontalMirror() && shouldMirror(blackKingSquare);
 
+        Accumulator newAcc;
         if (mustRefresh(board, move, piece)) {
-            if (white) {
-                whiteMirror = !whiteMirror;
-            } else {
-                blackMirror = !blackMirror;
-            }
+            newAcc = acc.copy();
+            if (white) whiteMirror = !whiteMirror;
+            else blackMirror = !blackMirror;
+
             boolean mirror = white ? whiteMirror : blackMirror;
-            fullRefresh(board, acc, white, mirror);
+            fullRefresh(board, newAcc, white, mirror);
+            acc = newAcc;
         }
 
         final Piece newPiece = move.isPromotion() ? move.promoPiece() : piece;
         final Piece captured = move.isEnPassant() ? Piece.PAWN : board.pieceAt(to);
 
-        Accumulator newAcc;
         if (move.isCastling()) {
             newAcc = handleCastleMove(acc, move, whiteMirror, blackMirror, white);
         }
