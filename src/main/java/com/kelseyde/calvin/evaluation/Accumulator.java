@@ -55,45 +55,51 @@ public class Accumulator {
         }
     }
 
-    public void add(int wx1, int bx1) {
+    public Accumulator add(int wx1, int bx1) {
         final int wOffset = wx1 * HIDDEN_SIZE;
         final int bOffset = bx1 * HIDDEN_SIZE;
 
+        short[] newWhiteFeatures = new short[featureCount];
+        short[] newBlackFeatures = new short[featureCount];
+
         for (int i = 0; i < loopLength; i += SPECIES.length()) {
-
-            ShortVector.fromArray(SPECIES, whiteFeatures, i)
+            ShortVector.fromArray(SPECIES, this.whiteFeatures, i)
                     .add(ShortVector.fromArray(SPECIES, WEIGHTS, i + wOffset))
-                    .intoArray(whiteFeatures, i);
+                    .intoArray(newWhiteFeatures, i);
 
-            ShortVector.fromArray(SPECIES, blackFeatures, i)
+            ShortVector.fromArray(SPECIES, this.blackFeatures, i)
                     .add(ShortVector.fromArray(SPECIES, WEIGHTS, i + bOffset))
-                    .intoArray(blackFeatures, i);
-
+                    .intoArray(newBlackFeatures, i);
         }
+
+        return new Accumulator(newWhiteFeatures, newBlackFeatures);
     }
 
-    public void addSub(int wx1, int bx1, int wx2, int bx2) {
+    public Accumulator addSub(int wx1, int bx1, int wx2, int bx2) {
         final int wOffset1 = wx1 * HIDDEN_SIZE;
         final int bOffset1 = bx1 * HIDDEN_SIZE;
         final int wOffset2 = wx2 * HIDDEN_SIZE;
         final int bOffset2 = bx2 * HIDDEN_SIZE;
 
-        for (int i = 0; i < loopLength; i += SPECIES.length()) {
+        short[] newWhiteFeatures = new short[featureCount];
+        short[] newBlackFeatures = new short[featureCount];
 
-            ShortVector.fromArray(SPECIES, whiteFeatures, i)
+        for (int i = 0; i < loopLength; i += SPECIES.length()) {
+            ShortVector.fromArray(SPECIES, this.whiteFeatures, i)
                     .add(ShortVector.fromArray(SPECIES, WEIGHTS, i + wOffset1))
                     .sub(ShortVector.fromArray(SPECIES, WEIGHTS, i + wOffset2))
-                    .intoArray(whiteFeatures, i);
+                    .intoArray(newWhiteFeatures, i);
 
-            ShortVector.fromArray(SPECIES, blackFeatures, i)
+            ShortVector.fromArray(SPECIES, this.blackFeatures, i)
                     .add(ShortVector.fromArray(SPECIES, WEIGHTS, i + bOffset1))
                     .sub(ShortVector.fromArray(SPECIES, WEIGHTS, i + bOffset2))
-                    .intoArray(blackFeatures, i);
-
+                    .intoArray(newBlackFeatures, i);
         }
+
+        return new Accumulator(newWhiteFeatures, newBlackFeatures);
     }
 
-    public void addSubSub(int wx1, int bx1, int wx2, int bx2, int wx3, int bx3) {
+    public Accumulator addSubSub(int wx1, int bx1, int wx2, int bx2, int wx3, int bx3) {
         final int wOffset1 = wx1 * HIDDEN_SIZE;
         final int bOffset1 = bx1 * HIDDEN_SIZE;
         final int wOffset2 = wx2 * HIDDEN_SIZE;
@@ -101,24 +107,27 @@ public class Accumulator {
         final int wOffset3 = wx3 * HIDDEN_SIZE;
         final int bOffset3 = bx3 * HIDDEN_SIZE;
 
-        for (int i = 0; i < loopLength; i += SPECIES.length()) {
+        short[] newWhiteFeatures = new short[featureCount];
+        short[] newBlackFeatures = new short[featureCount];
 
-            ShortVector.fromArray(SPECIES, whiteFeatures, i)
+        for (int i = 0; i < loopLength; i += SPECIES.length()) {
+            ShortVector.fromArray(SPECIES, this.whiteFeatures, i)
                     .add(ShortVector.fromArray(SPECIES, WEIGHTS, i + wOffset1))
                     .sub(ShortVector.fromArray(SPECIES, WEIGHTS, i + wOffset2))
                     .sub(ShortVector.fromArray(SPECIES, WEIGHTS, i + wOffset3))
-                    .intoArray(whiteFeatures, i);
+                    .intoArray(newWhiteFeatures, i);
 
-            ShortVector.fromArray(SPECIES, blackFeatures, i)
+            ShortVector.fromArray(SPECIES, this.blackFeatures, i)
                     .add(ShortVector.fromArray(SPECIES, WEIGHTS, i + bOffset1))
                     .sub(ShortVector.fromArray(SPECIES, WEIGHTS, i + bOffset2))
                     .sub(ShortVector.fromArray(SPECIES, WEIGHTS, i + bOffset3))
-                    .intoArray(blackFeatures, i);
-
+                    .intoArray(newBlackFeatures, i);
         }
+
+        return new Accumulator(newWhiteFeatures, newBlackFeatures);
     }
 
-    public void addAddSubSub(int wx1, int bx1, int wx2, int bx2, int wx3, int bx3, int wx4, int bx4) {
+    public Accumulator addAddSubSub(int wx1, int bx1, int wx2, int bx2, int wx3, int bx3, int wx4, int bx4) {
         final int wOffset1 = wx1 * HIDDEN_SIZE;
         final int bOffset1 = bx1 * HIDDEN_SIZE;
         final int wOffset2 = wx2 * HIDDEN_SIZE;
@@ -128,23 +137,26 @@ public class Accumulator {
         final int wOffset4 = wx4 * HIDDEN_SIZE;
         final int bOffset4 = bx4 * HIDDEN_SIZE;
 
-        for (int i = 0; i < loopLength; i += SPECIES.length()) {
+        short[] newWhiteFeatures = new short[featureCount];
+        short[] newBlackFeatures = new short[featureCount];
 
-            ShortVector.fromArray(SPECIES, whiteFeatures, i)
+        for (int i = 0; i < loopLength; i += SPECIES.length()) {
+            ShortVector.fromArray(SPECIES, this.whiteFeatures, i)
                     .add(ShortVector.fromArray(SPECIES, WEIGHTS, i + wOffset1))
                     .add(ShortVector.fromArray(SPECIES, WEIGHTS, i + wOffset2))
                     .sub(ShortVector.fromArray(SPECIES, WEIGHTS, i + wOffset3))
                     .sub(ShortVector.fromArray(SPECIES, WEIGHTS, i + wOffset4))
-                    .intoArray(whiteFeatures, i);
+                    .intoArray(newWhiteFeatures, i);
 
-            ShortVector.fromArray(SPECIES, blackFeatures, i)
+            ShortVector.fromArray(SPECIES, this.blackFeatures, i)
                     .add(ShortVector.fromArray(SPECIES, WEIGHTS, i + bOffset1))
                     .add(ShortVector.fromArray(SPECIES, WEIGHTS, i + bOffset2))
                     .sub(ShortVector.fromArray(SPECIES, WEIGHTS, i + bOffset3))
                     .sub(ShortVector.fromArray(SPECIES, WEIGHTS, i + bOffset4))
-                    .intoArray(blackFeatures, i);
-
+                    .intoArray(newBlackFeatures, i);
         }
+
+        return new Accumulator(newWhiteFeatures, newBlackFeatures);
     }
 
     public Accumulator copy() {

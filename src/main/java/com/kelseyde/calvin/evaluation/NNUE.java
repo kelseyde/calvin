@@ -99,7 +99,7 @@ public class NNUE {
      */
     public void makeMove(Board board, Move move) {
 
-        final Accumulator acc = accumulatorStack[++current] = accumulatorStack[current - 1].copy();
+        final Accumulator acc = accumulatorStack[current];
         final boolean white = board.isWhite();
         final int from = move.from();
         final int to = move.to();
@@ -124,29 +124,30 @@ public class NNUE {
         final Piece newPiece = move.isPromotion() ? move.promoPiece() : piece;
         final Piece captured = move.isEnPassant() ? Piece.PAWN : board.pieceAt(to);
 
+        Accumulator newAcc;
         if (move.isCastling()) {
-            handleCastleMove(acc, move, whiteMirror, blackMirror, white);
+            newAcc = handleCastleMove(acc, move, whiteMirror, blackMirror, white);
         }
         else if (captured != null) {
-            handleCapture(acc, move, piece, newPiece, captured, whiteMirror, blackMirror, white);
+            newAcc = handleCapture(acc, move, piece, newPiece, captured, whiteMirror, blackMirror, white);
         }
         else {
-            handleStandardMove(acc, move, piece, newPiece, whiteMirror, blackMirror, white);
+            newAcc = handleStandardMove(acc, move, piece, newPiece, whiteMirror, blackMirror, white);
         }
-
+        accumulatorStack[++current] = newAcc;
     }
 
-    private void handleStandardMove(Accumulator acc, Move move, Piece piece, Piece newPiece, boolean whiteMirror, boolean blackMirror, boolean white) {
+    private Accumulator handleStandardMove(Accumulator acc, Move move, Piece piece, Piece newPiece, boolean whiteMirror, boolean blackMirror, boolean white) {
         final int wSub = featureIndex(piece, move.from(), whiteMirror, white, true);
         final int bSub = featureIndex(piece, move.from(), blackMirror, white, false);
 
         final int wAdd = featureIndex(newPiece, move.to(), whiteMirror, white, true);
         final int bAdd = featureIndex(newPiece, move.to(), blackMirror, white, false);
 
-        acc.addSub(wAdd, bAdd, wSub, bSub);
+        return acc.addSub(wAdd, bAdd, wSub, bSub);
     }
 
-    private void handleCastleMove(Accumulator acc, Move move, boolean whiteMirror, boolean blackMirror, boolean white) {
+    private Accumulator handleCastleMove(Accumulator acc, Move move, boolean whiteMirror, boolean blackMirror, boolean white) {
         final boolean kingside = Castling.isKingside(move.from(), move.to());
 
         // In Chess960, castling is encoded as 'king captures rook'.
@@ -164,10 +165,10 @@ public class NNUE {
         final int wAdd2 = featureIndex(Piece.ROOK, rookTo, whiteMirror, white, true);
         final int bAdd2 = featureIndex(Piece.ROOK, rookTo, blackMirror, white, false);
 
-        acc.addAddSubSub(wAdd1, bAdd1, wAdd2, bAdd2, wSub1, bSub1, wSub2, bSub2);
+        return acc.addAddSubSub(wAdd1, bAdd1, wAdd2, bAdd2, wSub1, bSub1, wSub2, bSub2);
     }
 
-    private void handleCapture(
+    private Accumulator handleCapture(
             Accumulator acc, Move move, Piece piece, Piece newPiece, Piece captured, boolean whiteMirror, boolean blackMirror, boolean white) {
         final int wSub1 = featureIndex(piece, move.from(), whiteMirror, white, true);
         final int bSub1 = featureIndex(piece, move.from(), blackMirror, white, false);
@@ -181,7 +182,7 @@ public class NNUE {
         final int wSub2 = featureIndex(captured, captureSquare, whiteMirror, !white, true);
         final int bSub2 = featureIndex(captured, captureSquare, blackMirror, !white, false);
 
-        acc.addSubSub(wAdd1, bAdd1, wSub1, bSub1, wSub2, bSub2);
+        return acc.addSubSub(wAdd1, bAdd1, wSub1, bSub1, wSub2, bSub2);
     }
 
     public void unmakeMove() {
