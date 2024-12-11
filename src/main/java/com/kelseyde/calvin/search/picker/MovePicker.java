@@ -185,7 +185,9 @@ public class MovePicker {
             int goodIndex = 0;
             for (Move move : stagedMoves) {
                 ScoredMove scoredMove = scoreMove(board, move, ttMove, ply);
-                goodNoisies[goodIndex++] = scoredMove;
+                if (inCheck || scoredMove.isGoodNoisy()) {
+                    goodNoisies[goodIndex++] = scoredMove;
+                }
             }
         }
 
