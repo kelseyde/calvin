@@ -247,6 +247,8 @@ public class MovePicker {
         final int historyScore = history.getCaptureHistoryTable().get(piece, move.to(), captured, board.isWhite());
         score += historyScore / 8;
 
+        score += history.getPawnHistoryTable().get(board, move, piece, captured, white);
+
         final int threshold = -score / 4 + config.seeNoisyOffset.value;
 
         // Separate good and bad noisies based on the material won or lost once all pieces are swapped off.
@@ -259,7 +261,8 @@ public class MovePicker {
         boolean white = board.isWhite();
         int historyScore = history.getQuietHistoryTable().get(move, piece, white);
         int contHistScore = continuationHistoryScore(move, piece, white);
-        int score = historyScore + contHistScore;
+        int pawnHistScore = history.getPawnHistoryTable().get(board, move, piece, captured, white);
+        int score = historyScore + contHistScore + pawnHistScore;
         return new ScoredMove(move, piece, captured, score, historyScore, MoveType.QUIET);
     }
 

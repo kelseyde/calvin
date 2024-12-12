@@ -81,6 +81,11 @@ public class EngineConfig {
     public final Tunable contHistMalusMax       = new Tunable("ContHistMalusMax", 1200, 100, 2000, 100);
     public final Tunable contHistMalusScale     = new Tunable("ContHistMalusScale", 200, 50, 400, 25);
     public final Tunable contHistMaxScore       = new Tunable("ContHistMaxScore", 8192, 1000, 12000, 100);
+    public final Tunable pawnHistBonusMax       = new Tunable("PawnHistBonusMax", 1200, 100, 2000, 100);
+    public final Tunable pawnHistBonusScale     = new Tunable("PawnHistBonusScale", 200, 50, 400, 25);
+    public final Tunable pawnHistMalusMax       = new Tunable("PawnHistMalusMax", 1200, 100, 2000, 100);
+    public final Tunable pawnHistMalusScale     = new Tunable("PawnHistMalusScale", 200, 50, 400, 25);
+    public final Tunable pawnHistMaxScore       = new Tunable("PawnHistMaxScore", 8192, 1000, 12000, 100);
     public final Tunable timeFactor             = new Tunable("TimeFactor", 5, 3, 10, 1);
     public final Tunable incrementFactor        = new Tunable("IncrementFactor", 75, 50, 100, 5);
     public final Tunable softTimeFactor         = new Tunable("SoftTimeFactor", 66, 50, 70, 10);

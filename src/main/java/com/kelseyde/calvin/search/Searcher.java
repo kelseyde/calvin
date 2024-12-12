@@ -537,7 +537,7 @@ public class Searcher implements Search {
         if (bestScore >= beta) {
             final PlayedMove best = sse.bestMove;
             final int historyDepth = depth + (staticEval > alpha ? 1 : 0);
-            history.updateHistory(best, board.isWhite(), historyDepth, ply, ss);
+            history.updateHistory(board, best, board.isWhite(), historyDepth, ply, ss);
         }
 
         if (!inCheck

@@ -8,10 +8,7 @@ import com.kelseyde.calvin.search.SearchStack.SearchStackEntry;
 import com.kelseyde.calvin.tables.correction.CorrectionHistoryTable;
 import com.kelseyde.calvin.tables.correction.HashCorrectionTable;
 import com.kelseyde.calvin.tables.correction.PieceToCorrectionTable;
-import com.kelseyde.calvin.tables.history.CaptureHistoryTable;
-import com.kelseyde.calvin.tables.history.ContinuationHistoryTable;
-import com.kelseyde.calvin.tables.history.KillerTable;
-import com.kelseyde.calvin.tables.history.QuietHistoryTable;
+import com.kelseyde.calvin.tables.history.*;
 
 import java.util.List;
 
@@ -22,6 +19,7 @@ public class SearchHistory {
     private final QuietHistoryTable quietHistoryTable;
     private final ContinuationHistoryTable contHistTable;
     private final CaptureHistoryTable captureHistoryTable;
+    private final PawnHistoryTable pawnHistoryTable;
     private final HashCorrectionTable pawnCorrHistTable;
     private final HashCorrectionTable[] nonPawnCorrHistTables;
     private final PieceToCorrectionTable countermoveCorrHistTable;
@@ -35,19 +33,22 @@ public class SearchHistory {
         this.quietHistoryTable = new QuietHistoryTable(config);
         this.contHistTable = new ContinuationHistoryTable(config);
         this.captureHistoryTable = new CaptureHistoryTable(config);
+        this.pawnHistoryTable = new PawnHistoryTable(config);
         this.pawnCorrHistTable = new HashCorrectionTable();
         this.nonPawnCorrHistTables = new HashCorrectionTable[] { new HashCorrectionTable(), new HashCorrectionTable() };
         this.countermoveCorrHistTable = new PieceToCorrectionTable();
     }
 
     public void updateHistory(
-            PlayedMove bestMove, boolean white, int depth, int ply, SearchStack ss) {
+            Board board, PlayedMove bestMove, boolean white, int depth, int ply, SearchStack ss) {
 
         List<PlayedMove> playedMoves = ss.get(ply).searchedMoves;
 
         if (bestMove.captured() == null) {
             killerTable.add(ply, bestMove.move());
         }
+
+        pawnHistoryTable.update(board, bestMove.move(), bestMove.piece(), bestMove.captured(), depth, white, true);
 
         for (PlayedMove playedMove : playedMoves) {
             if (bestMove.captured() == null && playedMove.captured() == null) {
@@ -136,6 +137,10 @@ public class SearchHistory {
         return captureHistoryTable;
     }
 
+    public PawnHistoryTable getPawnHistoryTable() {
+        return pawnHistoryTable;
+    }
+
     public void reset() {
         bestMoveStability = 0;
         bestScoreStability = 0;
@@ -148,6 +153,7 @@ public class SearchHistory {
         quietHistoryTable.clear();
         contHistTable.clear();
         captureHistoryTable.clear();
+        pawnHistoryTable.clear();
         pawnCorrHistTable.clear();
         nonPawnCorrHistTables[Colour.WHITE].clear();
         nonPawnCorrHistTables[Colour.BLACK].clear();
