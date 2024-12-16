@@ -39,18 +39,23 @@ public class NNUE {
     public NNUE() {
         this.current = 0;
         this.accumulatorStack = new Accumulator[Search.MAX_DEPTH];
-        this.accumulatorStack[current] = new Accumulator(NETWORK.hiddenSize());
+        this.accumulatorStack[current] = new Accumulator(NETWORK.hiddenSize(), false, false);
     }
 
     public NNUE(Board board) {
         this.board = board;
         this.current = 0;
         this.accumulatorStack = new Accumulator[Search.MAX_DEPTH];
-        this.accumulatorStack[current] = new Accumulator(NETWORK.hiddenSize());
+
+        boolean whiteMirror = shouldMirror(board.kingSquare(true));
+        boolean blackMirror = shouldMirror(board.kingSquare(false));
+        this.accumulatorStack[current] = new Accumulator(NETWORK.hiddenSize(), whiteMirror, blackMirror);
         activateAll(board);
     }
 
     public int evaluate() {
+
+        applyLazyUpdates();
 
         final boolean white = board.isWhite();
         final Accumulator acc = accumulatorStack[current];
@@ -94,51 +99,32 @@ public class NNUE {
         }
     }
 
-    /**
-     * Efficiently update only the relevant features of the network after a move has been made.
-     */
     public void makeMove(Board board, Move move) {
 
         final Accumulator acc = accumulatorStack[++current] = accumulatorStack[current - 1].copy();
         final boolean white = board.isWhite();
-        final int from = move.from();
-        final int to = move.to();
-        final Piece piece = board.pieceAt(from);
-        if (piece == null) return;
 
-        final int whiteKingSquare = board.kingSquare(true);
-        final int blackKingSquare = board.kingSquare(false);
-        boolean whiteMirror = NETWORK.horizontalMirror() && shouldMirror(whiteKingSquare);
-        boolean blackMirror = NETWORK.horizontalMirror() && shouldMirror(blackKingSquare);
+        acc.computed[Colour.WHITE] = false;
+        acc.computed[Colour.BLACK] = false;
 
-        if (mustRefresh(board, move, piece)) {
-            if (white) {
-                whiteMirror = !whiteMirror;
-            } else {
-                blackMirror = !blackMirror;
-            }
-            boolean mirror = white ? whiteMirror : blackMirror;
-            fullRefresh(board, acc, white, mirror);
-        }
+        acc.mirror[Colour.WHITE] = shouldMirror(board.kingSquare(true));
+        acc.mirror[Colour.BLACK] = shouldMirror(board.kingSquare(false));
 
-        final Piece newPiece = move.isPromotion() ? move.promoPiece() : piece;
-        final Piece captured = move.isEnPassant() ? Piece.PAWN : board.pieceAt(to);
+        boolean needsRefresh = needsRefresh(board, move);
+        acc.needsRefresh[Colour.index(white)] = needsRefresh;
 
-        AccumulatorUpdate update;
-        if (move.isCastling()) {
-            update = handleCastleMove(move, white);
-        }
-        else if (captured != null) {
-            update = handleCapture(move, piece, newPiece, captured, white);
-        }
-        else {
-            update = handleStandardMove(move, piece, newPiece, white);
-        }
-        acc.apply(update, whiteMirror, blackMirror);
+        acc.update = switch (moveType(board, move)) {
+            case STANDARD -> handleStandardMove(board, move, white);
+            case CAPTURE -> handleCapture(board, move, white);
+            case CASTLE -> handleCastleMove(move, white);
+        };
 
     }
 
-    private AccumulatorUpdate handleStandardMove(Move move, Piece piece, Piece newPiece, boolean white) {
+    private AccumulatorUpdate handleStandardMove(Board board, Move move, boolean white) {
+
+        final Piece piece = board.pieceAt(move.from());
+        final Piece newPiece = move.isPromotion() ? move.promoPiece() : piece;
 
         AccumulatorUpdate update = new AccumulatorUpdate();
         update.pushAdd(new Feature(newPiece, move.to(), white));
@@ -166,7 +152,11 @@ public class NNUE {
 
     }
 
-    private AccumulatorUpdate handleCapture(Move move, Piece piece, Piece newPiece, Piece captured, boolean white) {
+    private AccumulatorUpdate handleCapture(Board board, Move move, boolean white) {
+
+        final Piece piece = board.pieceAt(move.from());
+        final Piece newPiece = move.isPromotion() ? move.promoPiece() : piece;
+        final Piece captured = move.isEnPassant() ? Piece.PAWN : board.pieceAt(move.to());
 
         AccumulatorUpdate update = new AccumulatorUpdate();
         int captureSquare = move.to();
@@ -182,6 +172,60 @@ public class NNUE {
 
     public void unmakeMove() {
         current--;
+    }
+
+    private void applyLazyUpdates() {
+        applyLazyUpdates(true);
+        applyLazyUpdates(false);
+    }
+
+    // Implementation based on Stormphrax:
+    // https://github.com/Ciekce/Stormphrax/commit/9b76f2a35531513239ed7078acc21294a11e75c6
+    private void applyLazyUpdates(boolean whitePerspective) {
+
+        Accumulator acc = accumulatorStack[current];
+
+        int colourIndex = Colour.index(whitePerspective);
+
+        if (current == 0) {
+            fullRefresh(board, acc, whitePerspective);
+            return;
+        }
+
+        // If the current state is correct for our perspective, no work is required.
+        if (acc.computed[colourIndex]) {
+            return;
+        }
+
+        // If the current state requires a full refresh, don't bother with previous states
+        if (acc.needsRefresh[Colour.index(whitePerspective)]) {
+            fullRefresh(board, acc, whitePerspective);
+            return;
+        }
+
+        // Find the most recent accumulator that is computed or requires a refresh.
+        int index = current - 1;
+        while (index > 0
+                && !accumulatorStack[index].computed[colourIndex]
+                && !accumulatorStack[index].needsRefresh[colourIndex]) {
+            index--;
+        }
+
+        Accumulator prev = accumulatorStack[index];
+        if (prev.needsRefresh[colourIndex]) {
+            // The previous accumulator would require a full refresh; therefore just refresh the current one instead
+            fullRefresh(board, acc, whitePerspective);
+        }
+        else {
+            // Apply the updates from the previous state to the current state
+            while (index < current) {
+                Accumulator curr = accumulatorStack[++index];
+                curr.apply(prev, curr.update, whitePerspective);
+                curr.computed[colourIndex] = true;
+            }
+
+        }
+
     }
 
     public void setPosition(Board board) {
@@ -213,8 +257,9 @@ public class NNUE {
         return 3 * knights + 3 * bishops + 5 * rooks + 10 * queens;
     }
 
-    private boolean mustRefresh(Board board, Move move, Piece piece) {
+    private boolean needsRefresh(Board board, Move move) {
         if (!NETWORK.horizontalMirror()) return false;
+        final Piece piece = board.pieceAt(move.from());
         if (piece != Piece.KING) return false;
         int prevKingSquare = move.from();
         int currKingSquare = move.to();
@@ -226,13 +271,28 @@ public class NNUE {
     }
 
     private boolean shouldMirror(int kingSquare) {
-        return File.of(kingSquare) > 3;
+        return NETWORK.horizontalMirror() && File.of(kingSquare) > 3;
+    }
+
+    private MoveType moveType(Board board, Move move) {
+        if (move.isCastling()) return MoveType.CASTLE;
+        if (board.isCapture(move)) return MoveType.CAPTURE;
+        return MoveType.STANDARD;
     }
 
     public void clearHistory() {
         this.current = 0;
         this.accumulatorStack = new Accumulator[Search.MAX_DEPTH];
-        this.accumulatorStack[0] = new Accumulator(NETWORK.hiddenSize());
+
+        boolean whiteMirror = shouldMirror(board.kingSquare(true));
+        boolean blackMirror = shouldMirror(board.kingSquare(false));
+        this.accumulatorStack[0] = new Accumulator(NETWORK.hiddenSize(), whiteMirror, blackMirror);
+    }
+
+    public enum MoveType {
+        STANDARD,
+        CAPTURE,
+        CASTLE
     }
 
 }

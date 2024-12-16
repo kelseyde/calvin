@@ -34,6 +34,18 @@ public class NNUETest {
     }
 
     @Test
+    public void testStandardMove() {
+
+        Board board = Board.from(FEN.STARTPOS);
+        NNUE nnue = new NNUE(board);
+        Move move = Move.fromUCI("e2e4");
+        nnue.makeMove(board, move);
+        board.makeMove(move);
+        Assertions.assertEquals(nnue.evaluate(), new NNUE(board).evaluate());
+
+    }
+
+    @Test
     public void testWhiteKingsideCastling() {
 
         String fen = "r1bqk1nr/ppppbppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4";
