@@ -9,6 +9,7 @@ import com.kelseyde.calvin.movegen.MoveGenerator;
 import com.kelseyde.calvin.movegen.MoveGenerator.MoveFilter;
 import com.kelseyde.calvin.search.SearchStack.SearchStackEntry;
 import com.kelseyde.calvin.search.picker.MovePicker;
+import com.kelseyde.calvin.search.picker.MoveType;
 import com.kelseyde.calvin.search.picker.QuiescentMovePicker;
 import com.kelseyde.calvin.search.picker.ScoredMove;
 import com.kelseyde.calvin.tables.tt.HashEntry;
@@ -342,6 +343,55 @@ public class Searcher implements Search {
                     return Score.isMateScore(score) ? beta : score;
                 }
             }
+
+            // Probcut - https://www.chessprogramming.org/ProbCut
+
+            int probcutBeta = beta + 220;
+
+            if (depth >= 3
+                && !Score.isMateScore(beta)
+                && (ttMove == null || !board.isQuiet(ttMove))
+                && (!ttHit || ttEntry.depth() + 3 < depth || ttEntry.score() >= probcutBeta)) {
+
+                int probcutDepth = Math.max(1, depth - 3);
+                int seeThreshold = probcutBeta - staticEval;
+
+                QuiescentMovePicker probcutPicker = new QuiescentMovePicker(movegen, ss, history, board, ply, ttMove, inCheck);
+                probcutPicker.setFilter(MoveFilter.NOISY);
+                while (true) {
+                    ScoredMove probcutMove = probcutPicker.pickNextMove();
+                    if (probcutMove == null) break;
+                    Move move = probcutMove.move();
+
+                    if (SEE.see(board, move) < seeThreshold) {
+                        continue;
+                    }
+                    Piece piece = board.pieceAt(move.from());
+                    Piece captured = board.pieceAt(move.to());
+
+                    eval.makeMove(board, move);
+                    board.makeMove(move);
+                    sse.currentMove = new PlayedMove(move, piece, captured);
+
+                    int score = -quiescenceSearch(-probcutBeta, -probcutBeta + 1, 0, ply + 1);
+
+                    if (score >= probcutBeta) {
+                        score = -search(probcutDepth - 1, ply + 1, -probcutBeta, -probcutBeta + 1);
+                    }
+
+                    eval.unmakeMove();
+                    board.unmakeMove();
+                    sse.currentMove = null;
+
+                    if (score >= probcutBeta) {
+                        tt.put(board.key(), HashFlag.LOWER, probcutDepth, ply, move, staticEval, score);
+                        return score;
+                    }
+
+                }
+
+            }
+
 
         }
 
