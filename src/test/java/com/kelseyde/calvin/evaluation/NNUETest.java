@@ -38,10 +38,10 @@ public class NNUETest {
 
         Board board = Board.from(FEN.STARTPOS);
         NNUE nnue = new NNUE(board);
-        Move move = Move.fromUCI("e2e4");
+        Move move = Move.fromUCI("e2e3");
         nnue.makeMove(board, move);
         board.makeMove(move);
-        Assertions.assertEquals(nnue.evaluate(), new NNUE(board).evaluate());
+        Assertions.assertEquals(new NNUE(board).evaluate(), nnue.evaluate());
 
     }
 
