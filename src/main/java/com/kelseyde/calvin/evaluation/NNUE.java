@@ -221,7 +221,7 @@ public class NNUE {
             while (index < current) {
                 Accumulator curr = accumulatorStack[++index];
                 curr.copyFrom(prev, whitePerspective);
-                curr.apply(prev, curr.update, whitePerspective);
+                curr.apply(curr.update, whitePerspective);
                 curr.computed[colourIndex] = true;
             }
 

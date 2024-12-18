@@ -26,6 +26,8 @@ public class Accumulator {
     public boolean[] mirror;
 
     public Accumulator() {
+        this.whiteFeatures = new short[HIDDEN_SIZE];
+        this.blackFeatures = new short[HIDDEN_SIZE];
         this.needsRefresh = new boolean[2];
         this.computed = new boolean[2];
         this.mirror = new boolean[2];
@@ -68,19 +70,19 @@ public class Accumulator {
         }
     }
 
-    public void apply(Accumulator prev, AccumulatorUpdate update, boolean whitePerspective) {
+    public void apply(AccumulatorUpdate update, boolean whitePerspective) {
         final boolean mirror = this.mirror[Colour.index(whitePerspective)];
         switch (update.getUpdateType()) {
-            case ADD -> add(prev, update, whitePerspective, mirror);
-            case ADD_SUB -> addSub(prev, update, whitePerspective, mirror);
-            case ADD_SUB_SUB -> addSubSub(prev, update, whitePerspective, mirror);
-            case ADD_ADD_SUB_SUB -> addAddSubSub(prev, update, whitePerspective, mirror);
+            case ADD -> add(update, whitePerspective, mirror);
+            case ADD_SUB -> addSub(update, whitePerspective, mirror);
+            case ADD_SUB_SUB -> addSubSub(update, whitePerspective, mirror);
+            case ADD_ADD_SUB_SUB -> addAddSubSub(update, whitePerspective, mirror);
         }
     }
 
-    public void add(Accumulator prev, AccumulatorUpdate update, boolean whitePerspective, boolean mirror) {
+    public void add(AccumulatorUpdate update, boolean whitePerspective, boolean mirror) {
 
-        final short[] features = whitePerspective ? prev.whiteFeatures : prev.blackFeatures;
+        final short[] features = whitePerspective ?whiteFeatures :blackFeatures;
 
         final Feature add1 = update.adds[0];
 
@@ -95,9 +97,9 @@ public class Accumulator {
         }
     }
 
-    public void addSub(Accumulator prev, AccumulatorUpdate update, boolean whitePerspective, boolean mirror) {
+    public void addSub(AccumulatorUpdate update, boolean whitePerspective, boolean mirror) {
 
-        final short[] features = whitePerspective ? prev.whiteFeatures : prev.blackFeatures;
+        final short[] features = whitePerspective ?whiteFeatures :blackFeatures;
 
         final Feature add1 = update.adds[0];
         final Feature sub1 = update.subs[0];
@@ -115,9 +117,9 @@ public class Accumulator {
         }
     }
 
-    public void addSubSub(Accumulator prev, AccumulatorUpdate update, boolean whitePerspective, boolean mirror) {
+    public void addSubSub(AccumulatorUpdate update, boolean whitePerspective, boolean mirror) {
 
-        final short[] features = whitePerspective ? prev.whiteFeatures : prev.blackFeatures;
+        final short[] features = whitePerspective ?whiteFeatures :blackFeatures;
 
         final Feature add1 = update.adds[0];
         final Feature sub1 = update.subs[0];
@@ -138,9 +140,9 @@ public class Accumulator {
         }
     }
 
-    public void addAddSubSub(Accumulator prev, AccumulatorUpdate update, boolean whitePerspective, boolean mirror) {
+    public void addAddSubSub(AccumulatorUpdate update, boolean whitePerspective, boolean mirror) {
 
-        final short[] features = whitePerspective ? prev.whiteFeatures : prev.blackFeatures;
+        final short[] features = whitePerspective ?whiteFeatures :blackFeatures;
 
         final Feature add1 = update.adds[0];
         final Feature add2 = update.adds[1];
