@@ -41,7 +41,8 @@ public class NNUETest {
         Move move = Move.fromUCI("e2e3");
         nnue.makeMove(board, move);
         board.makeMove(move);
-        Assertions.assertEquals(new NNUE(board).evaluate(), nnue.evaluate());
+        NNUE newNNUE = new NNUE(board);
+        Assertions.assertEquals(newNNUE.evaluate(), nnue.evaluate());
 
     }
 

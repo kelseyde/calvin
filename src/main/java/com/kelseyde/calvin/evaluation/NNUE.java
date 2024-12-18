@@ -32,14 +32,14 @@ public class NNUE {
             .scale(400)
             .build();
 
-    private Accumulator[] accumulatorStack;
+    public Accumulator[] accumulatorStack;
     private int current;
     private Board board;
 
     public NNUE() {
         this.current = 0;
         this.accumulatorStack = new Accumulator[Search.MAX_DEPTH];
-        this.accumulatorStack[current] = new Accumulator(NETWORK.hiddenSize(), false, false);
+        this.accumulatorStack[current] = new Accumulator(false, false);
     }
 
     public NNUE(Board board) {
@@ -49,7 +49,7 @@ public class NNUE {
 
         boolean whiteMirror = shouldMirror(board.kingSquare(true));
         boolean blackMirror = shouldMirror(board.kingSquare(false));
-        this.accumulatorStack[current] = new Accumulator(NETWORK.hiddenSize(), whiteMirror, blackMirror);
+        this.accumulatorStack[current] = new Accumulator(whiteMirror, blackMirror);
         activateAll(board);
     }
 
@@ -101,7 +101,7 @@ public class NNUE {
 
     public void makeMove(Board board, Move move) {
 
-        final Accumulator acc = accumulatorStack[++current] = accumulatorStack[current - 1].copy();
+        final Accumulator acc = accumulatorStack[++current] = new Accumulator();
         final boolean white = board.isWhite();
 
         acc.computed[Colour.WHITE] = false;
@@ -220,6 +220,7 @@ public class NNUE {
             // Apply the updates from the previous state to the current state
             while (index < current) {
                 Accumulator curr = accumulatorStack[++index];
+                curr.copyFrom(prev, whitePerspective);
                 curr.apply(prev, curr.update, whitePerspective);
                 curr.computed[colourIndex] = true;
             }
@@ -286,7 +287,7 @@ public class NNUE {
 
         boolean whiteMirror = shouldMirror(board.kingSquare(true));
         boolean blackMirror = shouldMirror(board.kingSquare(false));
-        this.accumulatorStack[0] = new Accumulator(NETWORK.hiddenSize(), whiteMirror, blackMirror);
+        this.accumulatorStack[0] = new Accumulator(whiteMirror, blackMirror);
     }
 
     public enum MoveType {
