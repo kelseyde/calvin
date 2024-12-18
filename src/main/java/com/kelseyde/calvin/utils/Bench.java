@@ -9,6 +9,8 @@ import com.kelseyde.calvin.uci.UCI;
 import com.kelseyde.calvin.uci.UCICommand.GoCommand;
 import com.kelseyde.calvin.utils.notation.FEN;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 
 public class Bench {
@@ -68,26 +70,32 @@ public class Bench {
 
     private static final int BENCH_DEPTH = 10;
 
-    public static void run(Engine engine) {
+    public static void run(Engine engine, boolean exit) {
 
         UCI.setOutputEnabled(false);
-        TimeControl tc = TimeControl.init(engine.getConfig(), Board.from(FEN.STARTPOS), new GoCommand(-1, -1, -1, -1, -1, -1, BENCH_DEPTH, -1, false));
+        GoCommand command = new GoCommand(Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE,
+                Integer.MIN_VALUE, Integer.MIN_VALUE, BENCH_DEPTH, Integer.MIN_VALUE, false);
+        TimeControl tc = TimeControl.init(engine.getConfig(), Board.from(FEN.STARTPOS), command);
         Search search = engine.getSearcher();
         search.setThreadCount(1);
         long nodes = 0;
-        long time = 0;
 
+        Instant start = Instant.now();
         for (String fen : FENS) {
             search.clearHistory();
             search.setPosition(FEN.toBoard(fen));
             SearchResult result = search.search(tc);
             nodes += result.nodes();
-            time += result.time();
         }
+        Instant end = Instant.now();
+        long time = Duration.between(start, end).toMillis();
 
         long nps = (nodes / time) * 1000;
         UCI.setOutputEnabled(true);
         UCI.write(String.format("%s nodes %s nps", nodes, nps));
+        if (exit) {
+            UCI.handleQuit(null);
+        }
 
     }
 

@@ -13,6 +13,8 @@ log/**
 *.zip
 *.tar.gz
 *.rar
+calvin-chess-engine
+calvin-chess-engine.jar
 
 target/**
 .idea/

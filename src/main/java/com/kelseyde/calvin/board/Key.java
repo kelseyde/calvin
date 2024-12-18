@@ -28,7 +28,7 @@ public class Key {
 
     static {
 
-        Random random = ThreadLocalRandom.current();  // Use ThreadLocalRandom for thread-safety
+        Random random = new Random(18061995);
 
         // Generate random Zobrist keys for each piece on each square
         for (int square = 0; square < Square.COUNT; square++) {
