@@ -285,8 +285,8 @@ public class NNUE {
         this.current = 0;
         this.accumulatorStack = new Accumulator[Search.MAX_DEPTH];
 
-        boolean whiteMirror = shouldMirror(board.kingSquare(true));
-        boolean blackMirror = shouldMirror(board.kingSquare(false));
+        boolean whiteMirror = board != null && shouldMirror(board.kingSquare(true));
+        boolean blackMirror = board != null && shouldMirror(board.kingSquare(false));
         this.accumulatorStack[0] = new Accumulator(whiteMirror, blackMirror);
     }
 
