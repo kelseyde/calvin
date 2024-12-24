@@ -409,6 +409,9 @@ public class Searcher implements Search {
                 // Reduce moves with a bad history score more aggressively, and reduce less if the history score is good.
                 reduction -= 2 * historyScore / config.quietHistMaxScore.value;
 
+                // Reduce less when the static eval is improving.
+                reduction -= improving ? 1 : 0;
+
                 reduction = Math.max(0, reduction);
             }
 
