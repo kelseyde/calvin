@@ -485,9 +485,12 @@ public class Searcher implements Search {
                 // to try and prove the move will fail low while saving the time spent on a full search.
                 score = -search(depth - 1 - reduction, ply + 1, -alpha - 1, -alpha);
 
-                if (score > alpha && (score < beta || reduction > 0)) {
-                    // If we reduced the depth and/or used a null window, and the score beat alpha, we need to do a
-                    // re-search with the full window and depth. This is costly, but hopefully doesn't happen too often.
+                if (score > alpha && reduction > 1) {
+                    // If the reduced search failed high, we need to re-search at full depth.
+                    score = -search(depth - 1, ply + 1, -alpha - 1, -alpha);
+                }
+                if (score > alpha && score < beta) {
+                    // If the null window search failed high, we need to do a full re-search.
                     score = -search(depth - 1, ply + 1, -beta, -alpha);
                 }
             }
