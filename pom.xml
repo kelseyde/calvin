@@ -86,7 +86,6 @@
                     <toolchains>
                         <jdk>
                             <version>${java.version}</version>
-                            <vendor>oracle</vendor>
                         </jdk>
                     </toolchains>
                 </configuration>
