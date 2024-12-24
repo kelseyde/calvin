@@ -17,7 +17,7 @@ public class EngineConfig {
     public final int maxThreads = 12;
     public final int defaultThreads = 1;
 
-    public final int minHashSizeMb = 16;
+    public final int minHashSizeMb = 8;
     public final int maxHashSizeMb = 1024;
     public final int defaultHashSizeMb = 256;
 
