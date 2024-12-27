@@ -97,7 +97,7 @@ public class EngineConfig {
     public int[][][] lmrReductions;
     public final int[] bmStabilityFactor = { 250, 120, 90, 80, 75 };
     public final int[] scoreStabilityFactor = { 125, 115, 100, 94, 88 };
-    public final int[] contHistPlies = { 1, 2 };
+    public final int[] contHistPlies = { 1, 2, 4 };
 
     public Set<Tunable> getTunables() {
         return Set.of(
