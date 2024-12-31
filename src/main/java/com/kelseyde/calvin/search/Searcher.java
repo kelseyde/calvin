@@ -329,9 +329,11 @@ public class Searcher implements Search {
                 final int evalScale = config.nmpEvalScale.value;
                 final int evalMaxReduction = config.nmpEvalMaxReduction.value;
                 final int evalReduction = Math.min((staticEval - beta) / evalScale, evalMaxReduction);
+                final int improvingReduction = improving ? 1 : 0;
                 final int r = base
                         + depth / divisor
-                        + evalReduction;
+                        + evalReduction
+                        + improvingReduction;
 
                 final int score = -search(depth - r, ply + 1, -beta, -beta + 1);
 
