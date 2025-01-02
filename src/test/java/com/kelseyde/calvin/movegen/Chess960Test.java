@@ -45,7 +45,7 @@ public class Chess960Test {
 
             SEARCHER.clearHistory();
             SEARCHER.setPosition(Board.from(fen));
-            SEARCHER.search(20, 0, Integer.MIN_VALUE + 1, Integer.MAX_VALUE - 1);
+            SEARCHER.search(20, 0, Integer.MIN_VALUE + 1, Integer.MAX_VALUE - 1, false);
 
         }
 
