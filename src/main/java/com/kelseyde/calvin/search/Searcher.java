@@ -100,7 +100,7 @@ public class Searcher implements Search {
             final int delta = failMargin * retries;
 
             // Perform alpha-beta search for the current depth
-            final int score = search(searchDepth, 0, alpha, beta);
+            final int score = search(searchDepth, 0, alpha, beta, false);
 
             // Update the best move and evaluation if a better move is found
             if (bestMoveCurrent != null) {
@@ -168,8 +168,9 @@ public class Searcher implements Search {
      * @param ply                 The number of ply already examined in the current search ('ply from root').
      * @param alpha               The lower bound for search scores ('we can do at least this well').
      * @param beta                The upper bound for search scores ('our opponent can do at most this well').
+     * @param cutNode             Whether this node is an expected cut-node.
      */
-    public int search(int depth, int ply, int alpha, int beta) {
+    public int search(int depth, int ply, int alpha, int beta, boolean cutNode) {
 
         // If timeout is reached, exit immediately
         if (shouldStop()) return alpha;
@@ -333,7 +334,7 @@ public class Searcher implements Search {
                         + depth / divisor
                         + evalReduction;
 
-                final int score = -search(depth - r, ply + 1, -beta, -beta + 1);
+                final int score = -search(depth - r, ply + 1, -beta, -beta + 1, !cutNode);
 
                 board.unmakeNullMove();
                 ss.get(ply + 1).nullMoveAllowed = true;
@@ -402,6 +403,9 @@ public class Searcher implements Search {
 
                 // Reductions are based on the depth and the number of moves searched so far.
                 reduction = config.lmrReductions[isCapture ? 1 : 0][depth][movesSearched];
+
+                // Reduce more in expected cut-nodes.
+                reduction += cutNode ? 1 : 0;
 
                 // Reduce less in PV nodes.
                 reduction -= pvNode ? 1 : 0;
@@ -478,17 +482,17 @@ public class Searcher implements Search {
                 // Principal Variation Search - https://www.chessprogramming.org/Principal_Variation_Search
                 // The first move must be searched with the full alpha-beta window. If our move ordering is any good
                 // then we expect this to be the best move, and so we need to retrieve the exact score.
-                score = -search(depth - 1, ply + 1, -beta, -alpha);
+                score = -search(depth - 1, ply + 1, -beta, -alpha, !cutNode);
             }
             else {
                 // For all other moves apart from the principal variation, search with a null window (-alpha - 1, -alpha),
                 // to try and prove the move will fail low while saving the time spent on a full search.
-                score = -search(depth - 1 - reduction, ply + 1, -alpha - 1, -alpha);
+                score = -search(depth - 1 - reduction, ply + 1, -alpha - 1, -alpha, true);
 
                 if (score > alpha && (score < beta || reduction > 0)) {
                     // If we reduced the depth and/or used a null window, and the score beat alpha, we need to do a
                     // re-search with the full window and depth. This is costly, but hopefully doesn't happen too often.
-                    score = -search(depth - 1, ply + 1, -beta, -alpha);
+                    score = -search(depth - 1, ply + 1, -beta, -alpha, false);
                 }
             }
 
