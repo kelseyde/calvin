@@ -405,7 +405,7 @@ public class Searcher implements Search {
                 reduction = config.lmrReductions[isCapture ? 1 : 0][depth][movesSearched];
 
                 // Reduce more in expected cut-nodes.
-                reduction += cutNode ? 1 : 0;
+                reduction += cutNode ? 2 : 0;
 
                 // Reduce less in PV nodes.
                 reduction -= pvNode ? 1 : 0;
@@ -482,7 +482,7 @@ public class Searcher implements Search {
                 // Principal Variation Search - https://www.chessprogramming.org/Principal_Variation_Search
                 // The first move must be searched with the full alpha-beta window. If our move ordering is any good
                 // then we expect this to be the best move, and so we need to retrieve the exact score.
-                score = -search(depth - 1, ply + 1, -beta, -alpha, !cutNode);
+                score = -search(depth - 1, ply + 1, -beta, -alpha, false);
             }
             else {
                 // For all other moves apart from the principal variation, search with a null window (-alpha - 1, -alpha),
