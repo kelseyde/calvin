@@ -10,11 +10,11 @@ import com.kelseyde.calvin.board.Move;
  * - Key: 0-31 (zobrist key), 32-47 (age), 48-63 (static eval)
  * - Value: 0-11 (depth), 12-15 (flag), 16-31 (move), 32-63 (score)
  */
-public record HashEntry(Move move, int score, int staticEval, HashFlag flag, int depth) {
+public record HashEntry(Move move, int score, int staticEval, int flag, int depth) {
 
     public static HashEntry of(long key, long value) {
         final Move move       = Value.getMove(value);
-        final HashFlag flag   = Value.getFlag(value);
+        final int flag        = Value.getFlag(value);
         final int depth       = Value.getDepth(value);
         final int score       = Value.getScore(value);
         final int staticEval  = Key.getStaticEval(key);
@@ -69,19 +69,17 @@ public record HashEntry(Move move, int score, int staticEval, HashFlag flag, int
             return move > 0 ? new Move((short) move) : null;
         }
 
-        public static HashFlag getFlag(long value) {
-            long flag = (value & FLAG_MASK) >>> 12;
-            return HashFlag.valueOf((int) flag);
+        public static int getFlag(long value) {
+            return (int) (value & FLAG_MASK) >>> 12;
         }
 
         public static int getDepth(long value) {
             return (int) (value & DEPTH_MASK);
         }
 
-        public static long of(int score, Move move, HashFlag flag, int depth) {
+        public static long of(int score, Move move, int flag, int depth) {
             long moveValue = move != null ? move.value() : 0;
-            long flagValue = HashFlag.value(flag);
-            return (long) score << 32 | moveValue << 16 | flagValue << 12 | depth;
+            return (long) score << 32 | moveValue << 16 | (long) flag << 12 | depth;
         }
 
     }

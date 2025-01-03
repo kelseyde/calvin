@@ -24,11 +24,12 @@ public class Screlu {
     static final ShortVector FLOOR = ShortVector.broadcast(SPECIES, 0);
     static final ShortVector CEIL = ShortVector.broadcast(SPECIES, NETWORK.quantisations()[0]);
 
+    static final int QA = NETWORK.quantisations()[0];
+    static final int QB = NETWORK.quantisations()[1];
+    static final int QAB = QA * QB;
+
     public static int forward(short[] us, short[] them) {
 
-        final int qa = NETWORK.quantisations()[0];
-        final int qb = NETWORK.quantisations()[1];
-        final int qab = qa * qb;
         final int scale = NETWORK.scale();
         final short[] weights = NETWORK.outputWeights();
 
@@ -72,12 +73,12 @@ public class Screlu {
         }
 
         // Since squaring the inputs also squares quantisation, we need to divide that out.
-        eval /= qa;
+        eval /= QA;
 
         // Add the output bias, scale the result to centipawn space, and divide by the quantisation factor.
         eval += NETWORK.outputBias();
         eval *= scale;
-        eval /= qab;
+        eval /= QAB;
 
         return eval;
     }

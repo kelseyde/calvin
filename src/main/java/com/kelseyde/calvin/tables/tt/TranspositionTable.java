@@ -77,7 +77,7 @@ public class TranspositionTable {
      * <li>The entry with the lowest depth.</li>
      * </ol>
      */
-    public void put(long key, HashFlag flag, int depth, int ply, Move move, int staticEval, int score) {
+    public void put(long key, int flag, int depth, int ply, Move move, int staticEval, int score) {
 
         // Get the start index of the 4-item bucket.
         final int startIndex = index(key);
@@ -101,7 +101,7 @@ public class TranspositionTable {
 
             long storedValue = values[i];
 
-            HashFlag storedFlag = HashEntry.Value.getFlag(storedValue);
+            int storedFlag = HashEntry.Value.getFlag(storedValue);
             if (storedFlag == HashFlag.NONE) {
                 replacedIndex = i;
                 break;
