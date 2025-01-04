@@ -414,7 +414,7 @@ public class Searcher implements Search {
                 reduction = Math.max(0, reduction);
             }
 
-            // History pruning - https://www.chessprogramming.org/History_Leaf_Pruning
+            // Quiet History pruning - https://www.chessprogramming.org/History_Leaf_Pruning
             // Quiet moves which have a bad history score are pruned at the leaf nodes. This is a simple heuristic
             // that assumes that moves which have historically been bad are likely to be bad in the current position.
             if (!pvNode
@@ -423,6 +423,14 @@ public class Searcher implements Search {
                     && historyScore < config.hpMargin.value * depth + config.hpOffset.value) {
                 sse.currentMove = null;
                 movePicker.setSkipQuiets(true);
+                continue;
+            }
+
+            // Noisy History pruning - https://www.chessprogramming.org/History_Leaf_Pruning
+            if (!pvNode
+                && scoredMove.isNoisy()
+                && depth <= config.noisyHpMaxDepth.value
+                && historyScore < config.noisyHpMargin.value * depth + config.noisyHpOffset.value) {
                 continue;
             }
 
