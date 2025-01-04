@@ -7,6 +7,7 @@ import com.kelseyde.calvin.engine.EngineConfig;
 import com.kelseyde.calvin.evaluation.NNUE;
 import com.kelseyde.calvin.movegen.MoveGenerator;
 import com.kelseyde.calvin.movegen.MoveGenerator.MoveFilter;
+import com.kelseyde.calvin.search.SearchHistory.PlayedMove;
 import com.kelseyde.calvin.search.SearchStack.SearchStackEntry;
 import com.kelseyde.calvin.search.picker.MovePicker;
 import com.kelseyde.calvin.search.picker.QuiescentMovePicker;
@@ -470,7 +471,7 @@ public class Searcher implements Search {
                 reduction += futilityReduction;
             }
 
-            SearchHistory.PlayedMove playedMove = new SearchHistory.PlayedMove(move, piece, captured);
+            PlayedMove playedMove = new PlayedMove(move, piece, captured);
             sse.currentMove = playedMove;
             sse.searchedMoves.add(playedMove);
 
@@ -537,7 +538,7 @@ public class Searcher implements Search {
         }
 
         if (bestScore >= beta) {
-            final SearchHistory.PlayedMove best = sse.bestMove;
+            final PlayedMove best = sse.bestMove;
             final int historyDepth = depth + (staticEval > alpha ? 1 : 0);
             history.updateHistory(best, board.isWhite(), historyDepth, ply, ss);
         }
@@ -639,6 +640,7 @@ public class Searcher implements Search {
 
         final QuiescentMovePicker movePicker = new QuiescentMovePicker(config, movegen, ss, history, board, ply, ttMove, inCheck);
         movePicker.setFilter(filter);
+        SearchStackEntry sse = ss.get(ply);
 
         int movesSearched = 0;
 
@@ -652,6 +654,7 @@ public class Searcher implements Search {
             final ScoredMove scoredMove = movePicker.next();
             if (scoredMove == null) break;
             final Move move = scoredMove.move();
+            sse.currentMove = new PlayedMove(move, scoredMove.piece(), scoredMove.captured());
             movesSearched++;
 
             // Delta Pruning - https://www.chessprogramming.org/Delta_Pruning
