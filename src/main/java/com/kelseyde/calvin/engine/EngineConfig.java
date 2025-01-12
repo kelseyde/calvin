@@ -56,8 +56,8 @@ public class EngineConfig {
     public final Tunable lmrCapDivisor          = new Tunable("LmrCapDivisor", 310, 200, 400, 10);
     public final Tunable lmrMinMoves            = new Tunable("LmrMinMoves", 3, 2, 5, 1);
     public final Tunable lmrMinPvMoves          = new Tunable("LmrMinPvMoves", 4, 2, 5, 1);
-    public final Tunable lmpDepth               = new Tunable("LmpDepth", 4, 0, 8, 1);
-    public final Tunable lmpMultiplier          = new Tunable("LmpMultiplier", 8, 1, 20, 1);
+    public final Tunable lmpDepth               = new Tunable("LmpDepth", 11, 0, 8, 1);
+    public final Tunable lmpMultiplier          = new Tunable("LmpMultiplier", 4, 1, 20, 1);
     public final Tunable iirDepth               = new Tunable("IirDepth", 3, 0, 8, 1);
     public final Tunable dpMargin               = new Tunable("DpMargin", 111, 0, 250, 10);
     public final Tunable razorDepth             = new Tunable("RazorDepth", 5, 0, 8, 1);
