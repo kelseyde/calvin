@@ -349,6 +349,41 @@ public class Searcher implements Search {
                 }
             }
 
+            int pcBeta = beta + 240;
+            if (depth >= 7
+                && !Score.isMateScore(beta)
+                && (!ttHit || ttEntry.depth() + 3 < depth || ttEntry.score() >= beta)) {
+
+                final int seeThreshold = (pcBeta - staticEval) * 17 / 16;
+                QuiescentMovePicker movePicker = new QuiescentMovePicker(config, movegen, ss, history, board, ply, ttMove, false);
+                movePicker.setFilter(MoveFilter.NOISY);
+
+                while (true) {
+                    final ScoredMove scoredMove = movePicker.next();
+                    if (scoredMove == null) break;
+                    final Move move = scoredMove.move();
+                    if (!SEE.see(board, move, seeThreshold)) {
+                        continue;
+                    }
+                    eval.makeMove(board, move);
+                    if (!board.makeMove(move)) {
+                        eval.unmakeMove();
+                        continue;
+                    }
+                    td.nodes++;
+                    int score = -quiescenceSearch(-pcBeta, -pcBeta + 1, 1, ply + 1);
+                    if (score >= pcBeta) {
+                        score = -search(depth - 1, ply + 1, -pcBeta, -pcBeta + 1, !cutNode);
+                    }
+                    eval.unmakeMove();
+                    board.unmakeMove();
+                    if (score >= pcBeta) {
+                        return score;
+                    }
+                }
+
+            }
+
         }
 
         Move bestMove = null;
