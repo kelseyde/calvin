@@ -199,6 +199,10 @@ public class Searcher implements Search {
 
         history.getKillerTable().clear(ply + 1);
 
+        SearchStackEntry sse = ss.get(ply);
+        final Move excludedMove = sse.excludedMove;
+        final boolean singular = excludedMove != null;
+
         // Probe the transposition table in case this node has been searched before. If so, we can potentially re-use the
         // result of the previous search and save some time, only if the following conditions are met:
         //  a) we are not in a PV node,
@@ -208,6 +212,7 @@ public class Searcher implements Search {
         final boolean ttHit = ttEntry != null;
 
         if (!pvNode
+                && !singular
                 && ttHit
                 && isSufficientDepth(ttEntry, depth)
                 && (ttEntry.score() <= alpha || cutNode)) {
@@ -266,7 +271,6 @@ public class Searcher implements Search {
             }
         }
 
-        SearchStackEntry sse = ss.get(ply);
         sse.staticEval = staticEval;
 
         int futilityReduction = 0;
@@ -278,7 +282,7 @@ public class Searcher implements Search {
 
         // Pre-move-loop pruning: If the static eval indicates a fail-high or fail-low, there are several heuristic we
         // can employ to prune the node and its entire subtree, without searching any moves.
-        if (!pvNode && !inCheck) {
+        if (!pvNode && !inCheck && !singular) {
 
             // Reverse Futility Pruning - https://www.chessprogramming.org/Reverse_Futility_Pruning
             // If the static evaluation + some significant margin is still above beta, then let's assume this position
@@ -366,6 +370,9 @@ public class Searcher implements Search {
                 break;
             }
             Move move = scoredMove.move();
+            if (singular && move.equals(excludedMove)) {
+                continue;
+            }
             movesSearched++;
 
             final Piece piece = scoredMove.piece();
@@ -462,6 +469,28 @@ public class Searcher implements Search {
 
             }
 
+            int extension = 0;
+
+            if (!singular
+                && !rootNode
+                && ttHit
+                && move.equals(ttMove)
+                && depth >= 4
+                && !Score.isMateScore(ttEntry.score())
+                && (ttEntry.flag() == HashFlag.LOWER || ttEntry.flag() == HashFlag.EXACT)
+                && ttEntry.depth() > depth - 4) {
+
+                int singularBeta = ttEntry.score() - 2 * depth;
+                int singularDepth = depth / 2;
+
+                sse.excludedMove = move;
+                int score = -search(singularDepth, ply, -singularBeta - 1, -singularBeta, cutNode);
+                sse.excludedMove = null;
+
+                if (score < singularBeta) {
+                    extension = 1;
+                }
+            }
 
             eval.makeMove(board, move);
             if (!board.makeMove(move)) {
@@ -485,17 +514,17 @@ public class Searcher implements Search {
                 // Principal Variation Search - https://www.chessprogramming.org/Principal_Variation_Search
                 // The first move must be searched with the full alpha-beta window. If our move ordering is any good
                 // then we expect this to be the best move, and so we need to retrieve the exact score.
-                score = -search(depth - 1, ply + 1, -beta, -alpha, false);
+                score = -search(depth - 1 + extension, ply + 1, -beta, -alpha, false);
             }
             else {
                 // For all other moves apart from the principal variation, search with a null window (-alpha - 1, -alpha),
                 // to try and prove the move will fail low while saving the time spent on a full search.
-                score = -search(depth - 1 - reduction, ply + 1, -alpha - 1, -alpha, true);
+                score = -search(depth - 1 - reduction + extension, ply + 1, -alpha - 1, -alpha, true);
 
                 if (score > alpha && (score < beta || reduction > 0)) {
                     // If we reduced the depth and/or used a null window, and the score beat alpha, we need to do a
                     // re-search with the full window and depth. This is costly, but hopefully doesn't happen too often.
-                    score = -search(depth - 1, ply + 1, -beta, -alpha, false);
+                    score = -search(depth - 1 + extension, ply + 1, -beta, -alpha, false);
                 }
             }
 
@@ -548,6 +577,7 @@ public class Searcher implements Search {
         }
 
         if (!inCheck
+            && !singular
             && Score.isDefinedScore(bestScore)
             && (bestMove == null || board.isQuiet(bestMove))
             && !(flag == HashFlag.LOWER && uncorrectedStaticEval >= bestScore)
@@ -556,7 +586,7 @@ public class Searcher implements Search {
         }
 
         // Store the best move and score in the transposition table for future reference.
-        if (!shouldStop()) {
+        if (!shouldStop() && !singular) {
             tt.put(board.key(), flag, depth, ply, bestMove, rawStaticEval, bestScore);
         }
 
