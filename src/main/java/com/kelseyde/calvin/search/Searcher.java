@@ -648,7 +648,7 @@ public class Searcher implements Search {
         int movesSearched = 0;
 
         Move bestMove = null;
-        int bestScore = alpha;
+        int bestScore = staticEval;
         final int futilityScore = bestScore + config.qsFpMargin.value;
         int flag = HashFlag.UPPER;
 
@@ -673,7 +673,8 @@ public class Searcher implements Search {
             // Futility Pruning
             // The same heuristic as used in the main search, but applied to the quiescence. Skip captures that don't
             // win material when the static eval plus some margin is sufficiently below alpha.
-            if (captured != null
+            if (!inCheck
+                && captured != null
                 && futilityScore <= alpha
                 && !SEE.see(board, move, 1)) {
                 continue;
