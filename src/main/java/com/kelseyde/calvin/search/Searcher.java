@@ -408,7 +408,7 @@ public class Searcher implements Search {
                     && movesSearched >= (pvNode ? config.lmrMinPvMoves.value : config.lmrMinMoves.value)) {
 
                 // Reductions are based on the depth and the number of moves searched so far.
-                reduction = config.lmrReductions[isCapture ? 1 : 0][depth][movesSearched];
+                reduction = config.lmrTable[isCapture ? 1 : 0][depth][movesSearched];
 
                 // Reduce less in PV nodes.
                 reduction -= pvNode ? 1 : 0;
@@ -434,12 +434,11 @@ public class Searcher implements Search {
             // Late Move Pruning - https://www.chessprogramming.org/Futility_Pruning#Move_Count_Based_Pruning
             // If the move is ordered very late in the list, and isn't a 'noisy' move like a check, capture or
             // promotion, let's assume it's less likely to be good, and fully skip searching that move.
-            final int lmpCutoff = (depth * config.lmpMultiplier.value) / (1 + (improving ? 0 : 1));
             if (!pvNode
                     && !inCheck
                     && scoredMove.isQuiet()
                     && depth <= config.lmpDepth.value
-                    && movesSearched >= lmpCutoff) {
+                    && movesSearched >= config.lmpTable[improving ? 1 : 0][depth]) {
                 sse.currentMove = null;
                 movePicker.setSkipQuiets(true);
                 continue;
