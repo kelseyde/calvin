@@ -437,8 +437,7 @@ public class Searcher implements Search {
             if (!pvNode
                     && !inCheck
                     && scoredMove.isQuiet()
-                    && depth <= config.lmpDepth.value
-                    && movesSearched >= config.lmpTable[improving ? 1 : 0][depth]) {
+                    && movesSearched >= config.lmpTable[improving ? 1 : 0][Math.min(depth, 15)]) {
                 sse.currentMove = null;
                 movePicker.setSkipQuiets(true);
                 continue;
