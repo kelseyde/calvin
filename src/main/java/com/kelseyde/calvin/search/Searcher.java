@@ -454,8 +454,8 @@ public class Searcher implements Search {
                     && !Score.isMateScore(bestScore)) {
 
                 int threshold = scoredMove.isQuiet() ?
-                        config.seeQuietMargin.value * depth :
-                        config.seeNoisyMargin.value * depth * depth;
+                        config.seeQuietMargin.value * depth - (historyScore / config.seeQuietHistoryDivisor.value) :
+                        config.seeNoisyMargin.value * depth * depth - (historyScore / config.seeNoisyHistoryDivisor.value);
                 if (!SEE.see(board, move, threshold)) {
                     continue;
                 }
