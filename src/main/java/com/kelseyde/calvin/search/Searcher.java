@@ -659,6 +659,14 @@ public class Searcher implements Search {
             final Move move = scoredMove.move();
             movesSearched++;
 
+            // QS Late Move Pruning - https://www.chessprogramming.org/Futility_Pruning#Move_Count_Based_Pruning
+            if (!inCheck && !Score.isMateScore(alpha)
+                && (depth > 4 && movesSearched > 1)
+                    || (depth > 2 && movesSearched > 2)
+                    || (depth > 0 && movesSearched > 4)) {
+                break;
+            }
+
             // Delta Pruning - https://www.chessprogramming.org/Delta_Pruning
             // If the captured piece + a margin still has no potential of raising alpha, let's assume this position
             // is bad for us no matter what we do, and not bother searching any further
