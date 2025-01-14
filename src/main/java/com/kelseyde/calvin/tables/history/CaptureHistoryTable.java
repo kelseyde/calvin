@@ -12,8 +12,10 @@ public class CaptureHistoryTable extends AbstractHistoryTable {
     public CaptureHistoryTable(EngineConfig config) {
         super(config.captHistBonusMax.value,
                 config.captHistBonusScale.value,
+                config.captHistBonusOffset.value,
                 config.captHistMalusMax.value,
                 config.captHistMalusScale.value,
+                config.captHistMalusOffset.value,
                 config.captHistMaxScore.value);
     }
 

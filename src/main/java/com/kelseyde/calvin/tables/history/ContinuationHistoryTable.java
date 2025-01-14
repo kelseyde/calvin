@@ -13,8 +13,10 @@ public class ContinuationHistoryTable extends AbstractHistoryTable {
     public ContinuationHistoryTable(EngineConfig config) {
         super(config.contHistBonusMax.value,
                 config.contHistBonusScale.value,
+                config.contHistBonusOffset.value,
                 config.contHistMalusMax.value,
                 config.contHistMalusScale.value,
+                config.contHistMalusOffset.value,
                 config.contHistMaxScore.value);
     }
 
