@@ -274,7 +274,9 @@ public class Searcher implements Search {
         // We are 'improving' if the static eval of the current position is greater than it was on our previous turn.
         // If our position is improving we can be more aggressive in our beta pruning - where the eval is too high - but
         // should be more cautious in our alpha pruning - where the eval is too low.
-        final boolean improving = isImproving(ply, staticEval);
+        int lastEval = lastEval(ply);
+        final boolean improving = lastEval != Integer.MIN_VALUE && staticEval > lastEval;
+        final double improvingRate = lastEval == Integer.MIN_VALUE ? 0 : (staticEval - lastEval) / 50.0;
 
         // Pre-move-loop pruning: If the static eval indicates a fail-high or fail-low, there are several heuristic we
         // can employ to prune the node and its entire subtree, without searching any moves.
@@ -285,8 +287,10 @@ public class Searcher implements Search {
             // is a cut-node and will fail-high, and not search any further.
             if (depth <= config.rfpDepth.value && !Score.isMateScore(alpha)) {
 
-                int baseMargin = depth * (improving ? config.rfpImpMargin.value : config.rfpMargin.value);
-                int blend = depth * config.rfpBlend.value;
+                final int depthMultiplier = improving ? config.rfpImpMargin.value : config.rfpMargin.value;
+                final int improvingFactor = (int) (improvingRate * (0.75 * depth));
+                final int baseMargin = depth * depthMultiplier + improvingFactor;
+                final int blend = depth * config.rfpBlend.value;
 
                 int pruneMargin = baseMargin - blend;
                 int reduceMargin = baseMargin + blend;
@@ -753,6 +757,18 @@ public class Searcher implements Search {
 
     private boolean isDraw() {
         return Score.isEffectiveDraw(board);
+    }
+
+    private int lastEval(int ply) {
+        // Retrieve the static eval of the previous position where we were the side to move (2 plies ago).
+        // If we were in check 2 plies ago, use the static eval from 4 plies ago.
+        if (ply < 2) return Integer.MIN_VALUE;
+        int lastEval = ss.get(ply - 2).staticEval;
+        if (lastEval == Integer.MIN_VALUE) {
+            if (ply < 4) return Integer.MIN_VALUE;
+            lastEval = ss.get(ply - 4).staticEval;
+        }
+        return lastEval;
     }
 
     /**
