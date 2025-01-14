@@ -207,12 +207,15 @@ public class Searcher implements Search {
         final HashEntry ttEntry = tt.get(board.key(), ply);
         final boolean ttHit = ttEntry != null;
 
-        if (!pvNode
-                && ttHit
+        if (ttHit
                 && isSufficientDepth(ttEntry, depth)
                 && (ttEntry.score() <= alpha || cutNode)) {
             if (isWithinBounds(ttEntry, alpha, beta)) {
-                return ttEntry.score();
+                if (!pvNode) {
+                    return ttEntry.score();
+                } else {
+                    depth--;
+                }
             }
             else if (depth <= config.ttExtensionDepth.value) {
                 depth++;
@@ -461,7 +464,6 @@ public class Searcher implements Search {
                 }
 
             }
-
 
             eval.makeMove(board, move);
             if (!board.makeMove(move)) {
