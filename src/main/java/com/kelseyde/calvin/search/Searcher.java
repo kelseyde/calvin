@@ -211,7 +211,7 @@ public class Searcher implements Search {
                 && ttHit
                 && isSufficientDepth(ttEntry, depth)
                 && (ttEntry.score() <= alpha || cutNode)) {
-            if (isWithinBounds(ttEntry, alpha, beta)) {
+            if (!rootNode && isWithinBounds(ttEntry, alpha, beta)) {
                 return ttEntry.score();
             }
             else if (depth <= config.ttExtensionDepth.value) {
