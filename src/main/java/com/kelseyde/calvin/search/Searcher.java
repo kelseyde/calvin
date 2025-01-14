@@ -205,7 +205,7 @@ public class Searcher implements Search {
         //  b) it was searched to a sufficient depth, and
         //  c) the score is either exact, or outside the bounds of the current alpha-beta window.
         final HashEntry ttEntry = tt.get(board.key(), ply);
-        final boolean ttHit = ttEntry != null;
+        final boolean ttHit = ttEntry != null && ttEntry.flag() != HashFlag.NONE;
 
         if (!pvNode
                 && ttHit
@@ -250,7 +250,7 @@ public class Searcher implements Search {
             rawStaticEval = ttHit ? ttEntry.staticEval() : eval.evaluate();
             uncorrectedStaticEval = rawStaticEval;
 
-            if (!ttHit) {
+            if (ttEntry == null) {
                 tt.put(board.key(), HashFlag.NONE, 0, 0, null, rawStaticEval, 0);
             }
 
@@ -590,7 +590,7 @@ public class Searcher implements Search {
 
         // Exit the quiescence search early if we already have an accurate score stored in the hash table.
         final HashEntry ttEntry = tt.get(board.key(), ply);
-        final boolean ttHit = ttEntry != null;
+        final boolean ttHit = ttEntry != null && ttEntry.flag() != HashFlag.NONE;
         if (!pvNode
                 && ttHit
                 && isWithinBounds(ttEntry, alpha, beta)) {
@@ -619,7 +619,7 @@ public class Searcher implements Search {
 
             rawStaticEval = ttHit ? ttEntry.staticEval() : eval.evaluate();
 
-            if (!ttHit) {
+            if (ttEntry == null) {
                 tt.put(board.key(), HashFlag.NONE, 0, 0, null, rawStaticEval, 0);
             }
 
