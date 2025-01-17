@@ -660,16 +660,7 @@ public class Searcher implements Search {
             final Move move = scoredMove.move();
             movesSearched++;
 
-            // Delta Pruning - https://www.chessprogramming.org/Delta_Pruning
-            // If the captured piece + a margin still has no potential of raising alpha, let's assume this position
-            // is bad for us no matter what we do, and not bother searching any further
             final Piece captured = scoredMove.captured();
-            if (!inCheck
-                    && captured != null
-                    && !move.isPromotion()
-                    && (staticEval + SEE.value(captured) + config.dpMargin.value < alpha)) {
-                continue;
-            }
 
             // Futility Pruning
             // The same heuristic as used in the main search, but applied to the quiescence. Skip captures that don't
