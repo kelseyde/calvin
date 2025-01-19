@@ -197,6 +197,10 @@ public class Searcher implements Search {
         beta = Math.min(beta, Score.MATE - ply);
         if (alpha >= beta) return alpha;
 
+        SearchStackEntry sse = ss.get(ply);
+        Move excludedMove = sse.excludedMove;
+        boolean excluded = excludedMove != null;
+
         history.getKillerTable().clear(ply + 1);
 
         // Probe the transposition table in case this node has been searched before. If so, we can potentially re-use the
@@ -204,18 +208,22 @@ public class Searcher implements Search {
         //  a) we are not in a PV node,
         //  b) it was searched to a sufficient depth, and
         //  c) the score is either exact, or outside the bounds of the current alpha-beta window.
-        final HashEntry ttEntry = tt.get(board.key(), ply);
-        final boolean ttHit = ttEntry != null;
+        HashEntry ttEntry = null;
+        boolean ttHit = false;
 
-        if (!pvNode
-                && ttHit
-                && isSufficientDepth(ttEntry, depth)
-                && (ttEntry.score() <= alpha || cutNode)) {
-            if (isWithinBounds(ttEntry, alpha, beta)) {
-                return ttEntry.score();
-            }
-            else if (depth <= config.ttExtensionDepth.value) {
-                depth++;
+        if (!excluded) {
+            ttEntry = tt.get(board.key(), ply);
+            ttHit = ttEntry != null;
+            if (!pvNode
+                    && ttHit
+                    && isSufficientDepth(ttEntry, depth)
+                    && (ttEntry.score() <= alpha || cutNode)) {
+                if (isWithinBounds(ttEntry, alpha, beta)) {
+                    return ttEntry.score();
+                }
+                else if (depth <= config.ttExtensionDepth.value) {
+                    depth++;
+                }
             }
         }
 
@@ -229,6 +237,7 @@ public class Searcher implements Search {
         // If the position has not been searched yet, the search will be potentially expensive. So let's search with a
         // reduced depth expecting to record a move that we can use later for a full-depth search.
         if (!rootNode
+                && !excluded
                 && (pvNode || cutNode)
                 && (!ttHit || ttEntry.move() == null)
                 && depth >= config.iirDepth.value) {
@@ -238,7 +247,8 @@ public class Searcher implements Search {
         int rawStaticEval = Integer.MIN_VALUE;
         int uncorrectedStaticEval = Integer.MIN_VALUE;
         int staticEval = Integer.MIN_VALUE;
-        if (!inCheck) {
+        // No need to recompute staticEval in singular search - we already have it on the SearchStack
+        if (!excluded && !inCheck) {
             // Re-use cached static eval if available. Don't compute static eval while in check.
             rawStaticEval = ttHit ? ttEntry.staticEval() : eval.evaluate();
             uncorrectedStaticEval = rawStaticEval;
@@ -258,8 +268,9 @@ public class Searcher implements Search {
                 uncorrectedStaticEval = staticEval;
             }
         }
-
-        SearchStackEntry sse = ss.get(ply);
+        else if (excluded) {
+            staticEval = sse.staticEval;
+        }
         sse.staticEval = staticEval;
 
         int futilityReduction = 0;
@@ -271,7 +282,7 @@ public class Searcher implements Search {
 
         // Pre-move-loop pruning: If the static eval indicates a fail-high or fail-low, there are several heuristic we
         // can employ to prune the node and its entire subtree, without searching any moves.
-        if (!pvNode && !inCheck) {
+        if (!pvNode && !inCheck && !excluded) {
 
             // Reverse Futility Pruning - https://www.chessprogramming.org/Reverse_Futility_Pruning
             // If the static evaluation + some significant margin is still above beta, then let's assume this position
@@ -359,6 +370,10 @@ public class Searcher implements Search {
                 break;
             }
             Move move = scoredMove.move();
+            if (move.equals(excludedMove)) {
+                // Skip the excluded move in singular search
+                continue;
+            }
             movesSearched++;
 
             final Piece piece = scoredMove.piece();
@@ -467,6 +482,25 @@ public class Searcher implements Search {
 
             }
 
+            if (!rootNode
+                && depth >= 8
+                && move == ttMove
+                && !excluded
+                && ttEntry.depth() >= depth - 3
+                && ttEntry.flag() != HashFlag.UPPER) {
+
+                int sBeta = Math.max(-Score.MATE + 1, ttEntry.score() - depth * 2);
+                int sDepth = (depth - 1) / 2;
+
+                sse.excludedMove = move;
+                int score = search(sDepth, ply, sBeta - 1, sBeta, cutNode);
+                sse.excludedMove = null;
+
+                if (score < sBeta) {
+                    extension = 1;
+                }
+            }
+
 
             eval.makeMove(board, move);
             if (!board.makeMove(move)) {
@@ -555,6 +589,7 @@ public class Searcher implements Search {
         }
 
         if (!inCheck
+            && !excluded
             && Score.isDefinedScore(bestScore)
             && (bestMove == null || board.isQuiet(bestMove))
             && !(flag == HashFlag.LOWER && uncorrectedStaticEval >= bestScore)
@@ -563,7 +598,8 @@ public class Searcher implements Search {
         }
 
         // Store the best move and score in the transposition table for future reference.
-        if (!shouldStop()) {
+        // Don't write to the TT in SE search
+        if (!shouldStop() && !excluded) {
             tt.put(board.key(), flag, depth, ply, bestMove, rawStaticEval, bestScore);
         }
 
